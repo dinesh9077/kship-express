@@ -24,7 +24,7 @@
 	Route::post('login',    [AuthController::class, 'login']);
 	Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
 	
-	// protected routes
+	// authenticated routes
 	Route::middleware('auth:api')->group(function () 
 	{
 		Route::post('logout',[AuthController::class, 'logout']); 
