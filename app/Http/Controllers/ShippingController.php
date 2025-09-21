@@ -10,17 +10,21 @@
 	use App\Models\Packaging;
 	use DB,Auth,File,Hash,Helper;
 	use Illuminate\Support\Facades\Http;
+	use App\Services\ShipMozo;
 	use App\Services\DelhiveryService;
 	use App\Services\DelhiveryB2CService;
 	use Carbon\Carbon;
+	
 	class ShippingController extends Controller
 	{
 		protected $delhiveryService;
 		protected $delhiveryB2CService;
+		protected $shipMozo;
 		
 		public function __construct()
 		{
 			$this->middleware('auth');
+			$this->shipMozo = new ShipMozo();  
 			$this->delhiveryService = new DelhiveryService();  
 			$this->delhiveryB2CService = new DelhiveryB2CService();  
 		}
@@ -74,7 +78,7 @@
 		}
 
 		public function updateShipping(Request $request)
-		{
+		{  
 			$id = $request->id;
 			$data = $request->except('_token', 'id', 'logo');
 			$data['updated_at'] = Carbon::now();
@@ -194,31 +198,14 @@
 			$columnIndex = $columnIndex_arr[0]['column']; // Column index
 			$order = $columnName_arr[$columnIndex]['data']; // Column name
 			$dir = $order_arr[0]['dir']; // asc or desc
-			/* if($order = 'customer_name')  
-				{
-				$order = 'id';
-				}
-			*/
+		 
 			$role = Auth::user()->role;
 			$id = Auth::user()->id;
 			
-			$query = Packaging::where('packagings.id','!=','');  
-			/* if($role != "admin") 
-				{
-				$query->where('user_id',$id);
-			} */
-			$totalData = $query->get()->count();
-			
-			$totalFiltered = Packaging::where('packagings.id','!=',''); 
-			/* if($role != "admin") 
-				{
-				$totalFiltered->where('user_id',$id);
-			} */
-			$values = Packaging::select('packagings.*');
-			/* if($role != "admin") 
-				{
-				$values->where('user_id',$id);
-			} */
+			$query = Packaging::where('packagings.id','!=','');   
+			$totalData = $query->get()->count(); 
+			$totalFiltered = Packaging::where('packagings.id','!=','');  
+			$values = Packaging::select('packagings.*'); 
 			$values->offset($start)->limit($limit)->orderBy('packagings'.'.'.$order,$dir);
 			
 			if(!empty($request->input('search')))
@@ -384,7 +371,7 @@
 		}
 		
 		public function rateCalculatorShow(Request $request)
-		{  
+		{   
 			$user = Auth::user();
 			$role = $user->role;
 			$charge = $user->charge;
@@ -392,138 +379,65 @@
 			
 			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
 			$couriers = [];
-
+			 
 			foreach($shippingCompanies as $shippingCompany)
 			{ 
-				if ($shippingCompany->id == 2) { 
+				if ($shippingCompany->id == 1) { 
 					
-					$pincodeServiceData = $this->delhiveryService->pincodeService($request->delivery_code ?? '', $shippingCompany);
-					
+					$pincodeServiceData = $this->shipMozo->pincodeService($request, $shippingCompany);
+					 
 					if (!($pincodeServiceData['success'] ?? false) || 
-					(isset($pincodeServiceData['response']['success']) && !$pincodeServiceData['response']['success'])) {
+					(isset($pincodeServiceData['response']['result']) && $pincodeServiceData['response']['result'] == 0)) {
 						continue;
 					}
 					
-					$response = $this->delhiveryService->rateCaculator($request->all(), $shippingCompany);
-				 
+					$response = $this->shipMozo->rateCaculator($request->all(), $shippingCompany); 
 					if (!($response['success'] ?? false) || 
-						(isset($response['response']['success']) && !$response['response']['success'])) {
+						(isset($response['response']['result']) && $response['response']['result'] == 0)) {
 						continue;
 					}
+					
+					$responseDetails = $response['response']['data'] ?? []; 
+					if (!$responseDetails) {
+						continue;
+					}
+					
+					foreach($responseDetails as  $responseData){ 
+						$totalCharges = $responseData['total_charges'];  
+						$beforeTax = $responseData['before_tax_total_charges'];  
+						$gst = $responseData['gst'];  
 
-					$responseData = $response['response']['data'] ?? [];
-					if (!$responseData) {
-						continue;
-					}
-
-					$totalCharges = $responseData['total'];
-					$percentageAmount = ($role === "user" && $charge > 0) 
-						? ($charge_type == 1 ? $charge : ($totalCharges * $charge) / 100) 
-						: 0;
-					$totalCharges += $percentageAmount;
-                   
-					$tax = ($totalCharges * $shippingCompany->tax) / 100;
-				 
-					$roundedTotalCharges = round($totalCharges + $tax);
-					$roundOffAmount = $roundedTotalCharges - ($totalCharges + $tax);
-
-					$couriers[] = [
-						'direct_rate' => $responseData['price_breakup']['base_freight_charge'] ?? 0, 
-						'tax' => $tax,
-						'round_off' => $roundOffAmount,
-						'shipping_company_id' => $shippingCompany->id,
-						'shipping_company_name' => $shippingCompany->name,
-						'shipping_company_logo' => asset('storage/shipping-logo/' . $shippingCompany->logo),
-						'courier_id' => '',
-						'courier_name' => "{$shippingCompany->name}",
-						'freight_charges' => $responseData['price_breakup']['base_freight_charge'] ?? 0,
-						'cod_charges' => $responseData['price_breakup']['meta_charges']['cod'] ?? 0,
-						'total_charges' => $roundedTotalCharges,
-						'rto_charge' => $responseData['price_breakup']['insurance_rov'] ?? 0,
-						'min_weight' => $responseData['min_charged_wt'] ?? 0,
-						'chargeable_weight' => $responseData['charged_wt'] ?? 0,
-						'applicable_weight' => $request->weight ?? 0,
-						'percentage_amount' => $percentageAmount,
-						'responseData' => $responseData
-					];
-				}	 
-				
-				if ($shippingCompany->id == 3) { 
-					
-					$pincodeServiceData = $this->delhiveryB2CService->pincodeService($request->delivery_code ?? '', $shippingCompany);
-					
-					if (!($pincodeServiceData['success'] ?? false) || 
-					(isset($pincodeServiceData['response']['success']) && !$pincodeServiceData['response']['success'])) {
-						continue;
-					}
-					
-					$response = $this->delhiveryB2CService->rateCaculator($request->all(), $shippingCompany);
-				
-					if (!($response['success'] ?? false) || 
-					(isset($response['response']['success']) && !$response['response']['success'])) {
-						continue;
-					}
-					
-					$responseData = $response['response'] ?? [];
-					if (!$responseData) {
-						continue;
-					}
-				  
-					foreach($responseData as $responseValue)
-					{ 
-						$taxData = $responseValue['tax_data'] ? array_sum($responseValue['tax_data']) : 0;
-						$totalAmount = $responseValue['charge_DL'] ?? 0;
-						$chargeDph = $responseValue['charge_DPH'] ?? 0;
-						$chargeCod = $responseValue['charge_COD'] ?? 0;
-						$chargeRto = $responseValue['charge_RTO'] ?? 0;
-						
-						$totalCharges = $taxData + $totalAmount + $chargeDph + $chargeCod;
-						
-						$percentageAmount = ($role === "user" && $charge > 0) 
-						? ($charge_type == 1 ? $charge : ($totalCharges * $charge) / 100) 
-						: 0;
-					
-						$totalCharges += $percentageAmount;
-                    
-						$tax = ($totalCharges * $shippingCompany->tax) / 100;
-						$roundedTotalCharges = round($totalCharges + $tax);
-						$roundOffAmount = $roundedTotalCharges - ($totalCharges + $tax);
-						
-						$couriers[] = [
-							'direct_rate' => $totalAmount ?? 0, 
-							'tax' => $tax,
-							'round_off' => $roundOffAmount,
+						$couriers[] = [  
+							'shipping_charge' => $beforeTax, 
+							'tax' => $gst, 
 							'shipping_company_id' => $shippingCompany->id,
-							'shipping_company_name' => $shippingCompany->name,
-							'shipping_company_logo' => asset('storage/shipping-logo/' . $shippingCompany->logo),
-							'courier_id' => '',
-							'courier_name' => "{$shippingCompany->name} Surface",
-							'freight_charges' => ($totalAmount + $chargeDph),
-							'cod_charges' => $chargeCod,
-							'total_charges' => $roundedTotalCharges,
-							'rto_charge' => $chargeRto,
-							'min_weight' => ($responseValue['charged_weight'] / 1000),
-							'chargeable_weight' => ($responseValue['charged_weight'] / 1000),
-							'applicable_weight' => $totalWeightInKg ?? 0,
-							'percentage_amount' => $percentageAmount,
-							'responseData' => $responseValue
+							'courier_id' 	=> $responseData['id'],
+							'shipping_company_name' => $responseData['name'],
+							'shipping_company_logo' => $responseData['image'], 
+							'courier_name' => $responseData['name'], 
+							'total_charges' => $totalCharges,
+							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
+							'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
+							'applicable_weight' => $request->weight ?? 0,
+							'percentage_amount' => 0,
+							'responseData' => $responseData
 						];
-					} 
-				}
+					}
+				} 
 			}  
-		    
+		     
 			$view = view('shipping-cost', compact('couriers'))->render();
 			return response()->json(['status'=>'success','view'=>$view]); 
 		} 
 		
 		public function rateFreightBreakup(Request $request)
 		{	
-			$responseData = $request->data ? json_decode($request->data ?? [], true) : [];
+			$responseData = $request->data ? json_decode($request->data ?? [], true) : []; 
 			if(!$responseData['responseData'])
 			{
 				return response()->json(['error'=>'success', 'msg'=> 'Something went wrong.']); 
 			}
-			//dd($responseData);
+			 
 			$view = view('freight-breakup-modal', compact('responseData'))->render();
 			return response()->json(['status'=>'success', 'view'=>$view]); 	
 		}

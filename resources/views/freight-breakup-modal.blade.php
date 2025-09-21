@@ -6,7 +6,24 @@
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="mdi mdi-close"></i></button>
 			</div>
 			<div class="modal-body">
-				@if($responseData['shipping_company_id'] == 2)
+				@if($responseData['shipping_company_id'] == 1)
+					<div class="p-3 border rounded d-flex align-items-center justify-content-between">
+						<div>
+							<p class="mb-1"><strong>Courier:</strong> {{ $responseData['shipping_company_name'] ?? '' }}</p>
+							<p class="mb-1"><strong>Estimated Delivery:</strong> {{ $responseData['estimated_delivery'] ?? '' }}</p>
+							<p class="mb-1"><strong>Chargeable Weight:</strong> {{ $responseData['chargeable_weight'] ?? 0 }}</p>
+							<p class="mb-1"><strong>Shipping Charges:</strong> ₹ {{ $responseData['shipping_charge'] ?? 0 }}</p>
+							<p class="mb-1"><strong>GST at {{ $responseData['responseData']['gst_percentage'] ?? 0 }}%:</strong> ₹ {{ $responseData['tax'] ?? 0 }}</p>
+							<hr class="my-2">
+							<h5 class="text-danger mb-0"><strong>Total:</strong> ₹ {{ $responseData['total_charges'] ?? 0 }}</h5>
+						</div>
+						<div>
+							@if(!empty($responseData['shipping_company_logo']))
+								<img src="{{ $responseData['shipping_company_logo'] }}" alt="Courier Logo" style="height: 120px; width: 120px; object-fit: contain;">
+							@endif
+						</div>
+					</div>  
+				@elseif($responseData['shipping_company_id'] == 2)
 					<div class="p-3 border rounded">
 						<p><strong>Total freight on Pickup:</strong> ₹ {{ $responseData['total_charges'] }}</p>
 						<p><strong>Charged weight:</strong> {{ $responseData['responseData']['charged_wt'] }} kg(s)</p>
@@ -21,11 +38,7 @@
 						<p><strong>Pre-tax Freight Charges:</strong> ₹ {{ ($responseData['responseData']['price_breakup']['pre_tax_freight_charges'] ?? 0) + ($responseData['percentage_amount'] ?? 0) }}</p>
 						<p><strong>GST at {{ $responseData['responseData']['price_breakup']['gst_percent'] ?? 0 }}%:</strong> ₹ {{ $responseData['responseData']['price_breakup']['gst'] ?? 0 }}</p> 
 						<hr> 
-						<h5 class="text-danger"><strong>Total:</strong> ₹ {{ $responseData['total_charges'] }}</h5>
-
-						<p class="text-muted mt-3">
-							<small>* These Freight Charges are for estimation only. The actual charges are subject to change in lieu of other factors / special pricing.</small>
-						</p>
+						<h5 class="text-danger"><strong>Total:</strong> ₹ {{ $responseData['total_charges'] }}</h5>  
 					</div>
 				@elseif($responseData['shipping_company_id'] == 3) 
 					<div class="p-3 border rounded">
@@ -39,11 +52,7 @@
 						<p><strong>Pre-tax Freight Charges:</strong> ₹ {{ ($responseData['freight_charges'] ?? 0) + ($responseData['percentage_amount'] ?? 0)  + ($responseData['cod_charges'] ?? 0) }}</p>
 						<p><strong>Tax: </strong> ₹ {{ $responseData['responseData']['tax_data'] ? array_sum($responseData['responseData']['tax_data']) : 0 }}</p> 
 						<hr> 
-						<h5 class="text-danger"><strong>Total:</strong> ₹ {{ $responseData['total_charges'] }}</h5>
-
-						<p class="text-muted mt-3">
-							<small>* These Freight Charges are for estimation only. The actual charges are subject to change in lieu of other factors / special pricing.</small>
-						</p>
+						<h5 class="text-danger"><strong>Total:</strong> ₹ {{ $responseData['total_charges'] }}</h5> 
 					</div>
 				@endif
 			</div>

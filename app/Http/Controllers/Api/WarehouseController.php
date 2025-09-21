@@ -1,11 +1,10 @@
 <?php
 	
-	namespace App\Http\Controllers;
+	namespace App\Http\Controllers\Api;
 	
-	use Illuminate\Http\Request;
-	use App\Models\Vendor;
-	use App\Models\User;
-	use App\Models\VendorAddress;
+	use App\Http\Controllers\Controller;
+	use Illuminate\Http\Request; 
+	use App\Models\User; 
 	use App\Models\ShippingCompany;
 	use App\Models\PickupRequest;
 	use App\Models\CourierWarehouse;
@@ -15,55 +14,37 @@
 	use App\Services\DelhiveryB2CService;
 	use Illuminate\Support\Facades\Validator;
 	use Illuminate\Validation\Rule;
+	use App\Traits\ApiResponse;   
 	
 	class WarehouseController extends Controller
 	{	 
+		use ApiResponse; 
+		
 		public function __construct()
-		{
-			$this->middleware('auth');  
+		{ 
 			$this->delhiveryService = new DelhiveryService();
 			$this->delhiveryB2CService = new DelhiveryB2CService();
 			$this->shipMozo = new ShipMozo();
 		}
 		 
-		public function index()
+		public function index(Request $request)
 		{ 
-			return view('warehouse.index');
-		}
-		 
-		public function ajaxWarehouse(Request $request)
-		{
-			$draw = $request->get('draw');
-			$start = $request->get("start", 0);
-			$limit = $request->get("length", 10); // Rows per page
-
-			$columnIndexArr = $request->get('order', []);
-			$columnNameArr = $request->get('columns', []);
-			$orderArr = $request->get('order', []);
-			$searchArr = $request->get('search', []);
-
-			$columnIndex = $columnIndexArr[0]['column'] ?? 0; // Column index
-			$order = $columnNameArr[$columnIndex]['data'] ?? 'id'; // Column name
-			$dir = $orderArr[0]['dir'] ?? 'asc'; // Order direction
-
-			if ($order === 'customer_name') {
-				$order = 'id';
-			}
-			
 			$user = Auth::user();
 			$role = $user->role;
 			$userId = $user->id;
-
+			
+			$search = $request->input('search');
+			$offset = $request->input('offset');
+			$limit = $request->input('limit');
+			
 			// Base query
 			$query = CourierWarehouse::with('user:id,name');
 
 			if ($role === "user") {
 				$query->where('user_id', $userId);
 			}
-
-			// Apply search filter
-			if (!empty($searchArr['value'])) {
-				$search = $searchArr['value'];
+ 
+			if (!empty($search)) { 
 				$query->where(function ($q) use ($search) {
 					$q->where('company_name', 'LIKE', "%{$search}%")
 						->orWhere('contact_name', 'LIKE', "%{$search}%")
@@ -72,70 +53,18 @@
 						->orWhere('address', 'LIKE', "%{$search}%")
 						->orWhereDate('created_at', 'LIKE', "%{$search}%");
 				});
-			}
-
-			$totalData = $query->count();
-			$totalFiltered = $totalData;
-
-			// Fetch paginated data
-			$values = $query->orderBy($order, $dir)
-			->offset($start)
+			} 
+			 
+			$values = $query->orderBy('id')
+			->offset($offset)
 			->limit($limit)
 			->get();
-
-			// Format data for DataTable
-			$i = $start + 1;
-			$data = [];
-
-			foreach ($values as $value) {
-				$actionButtons = '';
-
-				if (config('permission.warehouse.edit')) {
-					$actionButtons .= '<a href="' . url('warehouse/edit', $value->id) . '" 
-						class="btn btn-icon waves-effect waves-light action-icon mr-1">
-						<i class="mdi mdi-pencil"></i>
-					</a>';
-				}
-
-				// if (config('permission.warehouse.delete')) {
-					// $actionButtons .= '<a href="' . url('warehouse/delete', $value->id) . '" 
-						// class="btn btn-icon waves-effect waves-light action-icon" 
-						// data-toggle="tooltip" title="Delete" onClick="deleteRecord(this, event);">
-						// <i class="mdi mdi-trash-can-outline"></i>
-					// </a>';
-				// }
-
-				$data[] = [
-					'id' => $i++,
-					'company_name' => $value->company_name,
-					'contact_name' => $value->contact_name,
-					'contact_number' => $value->contact_number,
-					'warehouse_name' => $value->warehouse_name,
-					'address' => $value->address,
-					'warehouse_status' => $value->warehouse_status == 1
-						? '<span class="badge badge-success">Active</span>'
-						: '<span class="badge badge-danger">In-Active</span>', 
-					'created_at' => date('d M Y', strtotime($value->created_at)) . 
-						($role == "admin" ? '<br><p>' . ($value->user->name ?? 'N.A') . '</p>' : ''),
-					'action' => $actionButtons
-				];
-			}
- 
-			return response()->json([
-				"draw" => intval($draw),
-				"iTotalRecords" => $totalData,
-				"iTotalDisplayRecords" => $totalFiltered,
-				"aaData" => $data,
-			]);
+			
+			return $this->successResponse($values, 'warehouse fetched successfully.');
 		}
-		
-		public function createWarehouse()
-		{  
-			return view('warehouse.add');
-		}
-		
+		    
 		public function storeWarehouse(Request $request)
-		{ 
+		{
 			$user_id = Auth::id();
 			$timestamp = now();
 
@@ -152,10 +81,9 @@
 				'city' => 'required|string',
 				'zip_code' => 'required|digits:6',
 			]);
-
-
+ 
 			if ($validator->fails()) {
-				return response()->json(['status' => 'info', 'msg' => $validator->errors()->first()]);
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
 			}
 
 			// Prepare vendor data
@@ -172,10 +100,10 @@
 				$this->addWareHouseByAPI($courierWarehouse, $shippingCompanies);
 
 				DB::commit();
-				return response()->json(['status' => 'success', 'msg' => 'The warehouse has been successfully added.', 'warehouse_id' => $courierWarehouse->id]);
+				return $this->successResponse($courierWarehouse, 'The warehouse has been successfully added.'); 
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return response()->json(['status' => 'error', 'msg' => 'Failed to add warehouse. Please try again. ' . $e->getMessage()]);
+				return $this->errorResponse([], 'Failed to add warehouse. Please try again.');  
 			}
 		}
 
@@ -209,12 +137,6 @@
 			}
 		}
 		   
-		public function editWarehouse($id)
-		{
-			$courierWarehouse = CourierWarehouse::find($id);   
-			return view('warehouse.edit', compact('courierWarehouse'));
-		}
-		
 		public function updateWarehouse(Request $request, $id)
 		{
 			$user_id = Auth::id();
@@ -235,7 +157,7 @@
 			]);
 
 			if ($validator->fails()) {
-				return response()->json(['status' => 'info', 'msg' => $validator->errors()->first()]);
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
 			}
 
 			DB::beginTransaction();
@@ -257,11 +179,11 @@
 					$this->updateWareHouseByAPI($courierWarehouse, $shippingCompanies);
 				}
 
-				DB::commit();
-				return response()->json(['status' => 'success', 'msg' => 'The warehouse has been successfully updated.']);
+				DB::commit(); 
+				return $this->successResponse($courierWarehouse, 'The warehouse has been successfully updated.'); 
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return response()->json(['status' => 'error', 'msg' => 'Failed to update warehouse. Please try again. ' . $e->getMessage()]);
+				return $this->errorResponse([], 'Failed to update warehouse. Please try again.');   
 			}
 		}
  
@@ -295,23 +217,7 @@
 				}
 			}
 		}
- 
-		public function deleteWarehouse($id)
-		{ 
-			try {
-				DB::beginTransaction();
- 
-				$courierWarehouse = CourierWarehouse::findOrFail($id);  
-				$courierWarehouse->delete(); 
-				
-				DB::commit(); 
-				return redirect()->route('warehouse')->with('success', 'The warehouse has been successfully deleted.');
-			} catch (\Exception $e) {
-				DB::rollBack(); 
-				return redirect()->route('warehouse')->with('error', 'Something went wrong.');
-			} 
-		}
-		
+    
 		public function pickupRequestList()
 		{ 
 			$user = Auth::user();

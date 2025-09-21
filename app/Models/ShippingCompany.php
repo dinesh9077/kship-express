@@ -14,6 +14,7 @@ class ShippingCompany extends Model
         'user_id',
         'name',
         'api_key',
+        'secret_key',
         'email',
         'password',
         'url',

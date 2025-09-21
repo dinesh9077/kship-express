@@ -23,10 +23,10 @@
 								<thead>
 									<tr>
 										<th> # </th>
+										<th> Warehouse </th>
 										<th> Company Name</th>
 										<th> Contact Person</th>
 										<th> Mobile</th>
-										<th> Warehouse </th>
 										<th> address </th>  
 										<th> status </th> 
 										<th> Created At </th>
@@ -71,10 +71,10 @@
 		},
 		"columns": [
 		{ "data": "id" }, 
+		{ "data": "warehouse_name" }, 
 		{ "data": "company_name" }, 
 		{ "data": "contact_name" }, 
 		{ "data": "contact_number" }, 
-		{ "data": "warehouse_name" }, 
 		{ "data": "address" },
 		{ "data": "warehouse_status" }, 
 		{ "data": "created_at" },   

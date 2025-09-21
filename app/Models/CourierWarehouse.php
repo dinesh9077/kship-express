@@ -17,11 +17,10 @@ class CourierWarehouse extends Model
         'company_name',
         'contact_name',
         'contact_number',
-        'address',
-        'delhivery_status',
+        'address', 
         'api_response',
-        'delhivery_status1',
-        'api_response1',
+        'contact_email',
+        'created',
         'city',
         'state',
         'country',
@@ -29,8 +28,12 @@ class CourierWarehouse extends Model
     ];
 	
 	protected $casts = [
-        'api_response' => 'array', // Cast JSON to an array automatically
-        'api_response1' => 'array', // Cast JSON to an array automatically
+        'api_response' => 'array',
+        'created' => 'array',
+    ];
+	
+	protected $hidden = [
+        'api_response'
     ];
 	
 	public function user()

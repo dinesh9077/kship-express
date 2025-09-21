@@ -7,6 +7,7 @@
 	use Illuminate\Support\Facades\Auth;
 	use App\Models\User;
 	use App\Models\UserWallet;
+	use App\Models\ShippingCompany;
 	use App\Models\Order;  
 	use Illuminate\Support\Facades\Hash;
 	use Carbon\Carbon; 
@@ -15,10 +16,18 @@
 	use Illuminate\Support\Facades\Validator;
 	use Illuminate\Support\Facades\Http; 
 	use Illuminate\Support\Str;
+	use App\Services\ShipMozo;
 	
 	class CommonController extends Controller
 	{
 		use ApiResponse; 
+		 
+		protected $shipMozo; 
+		public function __construct()
+		{
+			$this->middleware('auth');
+			$this->shipMozo = new ShipMozo();   
+		} 
 		
 		public function dashboard(Request $request)
 		{ 
@@ -88,4 +97,63 @@
 			
 			return $this->successResponse($data, 'detail fetched successfully.');
 		} 
+		
+		public function rateCalculator(Request $request)
+		{
+			$user = Auth::user();
+			$role = $user->role;
+			$charge = $user->charge;
+			$charge_type = $user->charge_type;
+			
+			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
+			$couriers = [];
+			 
+			foreach($shippingCompanies as $shippingCompany)
+			{ 
+				if ($shippingCompany->id == 1) { 
+					
+					$pincodeServiceData = $this->shipMozo->pincodeService($request, $shippingCompany);
+					 
+					if (!($pincodeServiceData['success'] ?? false) || 
+					(isset($pincodeServiceData['response']['result']) && $pincodeServiceData['response']['result'] == 0)) {
+						continue;
+					}
+					
+					$response = $this->shipMozo->rateCaculator($request->all(), $shippingCompany); 
+					if (!($response['success'] ?? false) || 
+						(isset($response['response']['result']) && $response['response']['result'] == 0)) {
+						continue;
+					}
+					
+					$responseDetails = $response['response']['data'] ?? []; 
+					if (!$responseDetails) {
+						continue;
+					}
+					
+					foreach($responseDetails as  $responseData){ 
+						$totalCharges = $responseData['total_charges'];  
+						$beforeTax = $responseData['before_tax_total_charges'];  
+						$gst = $responseData['gst'];  
+
+						$couriers[] = [ 
+							'shipping_charge' => $beforeTax, 
+							'tax' => $gst, 
+							'shipping_company_id' => $shippingCompany->id,
+							'courier_id' 	=> $responseData['id'],
+							'shipping_company_name' => $responseData['name'],
+							'shipping_company_logo' => $responseData['image'], 
+							'courier_name' => $responseData['name'], 
+							'total_charges' => $totalCharges,
+							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
+							'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
+							'applicable_weight' => $request->weight ?? 0,
+							'percentage_amount' => 0,
+							'responseData' => $responseData
+						];
+					}
+				} 
+			} 
+			
+			return $this->successResponse($couriers, 'detail fetched successfully.');
+		}
 	}

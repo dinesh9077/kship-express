@@ -41,7 +41,7 @@
 				]);
 				
 				if ($validator->fails()) { 
-					return $this->errorResponse('Validation failed', 422, $validator->errors());
+					return $this->validateResponse('Validation failed', 422, $validator->errors());
 				}
 				 
 				if(!isset($request->is_verify_otp) && $request->is_verify_otp == 0)
@@ -124,7 +124,7 @@
 			]);
 
 			if ($validator->fails()) {
-				return $this->errorResponse('Validation failed', 422, $validator->errors());
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
 			}
 
 			try {
@@ -153,7 +153,7 @@
 			]);
 
 			if ($validator->fails()) {
-				return $this->errorResponse('Validation failed', 422, $validator->errors());
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
 			}
 
 			$userOtp = UserOtp::where('email', $request->email)->first();
@@ -175,7 +175,7 @@
 			]);
 
 			if ($validator->fails()) {
-				return $this->errorResponse('Validation failed', 422, $validator->errors());
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
 			}
 			
 			$user = User::where('email', $request->email)->first();

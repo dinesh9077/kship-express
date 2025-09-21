@@ -35,8 +35,7 @@ class Order extends Model
 	
 	public static function generateOrderNumber($userId)
 	{  
-		$lastOrder = self::withTrashed() // Includes soft-deleted records
-		->where('user_id', $userId)
+		$lastOrder = self::where('user_id', $userId)
 		->orderBy('id', 'desc')
 		->count();
 		 

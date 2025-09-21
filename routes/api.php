@@ -4,6 +4,7 @@
 	use Illuminate\Support\Facades\Route; 
 	use App\Http\Controllers\Api\AuthController;
 	use App\Http\Controllers\Api\CommonController;
+	use App\Http\Controllers\Api\WarehouseController;
 	
 	/*
 		|--------------------------------------------------------------------------
@@ -30,5 +31,12 @@
 		Route::post('logout',[AuthController::class, 'logout']); 
 		Route::get('user',   [AuthController::class, 'user']);
 		
-		Route::get('dashboard',   [CommonController::class, 'dashboard']);  
+		Route::get('dashboard',   [CommonController::class, 'dashboard']);   
+		Route::post('rate-calculator',   [CommonController::class, 'rateCalculator']);  
+		
+		Route::group(['prefix'=>'warehouse'], function(){ 
+			Route::post('/list', [WarehouseController::class, 'index']);    
+			Route::post('/create', [WarehouseController::class, 'storeWarehouse']);  
+			Route::post('/update/{id}', [WarehouseController::class, 'updateWarehouse']);  
+		});
 	});	

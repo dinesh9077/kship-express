@@ -20,39 +20,45 @@
 						<div class="main-rowx-1">
                             <div class="main-order-001">
                                 <div class="address_block">
-                                    <div class="main-heading-1 pt-lg-0 pb-lg-2 px-lg-0">
+                                    <!--<div class="main-heading-1 pt-lg-0 pb-lg-2 px-lg-0">
                                        <h4 class="mb-0"> 
 											<small class="text-muted d-block">
 												Note: If Delhivery API is activated, the address will be sent to the warehouse API to add it to the Delhivery portal.
 											</small>
 										</h4> 
-        							</div> 
+        							</div>--> 
 									<div class="row align-items-end">
-										<div class="col-xl-3 col-md-4 col-sm-6">
-											<div class="from-group my-2">
-												<label for="username"> Company Name </label>
-												<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
-											</div>
-										</div> 
-										<div class="col-xl-3 col-md-4 col-sm-6">
-											<div class="from-group my-2">
-												<label for="username"> Contact Name </label>
-												<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" required> 
-											</div>
-										</div> 
-										<div class="col-xl-3 col-md-4 col-sm-6">
-											<div class="from-group my-2">
-												<label for="first-name"> Contact Number </label>
-												<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
-											</div>
-										</div> 
-									 
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl-4 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Warehouse Name </label>
 												<input class="default" type="text" data-id="0" autocomplete="off" maxlength="18" name="warehouse_name" id="warehouse_name" placeholder="Warehouse Name" required> 
 											</div>
 										</div>
+										<div class="col-xl-4 col-md-4 col-sm-6">
+											<div class="from-group my-2">
+												<label for="username"> Company Name </label>
+												<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
+											</div>
+										</div> 
+										<div class="col-xl-4 col-md-4 col-sm-6">
+											<div class="from-group my-2">
+												<label for="username"> Contact Name </label>
+												<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" required> 
+											</div>
+										</div> 
+										<div class="col-xl-4 col-md-4 col-sm-6">
+											<div class="from-group my-2">
+												<label for="username"> Contact Email </label>
+												<input type="text" autocomplete="off" name="contact_email" id="contact_email" placeholder="Contact Name" required> 
+											</div>
+										</div> 
+										<div class="col-xl-4 col-md-4 col-sm-6">
+											<div class="from-group my-2">
+												<label for="first-name"> Contact Number </label>
+												<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
+											</div>
+										</div> 
+									  
 										<div class="col-xl-12 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Address </label>

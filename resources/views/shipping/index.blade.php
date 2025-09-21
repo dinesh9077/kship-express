@@ -23,12 +23,10 @@
 							<table id="shipping-datatable" class="table table-striped" style="width:100%">
 								<thead>
 									<tr>
-										<th>Sr. No.</th>
+										<th>Sr.No.</th>
 										<th>Company Logo</th>
-										<th>Company Name</th>
-										<th>Email</th>
-										<th>Url</th>
-										<th>Tax</th>
+										<th>Company Name</th> 
+										<th>Url</th> 
 										<th>Mode</th>
 										<th>Status</th>
 										<th>Created At</th>
@@ -46,10 +44,8 @@
 													<span>No Logo</span>
 												@endif
 											</td>
-											<td>{{ $shipping->name }}</td>
-											<td>{{ $shipping->email }}</td>
-											<td>{{ $shipping->url }}</td>
-											<td>{{ $shipping->tax }}</td>
+											<td>{{ $shipping->name }}</td> 
+											<td>{{ $shipping->url }}</td> 
 											<td>
 												<span class="badge {{ $shipping->mode == 1 ? 'badge-success' : 'badge-warning' }}">
 													{{ $shipping->mode == 1 ? 'Live' : 'TEST' }}
@@ -66,9 +62,9 @@
 													<a href="javascript:;" onclick="editShipping(this,event)"
 													   data-id="{{ $shipping->id }}"
 													   data-name="{{ $shipping->name }}"
-													   data-status="{{ $shipping->status }}"
-													   data-tax="{{ $shipping->tax }}"
+													   data-status="{{ $shipping->status }}" 
 													   data-api_key="{{ $shipping->api_key }}"
+													   data-secret_key="{{ $shipping->secret_key }}"
 													   data-mode="{{ $shipping->mode }}"
 													   data-url="{{ $shipping->url }}"
 													   data-email="{{ $shipping->email }}"
@@ -107,7 +103,7 @@
 						<div class="col-lg-6">
 							<div class="from-group my-2">
 								<label for="order-id">Shipping Company Logo </label>
-								<input type="file" class="form-control" name="logo" accept="image/png, image/jpe, image/jpeg" required>
+								<input type="file" class="form-control" name="logo" accept="image/png, image/jpe, image/jpeg">
 							</div>
 						</div>
 						<div class="col-lg-6">
@@ -120,6 +116,12 @@
 							<div class="from-group my-2">
 								<label for="order-id">Api Key/Token</label>
 								<input type="text" class="form-control" name="api_key" placeholder="Api Key/Token">
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="from-group my-2">
+								<label for="order-id">Secret Key</label>
+								<input type="text" class="form-control" name="secret_key" placeholder="Secret Key">
 							</div>
 						</div>
 						<div class="col-lg-6">
@@ -140,10 +142,10 @@
 								<input type="url" class="form-control" name="url" placeholder="Url" Required>
 							</div>
 						</div>
-						<div class="col-lg-6">
+						<div class="col-lg-6" style="display:none;">
 							<div class="from-group my-2">
 								<label for="order-id">Tax</label>
-								<input type="number" class="form-control" name="tax" placeholder="tax" Required>
+								<input type="number" class="form-control" name="tax" placeholder="tax" value="0">
 							</div>
 						</div>
 						<div class="col-lg-6">
@@ -209,6 +211,12 @@
 						</div>
 						<div class="col-lg-6">
 							<div class="from-group my-2">
+								<label for="order-id">Secret Key</label>
+								<input type="text" class="form-control" id="edit_secret_key" name="secret_key" placeholder="Secret Key">
+							</div>
+						</div>
+						<div class="col-lg-6">
+							<div class="from-group my-2">
 								<label for="order-id">Email</label>
 								<input type="text" class="form-control" id="edit_email" name="email" placeholder="Email">
 							</div>
@@ -228,7 +236,7 @@
 						<div class="col-lg-6">
 							<div class="from-group my-2">
 								<label for="order-id">Tax</label>
-								<input type="number" class="form-control" id="edit_tax" name="tax" placeholder="tax" Required>
+								<input type="number" class="form-control" id="edit_tax" name="tax" placeholder="tax" value="0">
 							</div>
 						</div>
 						<div class="col-lg-6">
@@ -281,6 +289,7 @@
 		var status = $obj.data('status');
 		var tax = $obj.data('tax');
 		var apiKey = $obj.data('api_key');
+		var secretKey = $obj.data('secret_key');
 		var email = $obj.data('email');
 		var password = $obj.data('password');
 		var url = $obj.data('url');
@@ -290,6 +299,7 @@
 		$('#edit_id').val(id);
 		$('#edit_name').val(name);
 		$('#edit_api_key').val(apiKey);
+		$('#edit_secret_key').val(secretKey);
 		$('#edit_email').val(email);
 		$('#edit_password').val(password);
 		$('#edit_url').val(url);
