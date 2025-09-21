@@ -35,14 +35,22 @@ class Order extends Model
 	
 	public static function generateOrderNumber($userId)
 	{  
-		$lastOrder = self::where('user_id', $userId)
-		->orderBy('id', 'desc')
-		->count();
-		 
-		$lastNumber = $lastOrder + 1;
-  
-		$newOrderNumber = $userId . $lastNumber; 
-		return (int)$newOrderNumber;  
+		$lastOrderCount = self::where('user_id', $userId)
+        ->count();
+		
+        $orderNumber = null;
+        $increment = $lastOrderCount + 1; 
+				
+        do { 
+			$orderNumber = (int) ($userId . $increment);
+ 
+            $exists = self::where('order_prefix', $orderNumber)
+                ->exists();
+    
+            $increment++;
+        } while ($exists);
+		
+        return $orderNumber;
 	}
 	
 	public function customer()

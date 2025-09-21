@@ -341,12 +341,14 @@
 		}
 		  
 		public function orderStore(Request $request)
-		{    
+		{     
 			$user_id = Auth::id();  
-			$data = $request->except('_token', 'product_discription', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
+			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
 			$data['user_id'] = $user_id;
 			$data['status_courier'] = 'new';
+			$data['weight'] = $request->total_weight;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
+			$data['total_amount'] = $request->invoice_amount;
 			$data['status'] = 1;
 			$data['created_at'] = now();
 			$data['updated_at'] = now();
@@ -356,11 +358,9 @@
 				return response()->json(['status' => 'error', 'msg' => 'The order number already exists.']);
 			}
 			
-			DB::beginTransaction(); // Begin Transaction
+			DB::beginTransaction();
 			
-			try {  
-				// Insert Order and get ID
-				
+			try {   
 				$order = Order::create($data); 
 				
 				$imagePaths = []; 
@@ -383,19 +383,21 @@
 					}
 				} 
 				$order->update(['order_image' => $imagePaths, 'invoice_document' => $invoiceDocPaths]);
-				
-				$totalAmount = 0;
+				 
 				$orderItems = [];
 				
-				if (!empty($request->product_discription)) {
-					foreach ($request->product_discription as $key => $productDiscription) { 
+				if (!empty($request->product_category)) 
+				{
+					foreach ($request->product_category as $key => $productCategory) { 
 						$amount = $request->amount[$key] ?? 0;
 						$quantity = $request->quantity[$key] ?? 1;
-						$totalAmount += $amount;
-						
+						  
 						$orderItems[] = [
 							'order_id' => $order->id, 
-							'product_discription' => $productDiscription,
+							'product_category' => $productCategory,
+							'product_name' => $request->product_name[$key] ?? null,
+							'sku_number' => $request->sku_number[$key] ?? null,
+							'hsn_number' => $request->hsn_number[$key] ?? null,
 							'amount' => $amount, 
 							'ewaybillno' => null, 
 							'quantity' => $quantity,
@@ -410,16 +412,15 @@
 						];
 					}
 					
-					OrderItem::insert($orderItems); // Bulk Insert Order Items
-					$order->update(['total_amount' => $totalAmount]);
+					OrderItem::insert($orderItems);  
 				}
 				
 				// Insert order status
 				OrderStatus::insert([
-				'order_id' => $order->id, 
-				'order_status' => 'New', 
-				'created_at' => now(), 
-				'updated_at' => now()
+					'order_id' => $order->id, 
+					'order_status' => 'New', 
+					'created_at' => now(), 
+					'updated_at' => now()
 				]);
 				
 				Helper::orderActivity($order->id, 'Order created.');
@@ -562,11 +563,13 @@
 		}
 		
 		public function orderUpdate(Request $request, $id)
-		{ 
+		{  
 			$user_id = Auth::id();  
-			$data = $request->except('_token', 'product_discription', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
+			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
 			$data['user_id'] = $user_id;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
+			$data['weight'] = $request->total_weight; 
+			$data['total_amount'] = $request->invoice_amount;
 			$data['status_courier'] = 'New';
 			$data['status'] = 1;
 			$data['created_at'] = now();
@@ -576,7 +579,7 @@
 			
 			try {  
 				// Insert Order and get ID
-				$order = Order::find($id);
+				$order = Order::findOrFail($id);
 				
 				$imagePaths = $order->order_image ?? [];   
 				if ($request->hasFile('order_image')) {
@@ -604,28 +607,30 @@
 				$totalAmount = 0;
 				$orderItems = [];
 				
-				if (!empty($request->product_discription)) 
+				if (!empty($request->product_category)) 
 				{
-					OrderItem::whereNotIn('id', $request->id ?? [])->delete();
-					foreach ($request->product_discription as $key => $productDiscription)
+					OrderItem::where('order_id', $id)->whereNotIn('id', $request->id ?? [])->delete();
+					foreach ($request->product_category as $key => $productCategory)
 					{  
 						$amount = $request->amount[$key] ?? 0;
 						$quantity = $request->quantity[$key] ?? 1;
-						$totalAmount += $amount;
-						
+						 
 						$orderItemData = [
-						'order_id' => $order->id, 
-						'product_discription' => $productDiscription,
-						'amount' => $amount, 
-						'ewaybillno' => null, 
-						'quantity' => $quantity,
-						'updated_at' => now(),
-						'dimensions' => json_encode([
-						'weight' => $request->weight[$key] ?? 0,
-						'length' => $request->length[$key] ?? 0,
-						'width' => $request->width[$key] ?? 0,
-						'height' => $request->height[$key] ?? 0,
-						]),
+							'order_id' => $order->id, 
+							'product_category' => $productCategory,
+							'product_name' => $request->product_name[$key],
+							'sku_number' => $request->sku_number[$key],
+							'hsn_number' => $request->hsn_number[$key],
+							'amount' => $amount, 
+							'ewaybillno' => null, 
+							'quantity' => $quantity,
+							'updated_at' => now(),
+							'dimensions' => json_encode([
+								'weight' => $request->weight[$key] ?? 0,
+								'length' => $request->length[$key] ?? 0,
+								'width' => $request->width[$key] ?? 0,
+								'height' => $request->height[$key] ?? 0,
+							]),
 						];
 						
 						// Check if order_item_id exists in the request
@@ -644,9 +649,7 @@
 					// Bulk insert for new items if any
 					if (!empty($orderItems)) {
 						OrderItem::insert($orderItems);
-					}
-					
-					$order->update(['total_amount' => $totalAmount]);
+					} 
 				}
 				
 				Helper::orderActivity($order->id, 'Order updated.');

@@ -71,7 +71,7 @@
                                     </div>
                                 </div>
 								
-								<div class="col-lg-3 col-sm-6 ">
+								{{--<div class="col-lg-3 col-sm-6 ">
                                     <div class="from-group my-2">
                                         <label for="order-type"> Freight (paid/to pay) </label>
                                         <select name="freight_mode" id="freight_mode" required>
@@ -79,19 +79,17 @@
                                             <option value="FOD" {{ $order->freight_mode === "FOD" ? 'selected' : '' }}>To Pay </option>
                                         </select>
                                     </div>
-                                </div>
-                                
-                                  @if((request('weight_order') ?? $order->weight_order) == 2)
-                                    <div class="col-lg-3 col-sm-6 mt-2">
-                                        <div class="from-group my-2">
-                                            <label for="insurance-type"> Insurance Type </label>
-                                            <select name="insurance_type" id="insurance_type" required>
-                                                <option value="1" {{ $order->insurance_type === 1 ? 'selected' : '' }}>Owner Risk</option>
-                                                <option value="2" {{ $order->insurance_type === 2 ? 'selected' : '' }}>Carrier Risk </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                @endif
+                                </div>--}}
+                                 
+								<div class="col-lg-3 col-sm-6">
+									<div class="from-group my-2">
+										<label for="insurance-type"> Insurance Type </label>
+										<select name="insurance_type" id="insurance_type" required>
+											<option value="1" {{ $order->insurance_type === 1 ? 'selected' : '' }}>Owner Risk</option>
+											<option value="2" {{ $order->insurance_type === 2 ? 'selected' : '' }}>Carrier Risk </option>
+										</select>
+									</div>
+								</div> 
 								<div class="col-lg-3 col-sm-6 mt-2">
                                     <div class="from-group my-2">
                                         <label for="order-type"> Order Type </label>
@@ -188,22 +186,41 @@
 								@if($order->orderItems->isNotEmpty())
 									@foreach($order->orderItems as $key => $orderItem)
 										<div class="row align-items-end {{ $key != 0 ? 'mt-2' : '' }} removeProductRows"> 
-											<div class="col-lg-4 col-sm-6 col-md-6">
+											<div class="col-lg-2 col-sm-6 col-md-6">
 												<div class="from-group my-2">
-													<label for="packaging-type"> Product Description </label>
-													<input type="text" placeholder="Product Description" name="product_discription[]" id="product_discription" value="{{ $orderItem->product_discription }}" required>
+													<label for="packaging-type"> Product Category </label>
+													<input type="text" placeholder="Product Category" name="product_category[]" id="product_category" value="{{ $orderItem->product_category }}" required>
 												</div>
 											</div> 
-											<div class="col-lg-3 col-md-6">
+											<div class="col-lg-2 col-sm-6 col-md-6">
+												<div class="from-group my-2">
+													<label for="packaging-type"> Product Name </label>
+													<input type="text" placeholder="Product Name" name="product_name[]" id="product_name"  value="{{ $orderItem->product_name }}" required>
+												</div>
+											</div>
+											<div class="col-lg-2 col-sm-6 col-md-6">
+												<div class="from-group my-2">
+													<label for="packaging-type"> SKU Number </label>
+													<input type="text" placeholder="SKU Number" name="sku_number[]" id="sku_number" value="{{ $orderItem->sku_number }}" required>
+												</div>
+											</div>
+											<div class="col-lg-2 col-sm-6 col-md-6">
+												<div class="from-group my-2">
+													<label for="packaging-type"> HSN No </label>
+													<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" value="{{ $orderItem->hsn_number }}" required>
+												</div>
+											</div> 
+											<div class="col-lg-1 col-md-6">
 												<div class="from-group my-2">
 													<label for="packaging-type"> Total Amount </label>
-													<input type="text" class="totalAmount" placeholder="Total Amount" value="{{ $orderItem->amount }}" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+													<input type="text" data-id="{{ $key }}" id="totalAmount_{{ $key }}" class="totalAmount" placeholder="Total Amount" value="{{ $orderItem->amount }}" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 												</div>
 											</div> 
-											<div class="col-lg-3 col-md-6">
+
+											<div class="col-lg-1 col-md-6">
 												<div class="from-group my-2">
-													<label for="packaging-type"> No of Box </label>
-													<input type="number" name="quantity[]" class="noofbox" id="quantity" value="{{ $orderItem->quantity }}" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
+													<label for="packaging-type"> No of Box/Qty </label>
+													<input type="number" data-id="{{ $key }}" id="noofbox_{{ $key }}" name="quantity[]" class="noofbox" id="quantity" value="{{ $orderItem->quantity }}" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
 												</div>
 											</div>
 											<div class="col-lg-1 col-md-6">
@@ -221,22 +238,41 @@
 									@endforeach
 								@else
 									<div class="row align-items-end removeProductRows"> 
-										<div class="col-lg-4 col-sm-6 col-md-6">
+										<div class="col-lg-2 col-sm-6 col-md-6">
 											<div class="from-group my-2">
-												<label for="packaging-type"> Product Description </label>
-												<input type="text" placeholder="Product Description" name="product_discription[]" id="product_discription" value="" required>
+												<label for="packaging-type"> Product Category </label>
+												<input type="text" placeholder="Product Category" name="product_category[]" id="product_category" required>
 											</div>
 										</div> 
-										<div class="col-lg-3 col-md-6">
+										<div class="col-lg-2 col-sm-6 col-md-6">
+											<div class="from-group my-2">
+												<label for="packaging-type"> Product Name </label>
+												<input type="text" placeholder="Product Name" name="product_name[]" id="product_name" required>
+											</div>
+										</div>
+										<div class="col-lg-2 col-sm-6 col-md-6">
+											<div class="from-group my-2">
+												<label for="packaging-type"> SKU Number </label>
+												<input type="text" placeholder="SKU Number" name="sku_number[]" id="sku_number" required>
+											</div>
+										</div>
+										<div class="col-lg-2 col-sm-6 col-md-6">
+											<div class="from-group my-2">
+												<label for="packaging-type"> HSN No </label>
+												<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" required>
+											</div>
+										</div> 
+										<div class="col-lg-1 col-md-6">
 											<div class="from-group my-2">
 												<label for="packaging-type"> Total Amount </label>
-												<input type="text" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+												<input type="text" data-id="0" id="totalAmount_0" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 											</div>
-										</div>  
-										<div class="col-lg-3 col-md-6">
+										</div> 
+
+										<div class="col-lg-1 col-md-6">
 											<div class="from-group my-2">
-												<label for="packaging-type"> No of Box </label>
-												<input type="number" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="No of Box" required oninput="allowOnlyNumbers(this)">
+												<label for="packaging-type"> No of Box/Qty </label>
+												<input type="number" data-id="0" id="noofbox_0" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
 											</div>
 										</div>
 										<div class="col-lg-1 col-md-6">
@@ -253,7 +289,7 @@
 								<div class="col-lg-4 col-sm-6 col-md-6">
 									<div class="from-group my-2">
 										<label for="packaging-type"> Invoice No </label>
-										<input type="text" placeholder="Invoice No" name="invoice_no" id="invoice_no" value="{{ $order->invoice_no }}" required>
+										<input type="text" placeholder="Invoice No" name="invoice_no" id="invoice_no" value="{{ $order->invoice_no }}">
 									</div>
 								</div> 
 								<div class="col-lg-3 col-md-6">
@@ -278,13 +314,17 @@
                                 <h5> Package Details </h5>
                             </div>
                             <div class="row">
-                                <div class="col-lg-3 col-sm-6 col-md-6">
+								<div class="col-lg-3 col-sm-6 col-md-6">
+                                    <div class="from-group my-2">
+                                        <label for="packaging-type"> Total Weight </label>
+                                        <input type="text" id="total_weight" placeholder="Total Weight." value="{{ $order->weight }}" name="total_weight" readonly>
+                                    </div>
+                                </div> 
+                                <div class="col-lg-3 col-sm-6 col-md-6" style="display:none;">
                                     <div class="from-group my-2">
                                         <label for="packaging-type"> Dimensions </label>
                                         <select class="form-control select2" id="dimension_type" name="dimension_type">
                                             <option value="cm" {{ $order->dimension_type === "cm" ? 'selected' : '' }}>Centimeter</option>
-                                            <option value="ft" {{ $order->dimension_type === "ft" ? 'selected' : '' }}>Feet</option>
-                                            <option value="inch" {{ $order->dimension_type === "inch" ? 'selected' : '' }}>Inch</option> 
                                         </select>
                                     </div>
                                 </div> 
@@ -297,7 +337,7 @@
 										<div class="col-lg-3 col-sm-6 col-md-6"> 
 											<div class="from-group my-2">
     											<label for="packaging-type"> Weight (KG) </label>
-    											<input type="text" name="weight[]" id="weight" placeholder="Weight (GM/KG)" value="{{ $orderItem->dimensions['weight'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+    											<input type="text" name="weight[]" id="weight" class="weight" placeholder="Weight (GM/KG)" value="{{ $orderItem->dimensions['weight'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
     										</div>
 											<label id="volumatric_weight" style="font-weight: 900;"></label>
 										</div>
@@ -329,7 +369,7 @@
 									<div class="col-lg-3 col-sm-6 col-md-6"> 
 										<div class="from-group my-2">
     											<label for="packaging-type"> Weight (KG) </label>
-    											<input type="text" name="weight[]" id="weight" placeholder="Weight (GM/KG)" value="0" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+    											<input type="text" name="weight[]" id="weight" class="weight" placeholder="Weight (GM/KG)" value="0" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
     										</div>
 										<label id="volumatric_weight" style="font-weight: 900;"></label>
 									</div>
@@ -361,52 +401,52 @@
                     </div>
 					
 					<div class="main-rowx-1">
-                        <div class="main-order-001">
-                            <div class="main-vender">
-                                <h5> Upload Documents </h5>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-6 col-sm-6 col-md-6">
-                                    <div class="from-group my-2">
-                                        <label for="packaging-type"> Invoice Documents </label>
-                                        <input type="file" class="form-control" id="invoice_document" name="invoice_document[]" multiple > 
-                                    </div>
-                                </div> 
-                            </div> 
-							@if(!empty($order->invoice_document))
-								<div class="row mt-2">
-									@foreach($order->invoice_document as $index => $invoiceImage)
-										<div class="col-lg-1 col-sm-1 col-md-1">
-											<div class="from-group my-2">
-												<label for="packaging-type"> Invoice {{ ($index + 1) }}</label>
-												<img src="{{ url('storage/orders/'.$order->id, $invoiceImage) }}" height=80> 
-											</div>
+						{{-- <div class="main-order-001">
+								<div class="main-vender">
+									<h5> Upload Documents </h5>
+								</div>
+								<div class="row">
+									<div class="col-lg-6 col-sm-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="packaging-type"> Invoice Documents </label>
+											<input type="file" class="form-control" id="invoice_document" name="invoice_document[]" multiple > 
 										</div>
-									@endforeach
+									</div> 
 								</div> 
-							@endif
-							
-							<div class="row mt-3">
-                                <div class="col-lg-6 col-sm-6 col-md-6">
-                                    <div class="from-group my-2">
-                                        <label for="packaging-type"> Other Documents </label>
-                                        <input type="file" class="form-control" id="order_image" name="order_image[]" multiple > 
-                                    </div>
-                                </div> 
-                            </div> 
-							@if(!empty($order->order_image))
-								<div class="row mt-2">
-									@foreach($order->order_image as $index => $orderImage)
-										<div class="col-lg-1 col-sm-1 col-md-1">
-											<div class="from-group my-2">
-												<label for="packaging-type"> Documents {{ ($index + 1) }}</label>
-												<img src="{{ url('storage/orders/'.$order->id, $orderImage) }}" height=80> 
+								@if(!empty($order->invoice_document))
+									<div class="row mt-2">
+										@foreach($order->invoice_document as $index => $invoiceImage)
+											<div class="col-lg-1 col-sm-1 col-md-1">
+												<div class="from-group my-2">
+													<label for="packaging-type"> Invoice {{ ($index + 1) }}</label>
+													<img src="{{ url('storage/orders/'.$order->id, $invoiceImage) }}" height=80> 
+												</div>
 											</div>
+										@endforeach
+									</div> 
+								@endif
+								
+								<div class="row mt-3">
+									<div class="col-lg-6 col-sm-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="packaging-type"> Other Documents </label>
+											<input type="file" class="form-control" id="order_image" name="order_image[]" multiple > 
 										</div>
-									@endforeach
+									</div> 
 								</div> 
-							@endif
-                        </div>
+								@if(!empty($order->order_image))
+									<div class="row mt-2">
+										@foreach($order->order_image as $index => $orderImage)
+											<div class="col-lg-1 col-sm-1 col-md-1">
+												<div class="from-group my-2">
+													<label for="packaging-type"> Documents {{ ($index + 1) }}</label>
+													<img src="{{ url('storage/orders/'.$order->id, $orderImage) }}" height=80> 
+												</div>
+											</div>
+										@endforeach
+									</div> 
+								@endif
+						</div> --}}
                         <button type="submit" class="btn btn-primary btn-main-1 float-right mt-3">Submit</button>
                     </div>
                 </div>
@@ -590,33 +630,50 @@
     $(`#add_more_product`).click(function()
 	{ 
         var html = `<div class="row align-items-end mt-2 removeProductRows"> 
-						<div class="col-lg-4 col-sm-6 col-md-6">
-							<div class="from-group my-2">
-								<label for="packaging-type"> Product Description </label>
-								<input type="text" placeholder="Product Description" name="product_discription[]" id="product_discription" required>
-							</div>
-						</div> 
-						<div class="col-lg-3 col-md-6">
-							<div class="from-group my-2">
-								<label for="packaging-type"> Total Amount </label>
-								<input type="text" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
-							</div>
-						</div> 
-
-						<div class="col-lg-3 col-md-6">
-							<div class="from-group my-2">
-								<label for="packaging-type"> No of Box </label>
-								<input type="number" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="No of Box" oninput="allowOnlyNumbers(this)" required>
-							</div>
-						</div>
-						<input type="hidden" name="id[]" value="">
-						<div class="col-lg-1 col-md-6">
-							<div class="from-group my-2">
-								<label for="packaging-type"> </label>
-								<button class="btn btn-danger d-002" data-row-id="${i}" onclick="removeProductRow(this)"> <i class="mdi mdi-trash-can"></i> </button> 
-							</div>
-						</div> 
-					</div>`;
+			<div class="col-lg-2 col-sm-6 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> Product Category </label>
+					<input type="text" placeholder="Product Category" name="product_category[]" id="product_category" required>
+				</div>
+			</div> 
+			<div class="col-lg-2 col-sm-6 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> Product Name </label>
+					<input type="text" placeholder="Product Name" name="product_name[]" id="product_name" required>
+				</div>
+			</div>
+			<div class="col-lg-2 col-sm-6 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> SKU Number </label>
+					<input type="text" placeholder="SKU Number" name="sku_number[]" id="sku_number" required>
+				</div>
+			</div>
+			<div class="col-lg-2 col-sm-6 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> HSN No </label>
+					<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" required>
+				</div>
+			</div>
+			<div class="col-lg-1 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> Total Amount </label>
+					<input type="text" data-id="${i}" id="totalAmount_${i}" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+				</div>
+			</div>  
+			<div class="col-lg-1 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> No of Box </label>
+					<input type="number" data-id="${i}" id="noofbox_${i}" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" oninput="allowOnlyNumbers(this)" required>
+				</div>
+			</div>
+			<div class="col-lg-1 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> </label>
+					<button type="button" class="btn btn-danger d-002" data-row-id="${i}" onclick="removeProductRow(this)"> <i class="mdi mdi-trash-can"></i> </button> 
+				</div>
+			</div>
+			<input type="hidden" name="id[]" value="">
+		</div>`;
 
         $orderForm.find(`.add_product_more`).append(html);
 		noOfBoxDimenstion(i);
@@ -637,11 +694,13 @@
 	{
 		let totalAmount = 0;
 
-        $('.totalAmount').each(function () {
-            let value = parseFloat($(this).val()) || 0; // Get value, default to 0 if empty/invalid
-            totalAmount += value;
-        });
-
+		$('.totalAmount').each(function () {
+			let index = $(this).data('id');
+			let qty = parseInt($(`#noofbox_${index}`).val()) || 0;   // ✅ correct selector
+			let value = parseFloat($(this).val()) || 0;
+			totalAmount += (value * qty);
+		}); 
+		 
 		let ewaybillInput = $orderForm.find('#ewaybillno'); // Use class instead of ID for closest
 		$orderForm.find('#invoice_amount').val(totalAmount.toFixed(2));
 		if (totalAmount >= ewaybillReqAmount) {
@@ -649,9 +708,26 @@
 		} else {
 			ewaybillInput.prop('required', false);
 		}
+		
+		let totalWeight = 0;
+		$('.weight').each(function () {  
+			let value = parseFloat($(this).val()) || 0;
+			totalWeight += value;
+		}); 
+		$orderForm.find('#total_weight').val(totalWeight);
 	}
 	
 	$(document).on('input', '.totalAmount', function()
+	{ 
+		ewayBillRequired()
+	});
+	
+	$(document).on('input', '.weight', function()
+	{ 
+		ewayBillRequired()
+	});
+	
+	$(document).on('input', '.noofbox', function()
 	{ 
 		ewayBillRequired()
 	});
@@ -662,7 +738,7 @@
 			<div class="col-lg-3 col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Weight (KG) </label>
-					<input type="text" name="weight[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="weight" placeholder="Weight (KG)" value="" required>
+					<input type="text" name="weight[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="weight" placeholder="Weight (KG)" class="weight" value="" required>
 				</div>
 				<label id="volumatric_weight" style="font-weight: 900;"></label>
 			</div>

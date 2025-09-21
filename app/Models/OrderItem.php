@@ -10,10 +10,10 @@ class OrderItem extends Model
 	  
 	protected $fillable = [
         'order_id', 'product_category', 'product_name', 'product_image', 
-        'product_discription', 'amount', 'quantity', 'ewaybillno', 'dimensions',
+        'product_discription', 'amount', 'quantity', 'ewaybillno', 'dimensions', 'sku_number', 'hsn_number'
     ];
 
     protected $casts = [
-        'dimensions' => 'array', // Cast dimensions as an array
+        'dimensions' => 'array',
     ];
 }
