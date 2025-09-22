@@ -13,7 +13,29 @@
 				<td colspan="2" style="padding: 0; text-align: center ; width: 20%; center; border: 1px solid black; padding: 0px 20px;">
 					<div style="height: 30px; width: 100%;"> 
 						@if($shipping->id == 1)
-							<img src="{{ $order->courier_logo }}" alt="LOGO" style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
+							@php 
+								$logoUrl = $order->courier_logo;
+
+								// Try to check if the signed URL is still accessible
+								if (!empty($logoUrl)) {
+									try {
+										$response = Illuminate\Support\Facades\Http::withoutVerifying()->get($logoUrl);
+
+										if ($response->status() !== 200) {
+											$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
+										}
+									} catch (\Throwable $e) {
+										// If any error, fallback
+										$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
+									}
+								} else {
+									$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
+								}
+
+								$order->final_logo = $logoUrl;
+
+							@endphp	
+							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
 						@else
 							<img src="{{ asset('storage/shipping-logo/'.$shipping->logo) }}" alt="LOGO" style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	 
 						@endif
