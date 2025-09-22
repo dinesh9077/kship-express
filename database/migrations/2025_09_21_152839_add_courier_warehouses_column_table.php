@@ -16,6 +16,7 @@ class AddCourierWarehousesColumnTable extends Migration
         Schema::table('courier_warehouses', function (Blueprint $table) {
             $table->string('contact_email')->nullable(); 
             $table->json('created')->nullable();
+			$table->json('label_options')->nullable();
         });
     }
 

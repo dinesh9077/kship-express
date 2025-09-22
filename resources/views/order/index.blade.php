@@ -21,7 +21,7 @@
                     <div class="inner-page-heading">
 						<ul id="tabs">
 							@php
-								$statuses = ['New', 'Manifested', 'In Transit', 'All'];
+								$statuses = ['New', 'Manifested', 'In Transit', 'Delivered', 'All'];
 							@endphp
 
 							@foreach($statuses as $st)
@@ -32,176 +32,126 @@
 						</ul>
 						@if(config('permission.order.add'))
 							<div class="order-111-add">
+								@if(!in_array($status, ['All', 'New']))
+									<button id="downloadAllLable" class="btn-main-1" style="display:none;">⬇ Bulk Label </button>
+								@endif
 								<a href="{{ route('order.create') }}?weight_order={{ request('weight_order') }}"> <button class="btn-main-1"> + Add Order </button> </a> 
 							</div>
 						@endif
 					</div> 
 					
                     <div class="ordr-main-001">
-                        <ul id="tab">
-							@if($status == 'New' || $status == '')
-								<li class="active">
-									<div class="main-calander-11"> 
-										<div class="main-data-teble-1 table-responsive">
-											<table id="neworder_datatable" style="width:100%">
-												<thead>
-													<tr>
-														<th> Sr.No</th>
-														<th> Order Id</th>
-														<th> Seller Details </th> 
-														<th> Customer details </th>
-														<th> Total Amount </th>
-														<th> Shipping Details </th> 
-														<th> Status </th>
-														<th> Action </th>
-													</tr>
-												</thead> 
-											</table>
-										</div>
-									</div>
-								</li> 
-							@endif
-							
-							@if($status === 'Manifested')  
-								<li class="active">
-									<div class="main-calander-11"> 
-										<div class="main-data-teble-1 table-responsive">
-											<table id="readytoship_datatable" style="width:100%">
-												<thead>
-													<tr> 
-														{{--<th><input type="checkbox" id="checkAll"></th>--}}
-														<th> Sr.No</th>
-														<th> Order Id</th> 
-														<th> Seller Details </th> 
-														<th> Customer details </th>
-														<th> Total Amount </th>
-														<th> Shipping Details </th> 
-														<th> Status </th>
-														<th> Action </th>
-													</tr>
-												</thead> 
-											</table>
-										</div>
-									</div>
-								</li> 
-							@endif
-							
-							@if($status == 'In Transit')
-								{{-- <div class="file-btn">
-									<a href="javascript:;"> <button class="btn-main-1 manifestAll mb-2"> Download Manifest </button> </a> 
-									<a href="{{ route('order.star-pending.excel', ['id'=>3]) }}"> <button class="btn-main-1 mb-2"> Star Express Excel </button> </a> 
-								</div> --}}
-								<li class="active">
-									<div class="main-calander-11"> 
-										<div class="main-data-teble-1 table-responsive">
-											<table id="pickup_datatable" style="width:100%">
-												<thead>
-													<tr>
-														{{--<th><input type="checkbox" id="checkAll"></th>--}}
-														<th> Sr.No</th>
-														<th> Order Id</th> 
-														<th> Seller Details </th> 
-														<th> Customer details </th>
-														<th> Total Amount </th>
-														<th> Shipping Details </th> 
-														<th> Status </th>
-														<th> Action </th>
-													</tr>
-												</thead> 
-											</table>
-										</div>
-									</div>
-								</li> 
-							@endif
-							
-							@if($status == 'All') 
-								<div class="row row-re mb-2 searchAllForm">
-									<div class="col-lg-2 col-sm-6">
-										<div class="main-selet-11">
-											<input type="text" class="form-control datepicker" name="from_date" 
-												id="from_date" placeholder="From Date" 
-												value="{{ request('from_date', '') }}">
-										</div>
-									</div>
-									<div class="col-lg-2 col-sm-6">
-										<div class="main-selet-11">
-											<input type="text" class="form-control datepicker" name="to_date" 
-												id="to_date" placeholder="To Date" 
-												value="{{ request('to_date', '') }}">
-										</div>
-									</div>
+						<ul id="tab">
 
-									@if(Auth::user()->role == "admin")  
-										<div class="col-lg-2 col-sm-6">
-											<div class="main-selet-11">
-												<select name="user_id" id="user_id" class="form-control">
-													<option value="">Select User</option> 
-													@foreach($sellers as $seller)
-														<option value="{{ $seller->id }}" 
-															{{ request('user_id') == $seller->id ? 'selected' : '' }}>
-															{{ $seller->name }}
-														</option>
-													@endforeach
-												</select>
+							@php
+								$tables = [
+									'New'        => 'neworder_datatable',
+									'Manifested' => 'readytoship_datatable',
+									'In Transit' => 'pickup_datatable',
+									'Delivered'  => 'pickup_datatable',
+									'All'        => 'all_datatable',
+								];
+							@endphp
+
+							@foreach ($tables as $key => $tableId)
+								@if($status === $key || ($key === 'New' && $status == ''))
+									{{-- Extra filters for "All" --}}
+									@if($key === 'All')
+										<div class="row row-re mb-2 searchAllForm">
+											<div class="col-lg-2 col-sm-6">
+												<div class="main-selet-11">
+													<input type="text" class="form-control datepicker" name="from_date"
+														id="from_date" placeholder="From Date"
+														value="{{ request('from_date', '') }}">
+												</div>
 											</div>
-										</div>
+											<div class="col-lg-2 col-sm-6">
+												<div class="main-selet-11">
+													<input type="text" class="form-control datepicker" name="to_date"
+														id="to_date" placeholder="To Date"
+														value="{{ request('to_date', '') }}">
+												</div>
+											</div>
+
+											@if(Auth::user()->role == "admin")  
+												<div class="col-lg-2 col-sm-6">
+													<div class="main-selet-11">
+														<select name="user_id" id="user_id" class="form-control">
+															<option value="">Select User</option> 
+															@foreach($sellers as $seller)
+																<option value="{{ $seller->id }}" 
+																	{{ request('user_id') == $seller->id ? 'selected' : '' }}>
+																	{{ $seller->name }}
+																</option>
+															@endforeach
+														</select>
+													</div>
+												</div>
+											@endif
+
+											<div class="col-lg-2 col-sm-6">
+												<div class="main-selet-11">
+													<select name="order_type" id="order_type" class="form-control">
+														<option value="">Select Order Type</option> 
+														<option value="prepaid" {{ request('order_type') == 'prepaid' ? 'selected' : '' }}>Prepaid</option>
+														<option value="cod" {{ request('order_type') == 'cod' ? 'selected' : '' }}>COD</option>
+													</select>
+												</div>
+											</div> 
+
+											<div class="col-lg-2 col-sm-6">
+												<div class="main-selet-11">
+													<select name="status_courier" id="status_courier" class="form-control">
+														@php
+															$statuses = \App\Models\Order::distinct()->pluck('status_courier');
+														@endphp
+														<option value=""> {{ ucfirst($status) }} </option>
+														@foreach($statuses as $st)
+															<option value="{{ $st }}" {{ request('status_courier') == $st ? 'selected' : '' }}>
+																{{ ucfirst($st) }}
+															</option>
+														@endforeach
+													</select>
+												</div>
+											</div>
+
+											<div class="col-lg-2 col-sm-6">
+												<div class="main-selet-11">
+													<button type="button" id="searchAllFilter" class="btn-main-1">Search</button>
+												</div>
+											</div>
+										</div>   
 									@endif
 
-									<div class="col-lg-2 col-sm-6">
-										<div class="main-selet-11">
-											<select name="order_type" id="order_type" class="form-control">
-												<option value="">Select Order Type</option> 
-												<option value="prepaid" {{ request('order_type') == 'prepaid' ? 'selected' : '' }}>Prepaid</option>
-												<option value="cod" {{ request('order_type') == 'cod' ? 'selected' : '' }}>COD</option>
-											</select>
-										</div>
-									</div> 
-
-									<div class="col-lg-2 col-sm-6">
-										<div class="main-selet-11">
-											<select name="status_courier" id="status_courier" class="form-control">
-												@php
-													$statuses = \App\Models\Order::distinct()->pluck('status_courier');
-												@endphp
-												<option value="" > {{ ucfirst($status) }} </option>
-												@foreach($statuses as $status)
-													<option value="{{ $status }}"  {{ request('status_courier') == $status ? 'selected' : '' }}> {{ ucfirst($status) }}
-													</option>
-												@endforeach
-											</select>
-										</div>
-									</div>
-
-									<div class="col-lg-2 col-sm-6">
-										<div class="main-selet-11">
-											<button type="botton" id="searchAllFilter" class="btn-main-1">Search</button>
-										</div>
-									</div>
-								</div>   
-								<li class="active">
-									<div class="main-calander-11"> 
-										<div class="main-data-teble-1 table-responsive">
-											<table id="all_datatable" class="" style="width:100%">
-												<thead>
-													<tr>
-														{{--<th><input type="checkbox" id="checkAll"></th>--}}
-														<th> Sr.No</th>
-														<th> Order Id</th> 
-														<th> Seller Details </th> 
-														<th> Customer details </th>
-														<th> Total Amount </th>
-														<th> Shipping Details </th> 
-														<th> Status </th>
-														<th> Action </th>
-													</tr>
+									<li class="active">
+										<div class="main-calander-11"> 
+											<div class="main-data-teble-1 table-responsive">
+												<table id="{{ $tableId }}" style="width:100%">
+													<thead>
+														<tr>
+															@if(in_array($status, ['All', 'New']))
+																<th>Sr.No</th>
+															@else
+																<th> <input type="checkbox" id="checkAll"> </th>
+															@endif 
+															<th>Order Id</th>
+															<th>Seller Details</th>
+															<th>Customer Details</th>
+															<th>Total Amount</th>
+															<th>Shipping Details</th>
+															<th>Package Details</th>
+															<th>Status</th>
+															<th>Action</th>
+														</tr>
 													</thead> 
-											</table>
+												</table>
+											</div>
 										</div>
-									</div>
-								</li> 
-							@endif
+									</li>
+								@endif
+							@endforeach
 						</ul>
-					</div>
+					</div> 
 				</div>
 			</div>
 		</div>
@@ -218,10 +168,7 @@
 			 
 			<div class="modal-body not_pickup">
 				<div class="main-0091-text show_msg"> </div> 
-				<div class="main-0921-order-text show_pickup_msg"> </div> 
-				<div class="main-note-from-01">
-					<h6> <b> Note: </b> Please ensure that your invoice is in the package, and your label is visible on the package to be delivered. </h6>
-				</div>
+				<div class="main-0921-order-text show_pickup_msg"> </div>  
 			</div>
 			<div class="modal-footer" style="margin: auto;border: none;">
 				<a href="{{ route('order') }}?status=Manifested" id="doitlater" class="btn btn-primary simple-021-btn" > close </a> 
@@ -286,7 +233,7 @@
 			$(this).removeClass('is-visible');
 		}
 	});
- 
+	 
 	function shipNow(obj, event)
 	{
 		event.preventDefault();
@@ -373,6 +320,7 @@
 			{ data: "customer_details" },
 			{ data: "total_amount" },
 			{ data: "shipment_details" },
+			{ data: "package_details" },
 			{ data: "status_courier" },
 			{ data: "action" }
 		];
@@ -382,7 +330,7 @@
 		// Initialize DataTables for different statuses
 		let newOrderTable = initializeDataTable('#neworder_datatable', "{{ route('order.ajax') }}", { status: "New", weightOrder: weightOrder }, OrderColumns);
 		let readyToShipTable = initializeDataTable('#readytoship_datatable', "{{ route('order.ajax') }}", { status: "Manifested", weightOrder: weightOrder}, OrderColumns);
-		let pickupTable = initializeDataTable('#pickup_datatable', "{{ route('order.ajax') }}", { status: "In Transit", weightOrder: weightOrder}, OrderColumns);
+		let pickupTable = initializeDataTable('#pickup_datatable', "{{ route('order.ajax') }}", { status: @json($status), weightOrder: weightOrder}, OrderColumns);
 		let allOrdersTable = initializeDataTable('#all_datatable', "{{ route('order.ajax') }}", {
 			status: 'All',
 			status_courier: statusCourier ?? $('.searchAllForm  #status_courier').val(),
@@ -405,7 +353,7 @@
 				user_id: $('.searchAllForm #user_id').val(),
 			}, OrderColumns)
 		});
-	}); 
+	});  
 	//Order End Listing
 	
 	function cancelNewOrder(obj, e)
@@ -569,13 +517,13 @@
 	});
 	
 	$(document).ready(function () {
-		$('.downloadAllLable').hide();
+		$('#downloadAllLable').hide();
 
 		// Master Checkbox Click Event
 		$('#checkAll').on('change', function () {
 			let isChecked = $(this).prop('checked');
 			$(".order-checkbox").prop('checked', isChecked);
-			$('.downloadAllLable').toggle(isChecked);
+			$('#downloadAllLable').toggle(isChecked);
 		});
 
 		// Individual Checkbox Click Event
@@ -584,50 +532,24 @@
 			let checkedCheckboxes = $('.order-checkbox:checked').length;
 
 			$('#checkAll').prop('checked', totalCheckboxes === checkedCheckboxes);
-			$('.downloadAllLable').toggle(checkedCheckboxes > 0);
+			$('#downloadAllLable').toggle(checkedCheckboxes > 0);
 		});
- 
-		$('.downloadAllLable').on('click', function () {
+		
+		$('#downloadAllLable').on('click', function () {
 			let orderIds = $(".order-checkbox:checked").map(function () {
 				return $(this).val();
 			}).get();
 
 			if (orderIds.length === 0) {
-				toastrMsg('error', 'Choose at least one item to remove.');
+				toastrMsg('error', 'Choose at least one item to download.');
 				return;
 			}
 
-			Swal.fire({
-				title: "Are you sure you want to download the manifest?",
-				icon: "warning",
-				showCancelButton: true,
-				confirmButtonColor: "#31ce77",
-				cancelButtonColor: "#f34943",
-				confirmButtonText: "Yes, Download it!"
-			}).then((result) => {
-				if (result.isConfirmed) {
-					$.ajax({
-						url: "{{ route('order.download-all-lable') }}",
-						type: 'POST',
-						data: { ids: orderIds.join(","), _token: "{{csrf_token()}}" },
-						dataType: "json",
-						success: function (res) 
-						{
-							toastrMsg(res.status, res.msg);
-							if (res.status !== "error") {
-								let a = $('<a>', {
-									href: res.url,
-									target: '_blank'
-								}).appendTo('body');
-
-								a[0].click();
-								a.remove();
-							}
-						}
-					});
-				}
-			});
+			// Send as array: order_ids[]=1&order_ids[]=2
+			window.location.href = "{{ route('order.download-all-lable') }}" + "?" + 
+				$.param({ order_ids: orderIds });
 		});
+
 	});
   
 	$('.orderAll').on('click', function(e)

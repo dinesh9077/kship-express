@@ -89,6 +89,7 @@
 			// Prepare vendor data
 			$warehouseData = $request->except('_token');
 			$warehouseData['user_id'] = $user_id;
+			$warehouseData['label_options'] = $request->label_options ?? []; 
 			$warehouseData['created_at'] = $timestamp;
 			$warehouseData['updated_at'] = $timestamp;
 
@@ -162,9 +163,16 @@
 
 			DB::beginTransaction();
 			try { 
+				
+				$labelOptions = [];
+				foreach(['hide_contact', 'hide_address', 'hide_mobile', 'hide_product', 'hide_weight'] as $label_option)
+				{
+					$labelOptions[$label_option] = 	in_array($label_option, $request->label_options ?? []) ? true : false;
+				}
 				$courierWarehouse = CourierWarehouse::findOrFail($id); 
 				$courierWarehouse->fill($request->all()); 
 				$courierWarehouse->user_id = $user_id;
+				$courierWarehouse->label_options = $labelOptions;
 				$courierWarehouse->updated_at = $timestamp;
 
 				// Check if warehouse name or address has changed

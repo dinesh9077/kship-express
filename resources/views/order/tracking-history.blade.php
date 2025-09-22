@@ -34,33 +34,18 @@
 														<div class="rounded-circle bg-primary text-white mb-1 main-12-10"><img src="{{asset('assets/images/order-1/fast-delivery.png')}}"></div>
 														<div class="line h-100"></div>
 													</div> 
-													@if($shippingCompany->id == 2)
+													@if($shippingCompany->id == 1)
 														 <div class="main-flex-raet">
 																 <div class="main-cotn-nt">
 																<h5 class="text-dark"> Activity : {{ $trackingHistory['status'] }} </h5>
-																<p class="lead-custm"> {{ $trackingHistory['location'] }} </p>
-																<h6 class="lead-custm"> {{ $trackingHistory['scan_remark'] }} </h6>
+																<p class="lead-custm"> {{ $trackingHistory['location'] }} </p> 
 															</div>
 
 															<div class="main-cotn-nt">
-																<h6 class="lead-custm"> {{ date('M d, Y  h:i a', strtotime($trackingHistory['scan_timestamp'])) }} </h6>
+																<h6 class="lead-custm"> {{ date('M d, Y  h:i a', strtotime($trackingHistory['date'])) }} </h6>
 															</div>
 														</div>
-													@endif  
-													
-													@if($shippingCompany->id == 3)
-														 <div class="main-flex-raet">
-																 <div class="main-cotn-nt">
-																<h5 class="text-dark"> Activity : {{ $trackingHistory['ScanDetail']['Scan'] }} </h5>
-																<p class="lead-custm"> {{ $trackingHistory['ScanDetail']['ScannedLocation'] }} </p>
-																<h6 class="lead-custm"> {{ $trackingHistory['ScanDetail']['Instructions'] }} </h6>
-															</div>
-
-															<div class="main-cotn-nt">
-																<h6 class="lead-custm"> {{ date('M d, Y  h:i a', strtotime($trackingHistory['ScanDetail']['ScanDateTime'])) }} </h6>
-															</div>
-														</div>
-													@endif  
+													@endif 
 												</div>
 											 @endforeach   
                                         </div>

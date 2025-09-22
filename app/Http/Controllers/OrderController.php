@@ -12,10 +12,12 @@
 	use App\Exports\PendingStarOrderExport;
 	use Maatwebsite\Excel\Facades\Excel;
 	use PDF;  
+	use App\Services\ShipMozo;
 	use App\Services\DelhiveryService;
 	use App\Services\DelhiveryB2CService;
 	use App\Imports\BulkOrder;
 	use Helper; 
+	use DNS1D;
 	
 	class OrderController extends Controller
 	{
@@ -23,7 +25,8 @@
 		protected $delhiveryB2CService;
 		public function __construct()
 		{  
-			$this->middleware('auth')->except(['orderLableGenerate', 'orderTrackingHistoryGlobal']);  
+			$this->middleware('auth')->except(['orderLableGenerate']);  
+			$this->shipMozo = new ShipMozo();  
 			$this->delhiveryService = new DelhiveryService();  
 			$this->delhiveryB2CService = new DelhiveryB2CService();  
 		}
@@ -38,7 +41,7 @@
 			->groupBy('users.id', 'users.name')
 			->orderBy('users.name', 'asc')
 			->get();
-			
+			 
 			return view('order.index',compact('status', 'sellers', 'authUser'));
 		}
 		
@@ -105,6 +108,7 @@
 					$query->whereBetween('orders.created_at', [$request->from_date, $request->to_date]);
 				}
 			}
+			
 			if($weightOrder)
 			{
 				$query->where('orders.weight_order', $weightOrder);
@@ -170,42 +174,72 @@
 			$data = [];
 			$i = $start + 1;
 			
-			foreach ($orders as $j => $order)
-			{  
-				$totalOrderTypeAmount =  $order->order_type == "cod" ? $order->cod_amount : $order->invoice_amount;
-				$totalOrderTypeLabel =  $order->order_type == "cod" ? 'Cod Amount' : 'Invoice Amount';
+			foreach ($orders as $j => $order) {    
+				$isCOD   = strtolower($order->order_type) === "cod";
+				$amount  = $isCOD ? $order->cod_amount : $order->invoice_amount;
+				$label   = $isCOD ? 'COD Amount' : 'Invoice Amount';
+
+				$warehouse = optional($order->warehouse);
+				$customer  = optional($order->customer);
+				$address   = optional($order->customerAddress)->address;
+
 				$data[] = [
-					//'id' => $status == "new" ? $j + 1 : "<input type='checkbox' class='order-checkbox' value=".$order->id.">",
-					'id' => $i,
-					'order_id' => '#' . $order->id . ($role == "admin" ? '<br><p>' . ($order->user->name ?? 'N.A') . '</p>' : ''), 
-					'seller_details' => "<div class='main-cont1-2'>
-					<p>" . optional($order->warehouse)->warehouse_name . " (" . optional($order->warehouse)->company_name . ")</p>
-					<p>" . optional($order->warehouse)->contact_name . "</p>
-					<p>" . optional($order->warehouse)->contact_number . "</p>
-					<p>" . optional($order->warehouse)->address . "</p>
-					</div>", 
-					'customer_details' => "<div class='main-cont1-2'>
-					<p>" . optional($order->customer)->first_name . " " . optional($order->customer)->last_name . "</p>
-					<p>" . optional($order->customer)->mobile . "</p>
-					<span style='padding-left:0'> 
-					<a href='javascript:;'> 
-					<div class='tooltip' data-toggle='tooltip' data-placement='top' title='" . optional($order->customerAddress)->address . "'> 
-					View Address 
-					</div>
-					</a> 
-					</span> 
-					</div>",
-					'shipment_details' => $this->orderShipmentDetailHtml($order, $status, $weightOrder),  
-					'total_amount' => "<div class='main-cont1-2'>
-					<p class='" . strtolower($order->order_type) . "'>{$order->order_type}</p> 
-					<p>{$totalOrderTypeLabel} : {$totalOrderTypeAmount}</p>
-					</div>",
+					'id' => $status == "new" || $status == "all" ? $i : "<input type='checkbox' class='order-checkbox' value={$order->id}>",
+					//'id' => $i,
+
+					// Order + Admin info
+					'order_id' => '#' . $order->id
+						. ($role === "admin" ? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>" : ''),
+
+					// Seller details
+					'seller_details' => "
+						<div class='main-cont1-2'>
+							<p>{$warehouse->warehouse_name} ({$warehouse->company_name})</p>
+							<p>{$warehouse->contact_name}</p>
+							<p>{$warehouse->contact_number}</p>
+							<p>{$warehouse->address}</p>
+						</div>",
+
+					// Customer details + Tooltip
+					'customer_details' => "
+						<div class='main-cont1-2'> 
+							<p>" . optional($order->customer)->first_name . " " . optional($order->customer)->last_name . "</p> 
+							<p>" . optional($order->customer)->mobile . "</p> 
+							<span style='padding-left:0'> 
+								<a href='javascript:;'> 
+									<div class='tooltip' 
+										 data-toggle='tooltip' 
+										 data-placement='top' 
+										 title='" . optional($order->customerAddress)->address . "'> 
+										 View Address 
+									</div> 
+								</a> 
+							</span> 
+						</div>
+					",
+
+
+					// Shipment details
+					'shipment_details' => $this->orderShipmentDetailHtml($order, $status, $weightOrder),
+
+					// Package details
+					'package_details' => $this->orderPackageDetailHtml($order),
+
+					// Order type + Amount
+					'total_amount' => "
+						<div class='main-cont1-2'>
+							<p class='" . strtolower($order->order_type) . "'>{$order->order_type}</p>
+							<p>{$label}: {$amount}</p>
+						</div>",
+
+					// Courier + Action
 					'status_courier' => $this->statusCourieHtml($order),
-					'action' => $this->orderAction($order, $status, $weightOrder)
+					'action'         => $this->orderAction($order, $status, $weightOrder),
 				];
+
 				$i++;
 			}
-			
+
 			
 			return response()->json([
 			"draw" => intval($draw),
@@ -260,10 +294,34 @@
 			return $output;
 		}
 		
+		function orderPackageDetailHtml($order)
+		{
+			if (!$order) {
+				return '';
+			}
+
+			$length = (float) $order->length;
+			$width  = (float) $order->width;
+			$height = (float) $order->height;
+			$weight = (float) $order->weight;
+
+			// Avoid division by zero → standard divisor 5000
+			$volumetricWt = ($length * $width * $height) / 5000;
+
+			return "
+				<div class='main-cont1-2'>
+					<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
+					<p>{$length} x {$width} x {$height} (cm)</p>
+					<p>Volumetric wt.: " . number_format($volumetricWt, 2) . " Kg</p>
+				</div>
+			";
+		}
+
+		
 		function orderAction($order, $status, $weightOrder)
 		{ 
-			$output = "<div class='main-btn-1'>";
-			if(in_array($status, ["new", "all"]) && config('permission.order.add'))
+			$output = "<div class='main-btn-1'>"; 
+			if($order->status_courier === "New")
 			{
 				$output .= "<a href='javascript:;'> 
 				<button type='button' class='customization_popup_trigger btn-light-1' data-weight-order=".$weightOrder." onclick='shipNow(this, event)' data-id='{$order->id}'> 
@@ -284,17 +342,19 @@
 				$output .="<a class='dropdown-item' href='" . url("order/clone/{$order->id}") . "?weight_order=".$weightOrder."'>Clone Order</a>
 				<hr class='m-0' />"; 
 			}
-			if($status == "new")
+			
+			if($order->status_courier === "New")
 			{
 				if(config('permission.order.edit'))
 				{
 					$output .="<a class='dropdown-item' href='" . url("order/edit/{$order->id}") . "?weight_order=".$weightOrder."'>Edit Order</a>
 					<hr class='m-0' />";
 				}
+				
 				if(config('permission.order.delete'))
 				{
-					$output .="<a class='dropdown-item' href='" . url("order/delete/{$order->id}") . "?weight_order=".$weightOrder."' onclick='deleteOrder(this, event)'>Delete Order</a>
-					<hr class='m-0' />"; 
+					/* $output .="<a class='dropdown-item' href='" . url("order/delete/{$order->id}") . "?weight_order=".$weightOrder."' onclick='deleteOrder(this, event)'>Delete Order</a>
+					<hr class='m-0' />"; */ 
 					$output .="<a class='dropdown-item' href='" . url("order/cancel/{$order->id}") . "?weight_order=".$weightOrder."' style='color: red;' onclick='cancelNewOrder(this, event)'> 
 					Cancel Order 
 					</a>"; 
@@ -302,7 +362,7 @@
 				
 			}
 			
-			if(in_array($status, ["manifested", "in transit", "all"]) && !empty($order->shipping_company_id) && !empty($order->awb_number))
+			if(in_array($status, ["manifested", "in transit", "delivered", "all"]) && !empty($order->shipping_company_id) && !empty($order->awb_number))
 			{   
 				if(!in_array(strtolower($order->status_courier), ["cancelled", "new"]))
 				{
@@ -313,9 +373,9 @@
 						
 						$output .="<a class='dropdown-item' href='" . url("order/shipping-lable/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Shipping Label </a><hr class='m-0' />"; 
 					}
-					$output .="<a class='dropdown-item' href='" . url("order/label/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Order Label </a><hr class='m-0' />"; 
+					$output .="<a class='dropdown-item' href='" . url("order/download-label/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Order Label </a><hr class='m-0' />"; 
 					
-					if(in_array(strtolower($order->status_courier), ["manifested", "in transit", "pending", "open", "scheduled"]))
+					if(in_array(strtolower($order->status_courier), ["manifested", "in transit", "Pickup Pending", "open", "scheduled"]))
 					{
 						if(config('permission.order.delete'))
 						{
@@ -345,7 +405,7 @@
 			$user_id = Auth::id();  
 			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
 			$data['user_id'] = $user_id;
-			$data['status_courier'] = 'new';
+			$data['status_courier'] = 'New';
 			$data['weight'] = $request->total_weight;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 			$data['total_amount'] = $request->invoice_amount;
@@ -385,6 +445,7 @@
 				$order->update(['order_image' => $imagePaths, 'invoice_document' => $invoiceDocPaths]);
 				 
 				$orderItems = [];
+				$height = $width = $length = $weight = 0;
 				
 				if (!empty($request->product_category)) 
 				{
@@ -410,10 +471,23 @@
 								'height' => $request->height[$key] ?? 0,
 							]),
 						];
+						
+						// Accumulate totals
+						$height += $request->height[$key] ?? 0;
+						$width  += $request->width[$key] ?? 0;
+						$length += $request->length[$key] ?? 0;
+						$weight += $request->weight[$key] ?? 0; 
 					}
 					
 					OrderItem::insert($orderItems);  
 				}
+				  
+				$order->update([
+					'weight' => $weight,
+					'length' => $length,
+					'width'  => $width,
+					'height' => $height
+				]);
 				
 				// Insert order status
 				OrderStatus::insert([
@@ -606,6 +680,7 @@
 				
 				$totalAmount = 0;
 				$orderItems = [];
+				$height = $width = $length = $weight = 0;
 				
 				if (!empty($request->product_category)) 
 				{
@@ -633,6 +708,12 @@
 							]),
 						];
 						
+						// Accumulate totals
+						$height += $request->height[$key] ?? 0;
+						$width  += $request->width[$key] ?? 0;
+						$length += $request->length[$key] ?? 0;
+						$weight += $request->weight[$key] ?? 0; 
+						
 						// Check if order_item_id exists in the request
 						if (!empty($request->id[$key])) {
 							$orderItem = OrderItem::find($request->id[$key]);
@@ -645,6 +726,13 @@
 							$orderItems[] = $orderItemData; // Add new item for bulk insert
 						}
 					}
+					 
+					$order->update([
+						'weight' => $weight,
+						'length' => $length,
+						'width'  => $width,
+						'height' => $height
+					]);
 					
 					// Bulk insert for new items if any
 					if (!empty($orderItems)) {
@@ -786,95 +874,7 @@
 			return back()->with('error', 'Something went wrong'); 
 		}
 		
-		public function orderLableDownload($orderId)
-		{ 
-			error_reporting(0);
-			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
-			 
-			if ($order && $order->shippingCompany && $order->shippingCompany->id == 2) 
-			{  
-				$docWaybill = $order->api_response['response']['data']['doc_waybill'] ?? '';  
-				 
-				// Sample data
-				$awbNumbers = $order->api_response['response']['data']['waybills'] ?? [];  
-				$items = $order->orderItems->map(function ($item) {
-					return [
-						'id' => $item->id,
-						'product_discription' => $item->product_discription, // Assuming correct column name
-						'quantity' => $item->quantity
-					];
-				})->toArray();
- 
-				$wayBills = [];
-				$awbIndex = 0; // Track AWB assignment
-
-				foreach ($items as $item) {
-					for ($i = 0; $i < $item['quantity']; $i++) {
-						$wayBills[] = [
-							'id' => $item['id'],
-							'product_discription' => $item['product_discription'],
-							'awb_number' => $awbNumbers[$awbIndex] ?? 'No AWB' // Assign AWB dynamically
-						];
-						$awbIndex++; // Move to the next AWB
-					}
-				} 
-				return view('order.label.delhivery_b2b', compact('order', 'wayBills', 'docWaybill'));
-				$pdf = PDF::loadView('order.label.delhivery_b2b', compact('order', 'wayBills', 'docWaybill')); 
-				return $pdf->download('order_label_' . $orderId . '.pdf');
-			}
-			
-			if ($order && $order->shippingCompany && $order->shippingCompany->id == 3) 
-			{    
-				$product_name = ["Order Id-{$order->order_prefix}"]; 
-				foreach ($order->orderItems ?? [] as $orderItems) {
-					$product_name[] = "Product discription - {$orderItems->product_discription}";
-				} 
-				$productNamesString = implode(', ', array_unique($product_name));
-			
-				return view('order.label.delhivery_b2c', compact('order', 'productNamesString')); 
-			}
-			
-			return back()->with('error', 'Something went wrong');
-		}
-		
-        public function ecomtrackorder($id)
-        {
-            $order =  DB::table('orders')->where('id',$id)->first();
-            $shippingcomp = ShippingCompany::whereId($order->shipping_company_id)->whereStatus(1)->first();
-            
-			
-            $curl = curl_init();
-			
-            curl_setopt_array($curl, [
-			CURLOPT_URL => 'https://plapi.ecomexpress.in/track_me/api/mawbd/',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_POST => true,
-			CURLOPT_POSTFIELDS => [
-			'username' => $shippingcomp->email,
-			'password' => $shippingcomp->password,
-			'awb' => $order->awb_number,
-			],
-            ]);
-			
-            $response = curl_exec($curl);
-            curl_close($curl);
-			
-            // Convert XML to JSON
-            function xmlToJson($xmlString) {
-                $xml = simplexml_load_string($xmlString);
-                $json = json_encode($xml);
-                return $json;
-			}
-            
-            // Convert the response from XML to JSON
-            $jsonResponse = xmlToJson($response);
-            $data = json_decode($jsonResponse, true);
-			
-            
-            return view('tracking', ['data' => $data]);
-		}
-		
-        public function downloadShippingLabel($id)
+		public function downloadShippingLabel($id)
         {
             $order = Order::find($id);
             $labelUrl = $order->label;
@@ -895,258 +895,80 @@
             return $fileUrl;
 		}
 		
-    	public function invoice_generate($order_id)
-    	{
-    	    $order = DB::table('orders')->where('id',$order_id)->first();
-            $existingInvoice = DB::table('invoices')->where('order_id', $order_id)->first();
-            if (!$existingInvoice) 
-            {
-                $vouchers_no = DB::table('invoices')->orderBy('id', 'desc')->pluck('inv_code')->first();
-    			if ($vouchers_no) {
-    				$vouchers_no = explode('-', $vouchers_no);
-    				
-    			    
-    				$v_number = $vouchers_no[3] + 1;
-    				} else {
-    				$v_number = 1;
-				}
-    			$v_no = '#INV-' . date('m-Y') . '-' . sprintf('%04d', $v_number);
-                $invoiceData = [
-				'inv_code'          => $v_no, // Assuming order ID is unique
-				'user_id'           => $order->user_id,
-				'order_id'          => $order->id,
-				'vendor_id'         => $order->vendor_id,
-				'vendor_address_id' => $order->vendor_address_id,
-				'total_amount'      => $order->total_amount,
-				'date'              => date('Y-m-d H:i:s'), // Assuming the current timestamp
-				'status'            => '1', // Assuming '1' means the invoice is active
-				'created_at'        => now(),
-				'updated_at'        => now(),
-                ];
-				
-                DB::table('invoices')->insert($invoiceData);
-                
-                DB::table('orders')->where('id', $order->id)->update(['is_inovice' => 1]);
-                return back()->with('success','The order has been successfully generate invoice.');
-			}
-            return back()->with('error','This order already have invoice.');
-		}
-		
-	    public function multi_invoice_generate(Request $request)
-    	{
-			// echo "<pre>"; print_r($request->order_Ids); echo "</pre>"; die;
-			$validator = Validator::make($request->all(), [
-			'order_Ids' => 'required|array',
-			'order_Ids.*' => 'required|exists:orders,id',
-            ]);
+		public function orderLableDownload($orderId)
+		{  
+			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
 			
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-			}
+			$shipping = $order->shippingCompany ?? null;
+			$customer = $order->customer ?? null;
+			$customerAddr = $order->customerAddress ?? null;
+			$products =  $order->orderItems ?? null; 
+			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
+			 
+			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
+			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 			
-            $o_id =	 $request->order_Ids ;
-            foreach ($o_id as $order_id)
-            {
-        	    $order = DB::table('orders')->where('id',$order_id)->first();
-				if (!$order) {
-					// If order does not exist, return error response
-					return response()->json(['error' => 'Order with ID ' . $orderId . ' not found.'], 404);
-				}
-				
-                $existingInvoice = DB::table('invoices')->where('order_id', $order_id)->first();
-                if (!$existingInvoice) 
-                {
-                    $vouchers_no = DB::table('invoices')->orderBy('id', 'desc')->pluck('inv_code')->first();
-        			if ($vouchers_no) {
-        				$vouchers_no = explode('-', $vouchers_no);
-        				
-        			    
-        				$v_number = $vouchers_no[3] + 1;
-        				} else {
-        				$v_number = 1;
-					}
-        			$v_no = '#INV-' . date('m-Y') . '-' . sprintf('%04d', $v_number);
-                    $invoiceData = [
-					'inv_code'          => $v_no, // Assuming order ID is unique
-					'user_id'           => $order->user_id,
-					'order_id'          => $order->id,
-					'vendor_id'         => $order->vendor_id,
-					'vendor_address_id' => $order->vendor_address_id,
-					'total_amount'      => $order->total_amount,
-					'date'              => date('Y-m-d H:i:s'), // Assuming the current timestamp
-					'status'            => '1', // Assuming '1' means the invoice is active
-					'created_at'        => now(),
-					'updated_at'        => now(),
-                    ];
-					
-                    DB::table('invoices')->insert($invoiceData);
-                    
-                    DB::table('orders')->where('id', $order->id)->update(['is_inovice' => '1']);
-					
-				}
-			}
-			return response()->json(['message' => 'Invoices generated successfully.'], 200); 
+			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
+			 
+			$pdf = PDF::loadHtml($htmlView);  
+			return $pdf->download('order_label_' . $orderId . '.pdf'); 
 		}
-    	 
-    	public function invoice_view($order_id)
-    	{
-    	    $invoice_data = DB::table('invoices')
-			->where('invoices.order_id', $order_id)
-			->join('orders', 'orders.id', '=', 'invoices.order_id')
-			->join('users', 'users.id', '=', 'invoices.user_id')
-			->leftjoin('company_details', 'company_details.user_id', '=', 'invoices.user_id')
-			->join('user_kycs', 'user_kycs.user_id', '=', 'invoices.user_id')
-			->select(
-			'invoices.*',
-			'company_details.company_name as user_company_name',
-			'users.name AS user_name',
-			'users.state as billing_state',
-			DB::raw("CONCAT(company_details.address, ' ', company_details.city, ' ', company_details.state, '-' ,company_details.zipcode ) AS company_address"),
-			DB::raw("CONCAT('+91-',users.mobile) AS user_mobile"),
-			'users.email as user_email',
-			'user_kycs.pancard as user_pancard',
-			'user_kycs.gst as user_gst',
-			DB::raw("CONCAT('(AWB No : ',orders.awb_number,' , Order Date: ',orders.order_date, ')') AS order_data"),
-			'orders.shipping_charge as order_total_amount',
-			'orders.tax as order_total_tax',
-			DB::raw('(orders.shipping_charge - orders.tax) as order_total_amount_without_tax')
-			)
-			->first(); 
-    	    return view('order.invoice',compact('invoice_data'));
-		}
-		
-		public function multi_invoice_download(Request $request)
-		{
-		    $validator = Validator::make($request->all(), [
-			'order_Ids' => 'required|array',
-			'order_Ids.*' => 'required|exists:orders,id',
-            ]);
-			
-            // If validation fails, return error response
-            if ($validator->fails()) {
-                return response()->json(['errors' => $validator->errors()], 422);
-			}
-            $invoice_datas = [];
-            $o_id =	 $request->order_Ids ;
-            foreach ($o_id as $order_id)
-            {
-				$invoiceDataArray = DB::table('invoices')
-				->where('invoices.order_id', $order_id)
-				->join('orders', 'orders.id', '=', 'invoices.order_id')
-				->join('users', 'users.id', '=', 'invoices.user_id')
-				->leftjoin('company_details', 'company_details.user_id', '=', 'invoices.user_id')
-				->join('user_kycs', 'user_kycs.user_id', '=', 'invoices.user_id')
-				->select(
-				'invoices.*',
-				'company_details.company_name as user_company_name',
-				'users.name AS user_name',
-				'users.state as billing_state',
-				DB::raw("CONCAT(company_details.address, ' ', company_details.city, ' ', company_details.state, '-' ,company_details.zipcode ) AS company_address"),
-				DB::raw("CONCAT('+91-',users.mobile) AS user_mobile"),
-				'users.email as user_email',
-				'user_kycs.pancard as user_pancard',
-				'user_kycs.gst as user_gst',
-				DB::raw("CONCAT('(AWB No : ',orders.awb_number,' , Order Date: ',orders.order_date, ')') AS order_data"),
-				'orders.shipping_charge as order_total_amount',
-				'orders.tax as order_total_tax',
-				DB::raw('(orders.shipping_charge - orders.tax) as order_total_amount_without_tax')
-				)
-				->first();
-                $invoice_datas[] = $invoiceDataArray;
-			} 
-            $view = view('order.invoice', compact('invoice_datas'))->render(); 
-		}
-		
+		  
         public function alllabeldownload(Request $request)
-        {
-            $orderIds = $request->input('order_Ids');
-            $pdfPaths = [];
-			
-            foreach ($orderIds as $orderId) 
-            {
-                $order = Order::find($orderId);
-                if (!$order) {
-                    continue; // Skip if order not found
+        { 
+			try {
+				$orderIds = $request->input('order_ids'); 
+				if (empty($orderIds) || !is_array($orderIds)) {
+					return back()->with('error', 'No orders selected');	 
 				}
-                
-                $shipping = ShippingCompany::find($order->shipping_company_id);
-                $customer = Customer::find($order->customer_id);
-                $customerAddr = CustomerAddress::find($order->customer_address_id);
-                $vendor = Vendor::find($order->vendor_id);
-                $vendorAddress = VendorAddress::find($order->vendor_address_id);
-                
-                $view = view('order.print-label', compact('shipping', 'order', 'customer', 'customerAddr', 'vendor', 'vendorAddress'))->render();
-                
-                // Create a unique filename for each PDF
-                $filename = "order_{$orderId}_label.pdf";
-                $pdfPath = storage_path("app/public/{$filename}");
-                
-                // Generate PDF and save it
-                $pdf = PDF::loadHTML($view);
-                $pdf->save($pdfPath);
-                
-                $pdfPaths[] = $pdfPath;
-			}
-            
-            if (empty($pdfPaths)) {
-                return response()->json(['error' => 'No valid orders found'], 400);
-			}
-            
-            // Create a ZIP file containing all PDFs
-            $zipPath = storage_path('app/public/labels.zip');
-            $zip = new \ZipArchive();
-            $zip->open($zipPath, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-            
-            foreach ($pdfPaths as $pdfPath) {
-                $zip->addFile($pdfPath, basename($pdfPath));
-			}
-            
-            $zip->close();
-            
-            // Remove individual PDFs after adding them to ZIP
-            foreach ($pdfPaths as $pdfPath) {
-                unlink($pdfPath);
-			}
-            
-            return response()->json(['url' => url('storage/labels.zip')]);
-		} 
-		
-        public function showLabel($order_id)
-        {
-            $order = Order::findOrFail($order_id);
-            $shipping = ShippingCompany::find($order->shipping_company_id);
-            $customer = Customer::find($order->customer_id);
-            $customerAddr = CustomerAddress::find($order->customer_address_id);
-            $vendor = Vendor::find($order->vendor_id);
-            $vendorAddress = VendorAddress::find($order->vendor_address_id);
-			
-            // Pass the data to the view
-            return view('order.print-label', [
-			'shipping' => $shipping,
-			'order' => $order,
-			'customer' => $customer,
-			'customer_address' => $customerAddr,
-			'vendor' => $vendor,
-			'vendor_address' => $vendorAddress,
-            ]);
-		}
-		
-		public function orderLableGenerate($id)
-		{
-			$order = Order::whereId($id)->first();
-			
-			if($order->shipping_company_id == 3)
-			{
-				$shipping = ShippingCompany::whereId($order->shipping_company_id)->first();
-				$customer = Customer::where('id',$order->customer_id)->first();
-				$customerAddr = CustomerAddress::where('id',$order->customer_address_id)->first();
 				
-				$vendor = Vendor::where('id',$order->vendor_id)->first();
-				$vendorAddress = VendorAddress::where('id',$order->vendor_address_id)->first();
-				return view('order.print-label', compact('shipping','order','customer','customerAddr','vendor','vendorAddress'));
+				// Eager load related models in one go
+				$orders = Order::with([
+					'shippingCompany', 'customer', 'customerAddress',
+					'orderItems', 'warehouse', 'user'
+				])
+				->whereIn('id', $orderIds)->get();
+				 
+				if ($orders->isEmpty()) {
+					return back()->with('error', 'No valid orders found');	 
+				}
+				 
+				$htmlSections = []; 
+				foreach ($orders as $order)
+				{ 
+					$shipping       = $order->shippingCompany;
+					$customer       = $order->customer;
+					$customerAddr   = $order->customerAddress;
+					$products       = $order->orderItems;  
+					 
+					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
+					 
+					$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
+					
+					// Generate HTML for label
+					$html = view('order.bulk-label', compact(
+					'shipping', 'order', 'customer', 'products',
+					'customerAddr', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'
+					))->render();
+					
+					// Optional: remove excessive whitespace (disable if layout breaks)
+					$htmlSections[] = trim(preg_replace('/\s+/', ' ', $html));  
+				}
+				
+				if (empty($htmlSections)) {
+					return back()->with('error', 'All labels are empty'); 
+				}
+				
+				$mergedHtml = implode('', $htmlSections); 
+				$pdf = PDF::loadHtml($mergedHtml);
+				return $pdf->download('labels.pdf');  
+			} 
+			catch (\Exception $e) 
+			{
+				return back()->with('error', 'PDF generation failed: ' . $e->getMessage());  
 			}
-		}
+		}  
 		
 		public function orderCancel($id)
 		{
@@ -1201,45 +1023,24 @@
 				}
 				
 				$orderCancelledData = []; 
-				if ($shippingCompany->id == 2) {  
-					$response = $this->delhiveryService->cancelShipmentByLrNo($order->lr_no, $shippingCompany);
-					
+				if ($shippingCompany->id == 1) {  
+					$response = $this->shipMozo->cancelShipment($order, $shippingCompany);  
 					if (!($response['success'] ?? false)) {
-						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
+						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['message'] ?? 'An error occurred.');
 						return back()->with('error', $errorMsg);
 					}
 					
-					if ((isset($response['response']['success']) && !$response['response']['success']))
+					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
 					{ 
-						return back()->with('error', $response['response']['error']['message'] ?? 'An error occurred.');
+						return back()->with('error', $response['response']['message'] ?? 'An error occurred.');
 					} 
 					
 					$orderCancelledData = [
 						'status_courier' => 'cancelled',
 						'order_cancel_date' => now(),
-						'reason_cancel' => $response['response']['data'] ?? '',
+						'reason_cancel' => 'cancelled shipment by user',
 					]; 
-				}
-				
-				if ($shippingCompany->id == 3) {  
-					$response = $this->delhiveryB2CService->cancelShipmentByAwbNumber($order->awb_number, $shippingCompany);
-					 
-					if (!($response['success'] ?? false)) {
-						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
-						return back()->with('error', $errorMsg);
-					}
-					
-					if ((isset($response['response']['success']) && !$response['response']['success']))
-					{ 
-						return back()->with('error', $response['response']['error']['message'] ?? 'An error occurred.');
-					} 
-					
-					$orderCancelledData = [
-						'status_courier' => 'cancelled',
-						'order_cancel_date' => now(),
-						'reason_cancel' => "For AWB number {$order->awb_number}, Shipment has been cancelled.",
-					]; 
-				}
+				} 
 				
 				if (!$orderCancelledData) {
 					throw new \Exception('Something went wrong while processing the cancellation.');
@@ -1289,45 +1090,26 @@
 			if(!$shippingCompany) 
 			{
 				return back()->with('error', 'Something went wrong.');
-			}
+			} 
 			
 			$trackingHistories = []; 
 			if(!empty($order->awb_number))
 			{  
-				if($shippingCompany->id == 2 && $order->lr_no)
+				if($shippingCompany->id == 1)
 				{ 
-					$trackingResponse = $this->delhiveryService->trackOrderByLrNo($order->lr_no, $shippingCompany);  
-					
+					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany);  
 					if (!($trackingResponse['success'] ?? false)) {
-						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error']['message'] ?? 'An error occurred.');
+						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
 						return back()->with('error', $errorMsg); 
 					}
 					
-					if ((isset($trackingResponse['response']['success']) && !$trackingResponse['response']['success']))
+					if ((isset($trackingResponse['response']['result']) && $trackingResponse['response']['result']) == 0)
 					{ 
-						return back()->with('error', $trackingResponse['response']['error']['message'] ?? 'An error occurred.'); 
+						return back()->with('error', $trackingResponse['response']['message'] ?? 'An error occurred.'); 
 					}
 					
-					$responseData = $trackingResponse['response']['data']['wbns'] ?? [];
-					$trackingHistories = array_reverse($responseData); 
-				} 
-				
-				if($shippingCompany->id == 3)
-				{ 
-					$trackingResponse = $this->delhiveryB2CService->trackOrderByAwbNumber($order->awb_number, $shippingCompany);  
-					
-					if (!($trackingResponse['success'] ?? false)) {
-						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error']['message'] ?? 'An error occurred.');
-						return back()->with('error', $errorMsg); 
-					}
-					
-					if ((isset($trackingResponse['response']['success']) && !$trackingResponse['response']['success']))
-					{ 
-						return back()->with('error', $trackingResponse['response']['Error'] ?? 'An error occurred.'); 
-					}
-					
-					$responseData = $trackingResponse['response']['ShipmentData'][0]['Shipment']['Scans'] ?? [];
-					$trackingHistories = array_reverse($responseData); 
+					$responseData = $trackingResponse['response']['data']['scan_detail'] ?? [];
+					$trackingHistories = $responseData; 
 				}  
 			}
 			
@@ -1349,26 +1131,22 @@
 			{  
 				$shippingCompany = $order->shippingCompany ?? null;
 				
-				if(($shippingCompany && $shippingCompany->id == 2) && $order->lr_no)
+				if(($shippingCompany && $shippingCompany->id == 1))
 				{ 
-					$trackingResponse = $this->delhiveryService->trackOrderByLrNo($order->lr_no, $shippingCompany);  
+					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany);  
+					if (!($trackingResponse['success'] ?? false)) {
+						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
+						return back()->with('error', $errorMsg); 
+					}
 					
-					if ((isset($trackingResponse['response']['success']) && $trackingResponse['response']['success']))
+					if ((isset($trackingResponse['response']['result']) && $trackingResponse['response']['result']) == 0)
 					{ 
-						$responseData = $trackingResponse['response']['data']['wbns'] ?? [];
-						$trackingHistories = array_reverse($responseData); 
-					} 
-				}
-				if(($shippingCompany && $shippingCompany->id == 3))
-				{ 
-					$trackingResponse = $this->delhiveryB2CService->trackOrderByAwbNumber($order->awb_number, $shippingCompany);  
-				 
-					if ((isset($trackingResponse['response']['ShipmentData']) && !empty($trackingResponse['response']['ShipmentData'])))
-					{ 
-						$responseData = $trackingResponse['response']['ShipmentData'][0]['Shipment']['Scans'] ?? [];
-						$trackingHistories = array_reverse($responseData); 
-					} 
-				}  
+						return back()->with('error', $trackingResponse['response']['message'] ?? 'An error occurred.'); 
+					}
+					
+					$responseData = $trackingResponse['response']['data']['scan_detail'] ?? [];
+					$trackingHistories = $responseData; 
+				} 
 			}
 			
 			return view('order.details', compact('order', 'orderActivities', 'trackingHistories'));
@@ -1385,130 +1163,69 @@
 			if (!$order) {
 				return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
 			}
-			
-			$totalWeightInKg = $order->orderItems->sum(fn($item) => $item->dimensions['weight'] ?? 0);
-			
+			  
 			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
 			$couriers = [];
 			
+			$volumetricWt = $order->length * $order->width * $order->height / 5000; 
+			$weight = $order->weight; 
+			
 			foreach ($shippingCompanies as $shippingCompany)
 			{
-				if ($order->weight_order == 2 && $shippingCompany->id == 2)
+				if ($shippingCompany->id == 1)
 				{ 
-					$pincodeServiceData = $this->delhiveryService->pincodeService($order->customerAddress->zip_code ?? '', $shippingCompany);
-					
-					if (!($pincodeServiceData['success'] ?? false) || 
-					(isset($pincodeServiceData['response']['success']) && !$pincodeServiceData['response']['success'])) {
+					$requestData = new Request([
+						'pickup_code'   => optional($order->warehouse)->zip_code,
+						'delivery_code' => optional($order->customerAddress)->zip_code,
+					]);
+  
+					$pincodeServiceData = $this->shipMozo->pincodeService($requestData->all(), $shippingCompany);
+ 
+					if (
+						!($pincodeServiceData['success'] ?? false) || 
+						(isset($pincodeServiceData['response']['result']) && $pincodeServiceData['response']['result'] == 0) || 
+						(isset($pincodeServiceData['response']['data']['serviceable']) && !$pincodeServiceData['response']['data'])
+					) {
 						continue;
 					}
-					
-					$response = $this->delhiveryService->freightEstimate($order, $shippingCompany);
+					 
+					$response = $this->shipMozo->orderRateCaculator($order, $shippingCompany); 
 					
 					if (!($response['success'] ?? false) || 
-					(isset($response['response']['success']) && !$response['response']['success'])) {
+					(isset($response['response']['result']) && $response['response']['result'] == 0)) {
 						continue;
 					}
 					
-					$responseData = $response['response']['data'] ?? [];
-					if (!$responseData) {
+					$responseDetails = $response['response']['data'] ?? []; 
+					if (!$responseDetails) {
 						continue;
 					}
 					
-					$totalCharges = $responseData['total'];
-					$percentageAmount = ($role === "user" && $charge > 0)
-					? ($charge_type == 1 ? $charge : ($totalCharges * $charge) / 100) 
-					: 0;
-					$totalCharges += $percentageAmount;
-					
-					$tax = ($totalCharges * $shippingCompany->tax) / 100;
-					$roundedTotalCharges = round($totalCharges + $tax);
-					$roundOffAmount = $roundedTotalCharges - ($totalCharges + $tax);
-					
-					$couriers[] = [
-						'direct_rate' => $responseData['price_breakup']['base_freight_charge'] ?? 0,
-						'order_id' => $orderId,
-						'tax' => $tax,
-						'round_off' => $roundOffAmount,
-						'shipping_company_id' => $shippingCompany->id,
-						'shipping_company_name' => $shippingCompany->name,
-						'shipping_company_logo' => asset('storage/shipping-logo/' . $shippingCompany->logo),
-						'courier_id' => '',
-						'courier_name' => "{$shippingCompany->name} {$order->shipping_mode}",
-						'freight_charges' => $responseData['price_breakup']['base_freight_charge'] ?? 0,
-						'cod_charges' => $responseData['price_breakup']['meta_charges']['cod'] ?? 0,
-						'total_charges' => $roundedTotalCharges,
-						'rto_charge' => $responseData['price_breakup']['insurance_rov'] ?? 0,
-						'min_weight' => $responseData['min_charged_wt'] ?? 0,
-						'chargeable_weight' => ($responseData['charged_wt'] ?? 0),
-						'applicable_weight' => $totalWeightInKg ?? 0,
-						'percentage_amount' => $percentageAmount,
-						'responseData' => $responseData
-					];
-				}
-				else if ($order->weight_order == 1 && $shippingCompany->id == 3) 
-				{ 
-					$pincodeServiceData = $this->delhiveryB2CService->pincodeService($order->customerAddress->zip_code ?? '', $shippingCompany);
-					 
-					if (!($pincodeServiceData['success'] ?? false) || 
-					(isset($pincodeServiceData['response']['success']) && !$pincodeServiceData['response']['success'])) {
-						continue;
-					}
-					
-					$response = $this->delhiveryB2CService->freightEstimate($order, $shippingCompany);
-					 
-					if (!($response['success'] ?? false) || 
-					(isset($response['response']['success']) && !$response['response']['success'])) {
-						continue;
-					}
-					
-					$responseData = $response['response'] ?? [];
-					if (!$responseData) {
-						continue;
-					}
-					
-					foreach($responseData as $responseValue)
-					{ 
-						$taxData = $responseValue['tax_data'] ? array_sum($responseValue['tax_data']) : 0;
-						$totalAmount = $responseValue['charge_DL'] ?? 0;
-						$chargeDph = $responseValue['charge_DPH'] ?? 0;
-						$chargeCod = $responseValue['charge_COD'] ?? 0;
-						$chargeRto = $responseValue['charge_RTO'] ?? 0;
-						
-						$totalCharges = $taxData + $totalAmount + $chargeDph + $chargeCod;
-						
-						$percentageAmount = ($role === "user" && $charge > 0) 
-						? ($charge_type == 1 ? $charge : ($totalCharges * $charge) / 100) 
-						: 0;
-						$totalCharges += $percentageAmount;
-						
-						$tax = ($totalCharges * $shippingCompany->tax) / 100;
-						$roundedTotalCharges = round($totalCharges + $tax);
-						$roundOffAmount = $roundedTotalCharges - ($totalCharges + $tax);
-						
-						$couriers[] = [
-							'direct_rate' => $totalAmount ?? 0,
-							'order_id' => $orderId,
-							'tax' => $tax,
-							'round_off' => $roundOffAmount,
+					foreach($responseDetails as  $responseData){ 
+						$totalCharges = $responseData['total_charges'];  
+						$beforeTax = $responseData['before_tax_total_charges'];  
+						$gst = $responseData['gst'];  
+
+						$couriers[] = [  
+							'order_id' => $order->id, 
+							'shipping_charge' => $beforeTax, 
+							'tax' => $gst, 
 							'shipping_company_id' => $shippingCompany->id,
-							'shipping_company_name' => $shippingCompany->name,
-							'shipping_company_logo' => asset('storage/shipping-logo/' . $shippingCompany->logo),
-							'courier_id' => '',
-							'courier_name' => "{$shippingCompany->name} {$order->shipping_mode}",
-							'freight_charges' => ($totalAmount + $chargeDph),
-							'cod_charges' => $chargeCod,
-							'total_charges' => $roundedTotalCharges,
-							'rto_charge' => $chargeRto,
-							'min_weight' => ($responseValue['charged_weight'] / 1000),
-							'chargeable_weight' => ($responseValue['charged_weight'] / 1000),
-							'applicable_weight' => $totalWeightInKg ?? 0,
-							'percentage_amount' => $percentageAmount,
-							'responseData' => $responseValue
+							'courier_id' 	=> $responseData['id'],
+							'shipping_company_name' => $responseData['name'],
+							'shipping_company_logo' => $responseData['image'], 
+							'courier_name' => $responseData['name'], 
+							'total_charges' => $totalCharges,
+							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
+							'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
+							'applicable_weight' =>  max($volumetricWt, $weight) ?? 0,
+							'percentage_amount' => 0,
+							'responseData' => $responseData
 						];
 					}
-				}
+				} 
 			}
-			
+			 
 			$couriers = $couriers ? collect($couriers)->sortBy('total_charges') : collect();
 			 
 			$view = view('order.shipment_charges', [
@@ -1521,12 +1238,13 @@
 		}
 		
 		public function orderShipNow(Request $request)
-		{
+		{  
 			DB::beginTransaction(); // Start Transaction
 			try {
-				$requestData = collect(json_decode($request->data, true) ?? []);
-				$shippingCompany = ShippingCompany::find($requestData['shipping_company_id']);
+				$requestData = collect(json_decode($request->data, true) ?? []); 
 				
+				$shippingCompany = ShippingCompany::findOrFail($requestData['shipping_company_id']);
+			 
 				if (!$shippingCompany) {
 					return response()->json(['status' => 'error', 'msg' => 'Invalid Shipping Company']);
 				}
@@ -1548,113 +1266,88 @@
 				$courierWarehouse = $order->warehouse ?? null;	
 				if(!$courierWarehouse)
 				{
-					return response()->json(['status' => 'error', 'msg' => 'Something went wrong.']);
+					return response()->json(['status' => 'error', 'msg' => 'Pickup warehouse address empty.']);
 				}
 				
-				if ($shippingCompany->id == 2) 
+				$courierLogo = $requestData['shipping_company_logo'] ?? null;
+				if ($shippingCompany->id == 1) 
 				{    
-					if($courierWarehouse->delhivery_status == 0)
-					{
-						$data = $this->delhiveryService->createWarehouse($courierWarehouse, $shippingCompany); 
-						if (!empty($data['success']) && !empty($data['response']['success'])) {   
-							$courierWarehouse->update(['shipping_id' => $shippingCompany->id, 'delhivery_status' => 1, 'api_response' => $data['response']]); 
-						}
-					}
-					$response = $this->delhiveryService->manifest($order, $requestData, $shippingCompany);
-					
-					if (!($response['success'] ?? false)) {
-						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
-					}
-					
-					if ((isset($response['response']['success']) && !$response['response']['success']))
-					{
-						return response()->json(['status' => 'error', 'msg' => $response['response']['error']['message'] ?? 'An error occurred.']);
-					}
-					
-					$jobId = $response['response']['job_id'] ?? '';
-					
-					$menifestStatusResponse = $this->delhiveryService->manifestStatus($jobId, $shippingCompany);  
-					
-					if (!($menifestStatusResponse['success'] ?? false)) {
-						$errorMsg = $menifestStatusResponse['response']['errors'][0]['message'] ?? ($menifestStatusResponse['response']['error']['message'] ?? 'An error occurred.');
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
-					}
-					
-					if ((isset($menifestStatusResponse['response']['success']) && !$menifestStatusResponse['response']['success']))
-					{
-						return response()->json(['status' => 'error', 'msg' => $menifestStatusResponse['response']['error']['message'] ?? 'An error occurred.']);
-					}
-					
-					if($menifestStatusResponse['response']['data']['status'] == "DataError")
-					{
-						return response()->json(['status' => 'error', 'msg' => $menifestStatusResponse['response']['data']['reason'] ?? 'An error occurred.']);
-					}
-					
-					// Extract response data
-					$shipment_id = $jobId;
-					$lr_no = $menifestStatusResponse['response']['data']['lrnum'] ?? null; 
-					$awb_number = $menifestStatusResponse['response']['data']['master_waybill'] ?? null; 
-					$courier_id = $menifestStatusResponse['response']['request_id'] ?? null; 
-					$statusCourier = 'manifested';
-					$apiResponse = $menifestStatusResponse;   
-				}
-				
-				if ($shippingCompany->id == 3) 
-				{    
-					if($courierWarehouse->delhivery_status1 == 0)
-					{
-						$data = $this->delhiveryB2CService->createWarehouse($courierWarehouse, $shippingCompany);
-						 
-						if (!empty($data['success']) && !empty($data['response']['success'])) {   
-							$courierWarehouse->update(['shipping_id' => $shippingCompany->id, 'delhivery_status1' => 1, 'api_response1' => $data['response']]); 
-						}
-					}
-					
-					$response = $this->delhiveryB2CService->manifest($order, $requestData, $shippingCompany);
+					$existStatus = $courierWarehouse->created ?? [];
 					 
-					if (!($response['success'] ?? false)) {
-						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
-					}
-					
-					if ((isset($response['response']['success']) && !$response['response']['success']))
-					{
-						$errmsg = $response['response']['rmk'];
-						if(count($response['response']['packages']) > 0)
-						{
-							$errmsg = $response['response']['packages'][0]['remarks'][0];
+					if ($existStatus && isset($existStatus['shipMozo']) && $existStatus['shipMozo'] == 0) 
+					{ 	 
+						$data = $this->shipMozo->createWarehouse($courierWarehouse, $shippingCompany);  
+						if ($data['success'] || (isset($data['response']['result']) && $data['response']['result'] == 1)){
+							$existingCreated = $courierWarehouse->created ?? [];  
+							if (is_string($existingCreated)) {
+								$existingCreated = json_decode($existingCreated, true) ?? [];
+							} 
+							$existingCreated['ship_mozo'] = 1;  
+							
+							$courierWarehouse->created = $existingCreated;
+							$courierWarehouse->shipping_id   = $data['response']['data']['warehouse_id'];
+							$courierWarehouse->api_response  = $data['response'];
+							$courierWarehouse->save(); 
 						} 
-						return response()->json(['status' => 'error', 'msg' => $errmsg ?? 'An error occurred.']);
 					}
 					 
-					// Extract response data
-					$shipment_id = $response['response']['upload_wbn'];
-					$lr_no = $order->order_prefix; 
-					$awb_number = $response['response']['packages'][0]['waybill'] ?? null; 
-					$courier_id = $response['response']['packages'][0]['refnum'] ?? null; 
+					$response = $this->shipMozo->pushOrder($order, $requestData, $shippingCompany);
+					 
+					if (!($response['success'] ?? false)) {
+						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
+						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+					}
+					
+					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
+					{
+						return response()->json(['status' => 'error', 'msg' => $response['response']['message'] ?? 'An error occurred.']);
+					} 
+					
+					$orderId = $response['response']['data']['order_id'] ?? '';
+					if (!$orderId) {
+						$errorMsg = 'Somthing went wrong.';
+						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+					}
+					
+					$courierResponse = $this->shipMozo->assignCourier($orderId, $requestData['courier_id'] ?? null, $shippingCompany);  
+					if (!($courierResponse['success'] ?? false)) {
+						$errorMsg = $courierResponse['response']['errors'][0]['message'] ?? ($courierResponse['response']['error'] ?? 'An error occurred.');
+						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+					}
+					
+					if ((isset($courierResponse['response']['result']) && $courierResponse['response']['result'] == 0))
+					{
+						return response()->json(['status' => 'error', 'msg' => $courierResponse['response']['message'] ?? 'An error occurred.']);
+					}   
+					$awbNumber = $courierResponse['response']['data']['awb_number'] ?? '';
+					
+					$shipment_id = $courierResponse['response']['data']['order_id'] ?? '';
+					$lr_no = $courierResponse['response']['data']['order_id'] ?? '' ?? null; 
+					$awb_number = $awbNumber ?? null; 
+					$courier_id = $requestData['courier_id'] ?? null; 
 					$statusCourier = 'manifested';
-					$apiResponse = $response['response'] ?? null;   
+					$apiResponse = $courierResponse;   
 				}
 				
 				// Prepare update data
 				$updateData = [
 					'status_courier' => $statusCourier,
-					'tax' => $requestData['tax'] ?? 0,
-					'tax_percentage' => $shippingCompany->tax,
+					'tax' => 0,
+					'tax_percentage' => 0,
 					'shipping_charge' => $requestData['total_charges'] ?? 0,
 					'shipping_company_id' => $shippingCompany->id,
 					'shipment_id' => $shipment_id,
 					'awb_number' => $awb_number,
 					'courier_name' => $requestData['courier_name'],
 					'courier_id' => $courier_id,
+					'courier_logo' => $courierLogo,
 					'label' => null,
 					'lr_no' => $lr_no,
 					'api_response' => $apiResponse,
-					'applicable_weight' => $requestData['chargeable_weight'],
-					'cod_charges' => $requestData['cod_charges'],
-					'rto_charge' => $requestData['rto_charge'],
-					'percentage_amount' => $requestData['percentage_amount']
+					'applicable_weight' => $requestData['applicable_weight'],
+					'cod_charges' => 0,
+					'rto_charge' => 0,
+					'percentage_amount' => $requestData['percentage_amount'] ?? 0
 				];
 				
 				$order->update($updateData);
@@ -1702,7 +1395,7 @@
 				}
 				
 				$msg = "<h5> <img src='" . asset('assets/images/order-1/green-teu.png') . "' style='margin-right: 5px;'>
-				Your package has been assigned to <b>{$shippingCompany->name}</b>."; 
+				Your package has been assigned to <b>{$order->courier_name}</b>."; 
 				if(!empty($awb_number))
 				{
 					$msg .= "The AWB number is <span>{$awb_number}</span></h5>";
@@ -1716,866 +1409,14 @@
 					'shipping_id' => $shippingCompany->id
 				]);
 				
-				} catch (\Exception $e) {
-				DB::rollBack(); // Rollback Transaction on Error
-				Log::error("Order Shipping Error: " . $e->getMessage());
+			} 
+			catch (\Exception $e) 
+			{
+				DB::rollBack();  
 				return response()->json(['status' => 'error', 'msg' => 'Something went wrong!'. $e->getMessage()]);
 			}
 		}
-		
-		public function getGenerateAWB($shipping_id)
-		{
-			$number = 'STAR-'.rand(1111111,9999999);
-			if(Order::where('shipping_company_id',$shipping_id)->where('awb_number',$number)->exists())
-			{
-				$this->getGenerateAWB($shipping_id);	
-			}
-			return $number;
-		}
-		
-		public function ecomlabeldownload($awb, $shippingcomp)
-		{
-    		$url = 'https://shipment.ecomexpress.in/services/expp/shipping_label';
-			
-    		
-    		// Making the HTTP POST request
-    		$response = Http::attach('username', $shippingcomp->email)
-			->attach('password', $shippingcomp->password)
-			->attach('awb', $awb)
-			->post($url);
-            
-            if ($response->successful()) 
-            {
-    			
-    			
-    			$pdfContent = $response->body();
-				
-                // Define the path where the PDF will be stored
-                $pdfName = 'shipping_label_' . $awb . '.pdf';
-                $filePath = storage_path('app/public/' . $pdfName);
-                
-                // Save the PDF content to the file
-                file_put_contents($filePath, $pdfContent);
-				
-                // Generate a URL for the stored PDF
-                $responseData = asset('storage/' . $pdfName);
-				//return $pdfUrl;
-				
-				} else {
-    		    $responseData = [];
-			}
-    		return $responseData;
-		}
-		
-		public function ecomRequestData($request, $shippingcomp)
-    	{
-			
-    		$order = Order::whereId($request['order_id'])->first();
-			
-    		$url = $shippingcomp->url . "apiv2/fetch_awb/";
-			
-    		if($order->order_type == "cod")
-    		{
-    			$type = "COD";
-			}else
-    		{
-    			$type = "PPD";
-			}
-    		
-    		// Making the HTTP POST request
-    		$response = Http::attach('username', $shippingcomp->email)
-			->attach('password', $shippingcomp->password)
-			->attach('count', 1)
-			->attach('type', $type)
-			->post($url);
-            
-            if ($response->successful()) {
-    			$responseData = $response->json();
-				
-    			$awb_no =  $responseData['awb'][0];
-			} 
-			// 		else {
-			// 		    $responseDatajson = 'Something went wrong to fetch awb number';
-			// 		    return $responseDatajson;
-			// 		}
-    		
-            $orderitems = DB::table('order_items')
-			->select('product_name as name', 'quantity', 'amount as price', 'product_discription as description')
-			->where('order_id', $order->id)
-			->get()
-			->toArray();
-			
-            $vendoraddr = VendorAddress::whereId($order->vendor_address_id)->first();
-            $customeraddr = CustomerAddress::whereId($order->customer_address_id)->first();
-            $vendor = Vendor::whereId($order->vendor_id)->first();
-            $customer = Customer::whereId($order->customer_id)->first();
-			
-            $order_amount = $order->total_amount;
-            $collectable_amount = 0;
-            if ($order->order_type == "cod") {
-                $order_amount = $order->total_amount;
-                $collectable_amount = $order->total_amount;
-			}
-            
-            $weight = $order->weight;
-            $volumatric_weight = $order->length * $order->width * $order->height / 5000;
-            if ($order->weight > $volumatric_weight) {
-                $applicable_weight = $weight;
-				} else {
-                $applicable_weight = $volumatric_weight;
-			}
-			
-            // Preparing JSON Input data
-            $json_input = [
-			[
-			'AWB_NUMBER' => $awb_no, // Example value, replace with dynamic data if needed
-			'ORDER_NUMBER' => $order->order_prefix,
-			'ITEM_DESCRIPTION' => $orderitems[0]->description, // Example value, replace with dynamic data if needed
-			'PIECES' => $orderitems[0]->quantity,
-			'DECLARED_VALUE' => $orderitems[0]->price,
-			'ACTUAL_WEIGHT' => $applicable_weight,
-			'VOLUMETRIC_WEIGHT' => $volumatric_weight,
-			'LENGTH' => $order->length,
-			'BREADTH' => $order->width,
-			'HEIGHT' => $order->height,
-			'DG_SHIPMENT' => false,
-			'ADDITIONAL_INFORMATION' => [
-			'essentialProduct' => 'N',
-			'OTP_REQUIRED_FOR_DELIVERY' => 'N',
-			'DELIVERY_TYPE' => 'EXPRESS',
-			'SELLER_TIN' => '',
-			'INVOICE_NUMBER' => $order->order_prefix,
-			'INVOICE_DATE' => null,
-			'ESUGAM_NUMBER' => '',
-			'ITEM_CATEGORY' => '',
-			'PACKING_TYPE' => '',
-			'PICKUP_TYPE' => '',
-			'RETURN_TYPE' => '',
-			'CONSIGNEE_ADDRESS_TYPE' => '',
-			'PICKUP_LOCATION_CODE' => '',
-			'SELLER_GSTIN' => '',
-			'GST_HSN' => '4309197354',
-			'GST_ERN' => '',
-			'GST_TAX_NAME' => 'HR IGST',
-			'GST_TAX_BASE' => 10,
-			'DISCOUNT' => 10,
-			'GST_TAX_RATE_CGSTN' => 10,
-			'GST_TAX_RATE_SGSTN' => 10,
-			'GST_TAX_RATE_IGSTN' => 10,
-			'GST_TAX_TOTAL' => 10,
-			'GST_TAX_CGSTN' => 10,
-			'GST_TAX_SGSTN' => 10,
-			'GST_TAX_IGSTN' => 10
-			],
-			'PRODUCT' => $type, // Example value, replace with dynamic data if needed
-			'COLLECTABLE_VALUE' => $collectable_amount,
-			'CONSIGNEE' => $customer->first_name . ' ' . $customer->last_name,
-			'CONSIGNEE_ADDRESS1' => $customeraddr->address,
-			'CONSIGNEE_ADDRESS2' => $customeraddr->address2,
-			'CONSIGNEE_ADDRESS3' => '',
-			'DESTINATION_CITY' => $customeraddr->city,
-			'PINCODE' => $customeraddr->zip_code,
-			'STATE' => $customeraddr->state,
-			'MOBILE' => $customer->mobile,
-			'TELEPHONE' => $customer->mobile,
-			'PICKUP_NAME' => $vendor->name,
-			'PICKUP_ADDRESS_LINE1' => $vendoraddr->address,
-			'PICKUP_ADDRESS_LINE2' => '',
-			'PICKUP_PINCODE' => $vendoraddr->zip_code,
-			'PICKUP_PHONE' => $vendor->phone,
-			'PICKUP_MOBILE' => $vendor->mobile,
-			'RETURN_NAME' => $vendor->name,
-			'RETURN_ADDRESS_LINE1' => $vendoraddr->address,
-			'RETURN_ADDRESS_LINE2' => '',
-			'RETURN_PINCODE' => $vendoraddr->zip_code,
-			'RETURN_PHONE' => $vendor->phone,
-			'RETURN_MOBILE' => $vendor->mobile,
-			]
-            ];
-            // echo "<pre>";
-            // print_r($json_input);
-            // echo "</pre>";
-            // die;
-            $url = $shippingcomp->url . "apiv2/manifest_awb/";
-			
-            // Making the HTTP POST request
-            $response = Http::attach('username', $shippingcomp->email)
-			->attach('password', $shippingcomp->password)
-			->attach('json_input', json_encode($json_input))
-			->post($url);
-			
-            if ($response->successful()) 
-            {
-                
-                $responseData = $response->json();
-                
-				} else {
-                $responseData =  [];
-			}
-            
-            return $responseData;
-		}
-		
-		public function marutiRequestData($request,$shippingcomp)
-		{ 
-			
-			$order = Order::whereId($request['order_id'])->first();
-			$orderitems_data = OrderItem::select('id','product_name as name','quantity','amount as price','product_discription as sku')->whereOrder_id($request['order_id'])->get()->toArray();
-			
-			$lineItems = array();
-    		foreach ($orderitems_data as $key => $orderitems)
-    		{
-				$sku = "PA".$orderitems['id'].$orderitems['name'];
-				$orderitems['price'] = number_format($orderitems['price'], 0, '.', '');
-				
-    			if($orderitems['quantity'] > 1)
-    			{
-    				$pr = $orderitems['quantity'] * $orderitems['price'];
-				}else
-    			{
-    				$pr =  $orderitems['price'];
-				}
-				$lineItems = [
-				'name' => $orderitems['name'],
-				'price' => (int)$pr, // Convert to integer if needed
-				'weight' => 120,
-				'quantity' => $orderitems['quantity'],
-				'sku' => $sku,
-				'unitPrice' => (int)$orderitems['price'] // Convert to integer if needed
-                ];
-			}
-			$vendoraddr = VendorAddress::whereId($order->vendor_address_id)->first();
-			$customeraddr = CustomerAddress::whereId($order->customer_address_id)->first();
-			$vendor = Vendor::whereId($order->vendor_id)->first();
-			$customer = Customer::whereId($order->customer_id)->first();
-			$order_amount = $order->total_amount;
-			$collectable_amount = 0; 
-			
-			$weight = $order->weight * 1000;
-			if($order->order_type == "cod")
-			{
-				$order_amount = $order->total_amount;
-				$collectable_amount = $order->total_amount;
-			}
-			
-			if($order->shipping_mode == 'Surface')
-			{
-			    $shipping_mode = 'SURFACE';
-			}else
-			{
-			    $shipping_mode = 'AIR';
-			}
-			
-			if($order->order_type == "cod")
-			{
-			    $paymentType = "COD";
-			}else
-			{
-			    $paymentType = "ONLINE";
-			}
-			$amount_order = number_format($order_amount, 0, '.', '');
-			
-			$dataArray = [
-			'orderId' => $order->order_prefix,
-			'orderSubtype' => 'FORWARD',
-			'orderCreatedAt' => date('Y-m-d H:i:s'),
-			'currency' => 'INR',
-			'amount' => (int)$amount_order,
-			'weight' => $weight,
- 			'lineItems' => [$lineItems],
-			'paymentType' => $paymentType,
-			'paymentStatus'=> 'PENDING',
-			'subTotal' => (int)$amount_order,
-			'remarks' => 'handle with care',
-			'shippingAddress' => [
-			'name' => $customer->first_name . ' ' . $customer->last_name,
-			'email' => $customer->email,
-			'phone' => $customer->mobile,
-			'address1' => $customeraddr->address,
-			'address_2' => '',
-			'city' => $customeraddr->city,
-			'state' => $customeraddr->state,
-			'country' => $customeraddr->country,
-			'zip' => $customeraddr->zip_code,
-			
-			],
-			'billingAddress' => [
-			'name' => $customer->first_name . ' ' . $customer->last_name,
-			'email' => $customer->email,
-			'phone' => $customer->mobile,
-			'address1' => $customeraddr->address,
-			'address_2' => '',
-			'city' => $customeraddr->city,
-			'state' => $customeraddr->state,
-			'country' => $customeraddr->country,
-			'zip' => $customeraddr->zip_code,
-			
-			],
-			'pickupAddress' => [
-			'name' => $vendor->first_name . ' ' . $vendor->last_name,
-			'email' => $vendor->email,
-			'phone' => $vendor->mobile,
-			'address1' => $vendoraddr->address,
-			'address_2' => '',
-			'city' => $vendoraddr->city,
-			'state' => $vendoraddr->state,
-			'country' => $vendoraddr->country,
-			'zip' => $vendoraddr->zip_code,
-			
-			],
-			'returnAddress' => [
-			'name' => $vendor->first_name . ' ' . $vendor->last_name,
-			'email' => $vendor->email,
-			'phone' => $vendor->mobile,
-			'address1' => $vendoraddr->address,
-			'address_2' => '',
-			'city' => $vendoraddr->city,
-			'state' => $vendoraddr->state,
-			'country' => $vendoraddr->country,
-			'zip' => $vendoraddr->zip_code,
-			
-			],
-			'gst' => 0,
-			'deliveryPromise' =>$shipping_mode,
-			'discountUnit'=> 'RUPEES',
-			'discount'=> 00,
-			'length'=> $order->length,
-			'height'=> $order->width,
-			'width'=> $order->height,
-			];
-			
-			$token = $shippingcomp->api_key;
-			$url = $shippingcomp->url.'fulfillment/public/seller/order/ecomm/push-order';
-			
-			//  		echo "<pre>"; print_r($dataArray); echo "</pre>"; die;
-			$response = Helper::callCurlApi($url,$dataArray,$token);
-			
-			return $response;
-		}
-		
-		public function downloadLabelShipway($id,$shipping_company_id,$carrier_id)
-		{
 		    
-			$order_details = Order::where('id',$id)->first();
-			
-			$shippingcomp = ShippingCompany::whereId($shipping_company_id['id'])->whereStatus(1)->first();
-			
-			//  $shippingcomp = ShippingCompany::whereId('id',5)->whereStatus(1)->first();
-			$orderitems = OrderItem::select('product_name as name', 'quantity', 'amount as price', 'product_discription as sku')->whereOrder_id($order_details['id'])->get()->toArray();
-			
-			$vendoraddr = VendorAddress::whereId($order_details->vendor_address_id)->first();
-			$customeraddr = CustomerAddress::whereId($order_details->customer_address_id)->first();
-			$vendor = Vendor::whereId($order_details->vendor_id)->first();
-			$customer = Customer::whereId($order_details->customer_id)->first();
-			$curierware = CourierWarehouse::where('vendor_address_id', $order_details->vendor_address_id)->where('shipping_id', $shippingcomp->id)->first();
-			
-			$warehouse_id = $curierware->warehouse_name;
-			$return_warehouse_id = $curierware->warehouse_name;
-			$order_amount = $order_details->total_amount;
-			$collectable_amount = 0;
-			if ($order_details->order_type == "cod") {
-				$order_amount = $order_details->total_amount;
-				$collectable_amount = $order_details->total_amount;
-			}
-			
-			$data = [];
-			foreach($orderitems as $product_list)
-			{
-				
-				$data['product'] = $product_list["name"];
-				$data['price'] = $product_list["price"];
-				$data['product_code'] = $product_list["sku"];
-				$data['amount'] = $product_list["quantity"];
-				$data['discount'] = 0;
-			}
-			
-			if ($order_details->order_type == "cod") {
-				$paymentType = "C";
-				}elseif ($order_details->order_type == "prepaid") {
-				$paymentType = "P";
-			}
-			$valueInGrams = $order_details->weight * 1000;
-			$dataArray = [
-			'order_id' 			=> $order_details->order_prefix,
-			'carrier_id'       => '',
-			'warehouse_id'      => $warehouse_id,
-			'return_warehouse_id'      => $warehouse_id,
-			'ewaybill' 			=> '',
-			'products' 			=> [$data],
-			'discount' 			=> 0,
-			'shipping' 			=> '',
-			'order_total' 			=> $order_amount,
-			'gift_card_amt' 		=> 0,
-			'taxes' 				=> '',
-			'email'				=> $customer->email,
-			'payment_type' 		=> $paymentType,
-			'billing_address'		=> $customeraddr->address,
-			'billing_address2' 		=> '',
-			'billing_city' 		=> $customeraddr->city,
-			'billing_state' 		=> $customeraddr->state,
-			'billing_country' 		=> $customeraddr->country,
-			'billing_firstname' 	=> $customer->first_name,
-			'billing_lastname' 		=> $customer->last_name,
-			'billing_phone' 		=> $customer->mobile,
-			'billing_zipcode' 		=> $customeraddr->zip_code,
-			'shipping_address' 		=> $customeraddr->address,
-			'shipping_address2' 	=> '',
-			'shipping_city' 		=> $customeraddr->city,
-			'shipping_state' 		=> $customeraddr->state,
-			'shipping_country' 		=> $customeraddr->country,
-			'shipping_firstname' 	=> $customer->first_name,
-			'shipping_lastname' 	=> $customer->last_name,
-			'shipping_phone' 		=> $customer->mobile,
-			'shipping_zipcode' 		=> $customeraddr->zip_code,
-			"order_weight"			=> $valueInGrams,
-			"box_length"			=> $order_details->length,
-			"box_breadth"			=> $order_details->width,
-			"box_height"			=> $order_details->height,
-			"order_date"			=> date($order_details->created_at),
-			];
-			
-			$url = $shippingcomp->url."api/v2orders";	
-			$username = $shippingcomp->email;
-			$password = $shippingcomp->password;
-			//			echo "<pre>"; print_r($dataArray); echo "</pre>"; die;
-			$response = Http::withBasicAuth($username, $password)->post($url, $dataArray);
-			
-			
-			if ($response->successful()) 
-    		{			
-    			$responseData = $response->json();
-				
-			}
-    		else
-    		{
-				
-    			$responseData = [];
-			}
-    		return $responseData;
-		}
-		
-	    public function shipwayRequestData($request,$shippingcomp)
-	    {
-			
-			
-			$order = Order::whereId($request['order_id'])->first();
-			$orderitems = OrderItem::select('product_name as name', 'quantity', 'amount as price', 'product_discription as sku')->whereOrder_id($request['order_id'])->get()->toArray();
-			
-			$vendoraddr = VendorAddress::whereId($order->vendor_address_id)->first();
-			$customeraddr = CustomerAddress::whereId($order->customer_address_id)->first();
-			$vendor = Vendor::whereId($order->vendor_id)->first();
-			$customer = Customer::whereId($order->customer_id)->first();
-			$order_amount = $order->total_amount;
-			$collectable_amount = 0;
-			if ($order->order_type == "cod") {
-				$order_amount = $order->total_amount;
-				$collectable_amount = $order->total_amount;
-			}
-			
-			$data = [];
-			foreach($orderitems as $product_list)
-			{
-				
-				// 			$data['product'] = $product_list["name"];
-				// 			$data['price'] = $product_list["price"];
-				// 			$data['product_code'] = $product_list["sku"];
-				// 			$data['amount'] = $product_list["price"];
-				// 			$data['discount'] = 0;
-				$data = [
-				'product' => $product_list["name"],
-				'price' => $product_list["price"], // Convert to integer if needed
-				'product_code' => $product_list["sku"],
-				'amount' => $product_list["quantity"],
-				'discount' => 0,
-                ];
-			}
-			
-			if ($order->order_type == "cod") {
-				$paymentType = "C";
-				}elseif ($order->order_type == "prepaid") {
-				$paymentType = "P";
-			}
-			
-			$valueInGrams =  $valueInGrams * 1000;
-			
-			$dataArray = [
-			'order_id' 			=> $order->order_prefix,
-			'ewaybill' 			=> '',
-			'products' 			=> [$data],
-			'discount' 			=> 0,
-			'shipping' 			=> '',
-			'order_total' 			=> $order_amount,
-			'gift_card_amt' 		=> 0,
-			'taxes' 				=> '',
-			'email'				=> $customer->email,
-			'payment_type' 		=> $paymentType,
-			'billing_address'		=> $customeraddr->address,
-			'billing_address2' 		=> '',
-			'billing_city' 		=> $customeraddr->city,
-			'billing_state' 		=> $customeraddr->state,
-			'billing_country' 		=> $customeraddr->country,
-			'billing_firstname' 	=> $customer->first_name,
-			'billing_lastname' 		=> $customer->last_name,
-			'billing_phone' 		=> $customer->mobile,
-			'billing_zipcode' 		=> $customeraddr->zip_code,
-			'shipping_address' 		=> $customeraddr->address,
-			'shipping_address2' 	=> '',
-			'shipping_city' 		=> $customeraddr->city,
-			'shipping_state' 		=> $customeraddr->state,
-			'shipping_country' 		=> $customeraddr->country,
-			'shipping_firstname' 	=> $customer->first_name,
-			'shipping_lastname' 	=> $customer->last_name,
-			'shipping_phone' 		=> $customer->mobile,
-			'shipping_zipcode' 		=> $customeraddr->zip_code,
-			"order_weight"			=> $valueInGrams,
-			"box_length"			=> $order->length,
-			"box_breadth"			=> $order->width,
-			"box_height"			=> $order->height,
-			"order_date"			=> date($order->created_at),
-			];
-			
-			$url = $shippingcomp->url."api/v2orders";	
-			$username = $shippingcomp->email;
-			$password = $shippingcomp->password;
-			
-			$response = Http::withBasicAuth($username, $password)->post($url, $dataArray);
-			if ($response->successful()) 
-			{			
-				$responseData = $response->json();
-			}
-			else
-			{
-				$responseData = [];
-			}
-			return $responseData;
-		}
-		
-		public function delhiveryRequestData($request)
-		{
-			
-			$shippingcomp = ShippingCompany::whereId($request['shipping_company_id'])->whereStatus(1)->first();	
-			
-			$url = $shippingcomp->url;
-			$token = $shippingcomp->api_key;
-			
-			$order = Order::whereId($request['order_id'])->first();
-			$user = User::whereId($order->user_id)->first();
-			$user_id = $user->id;
-			$role = $user->role; 
-			
-			
-			$orderitems = OrderItem::select('product_name as name','quantity as qty','amount as price','product_discription as sku')->where('order_id',$request['order_id'])->get()->toArray();
-			
-			$vendoraddr = VendorAddress::whereId($order->vendor_address_id)->first();
-			$customeraddr = CustomerAddress::whereId($order->customer_address_id)->first();
-			$vendor = Vendor::whereId($order->vendor_id)->first();
-			$customer = Customer::whereId($order->customer_id)->first();
-			$order_amount = $order->total_amount;
-			
-			// 		$cutomer_address = $customeraddr->address.' '.$customeraddr->city.' '.$customeraddr->state.' '.$customeraddr->zip_code.','.$customeraddr->country;
-			$cutomer_address = preg_replace('/\s+/', ' ', $customeraddr->address . ' ' . $customeraddr->city . ' ' . $customeraddr->state . ' ' . $customeraddr->zip_code . ', ' . $customeraddr->country);
-			
-			
-			// 			$pickup_address = $vendoraddr->address.' '.$vendoraddr->city.' '.$vendoraddr->state.' '.$vendoraddr->zip_code.','.$vendoraddr->country;
-	        $pickup_address = preg_replace('/\s+/', ' ', $vendoraddr->address.' '.$vendoraddr->city.' '.$vendoraddr->state.' '.$vendoraddr->zip_code.','.$vendoraddr->country);
-			
-            $specialChars = ['&', '\\', '%', '#', ';', ',,', '"'];
-			$pickup_address = str_replace($specialChars, '', $pickup_address);
-			$cutomer_address = str_replace($specialChars, '', $cutomer_address);
-			
-			$pickup_address = preg_replace('/\s+/', ' ', $pickup_address);
-            $customer_address = preg_replace('/\s+/', ' ', $customer_address);
-			
-			foreach($orderitems as  $product_list)
-			{
-				$product_name[] = "Order Id-".$order->order_prefix;
-				$product_name[] = "Product - ". $product_list["name"];
-			} 
-			
-			$productNamesString = implode(', ', array_unique($product_name));
-			
-			$data = 'format=json&data={
-			"shipments": [
-			{
-			"add": "'.$cutomer_address.'",
-			"address_type": "",
-			"phone": "'.$customer->mobile.'",
-			"payment_mode": "'.$order->order_type.'",
-			"name": "'.$customer->first_name.' '.$customer->last_name.'",
-			"pin": "'.$customeraddr->zip_code.'",
-			"order": "'.$order->order_prefix.'",
-			"consignee_gst_amount": "",
-			"integrated_gst_amount": "",
-			"ewbn": "",
-			"consignee_gst_tin": "",
-			"seller_gst_tin": "",
-			"client_gst_tin": "",
-			"hsn_code": "",
-			"gst_cess_amount": "",
-			"shipping_mode": "'.$order->shipping_mode.'",
-			"client": "37b434-STAREXPRESS-do",
-			"tax_value": "",
-			"seller_tin": "",
-			"seller_gst_amount": "",
-			"seller_inv": "",
-			"city": "",
-			"commodity_value": "",
-			"weight": "'.$request['chargeable_weight'].'",
-			"return_state": "",
-			"document_number": "",
-			"od_distance": "",
-			"sales_tax_form_ack_no": "",
-			"document_type": "",
-			"seller_cst": "",
-			"seller_name": "",
-			"fragile_shipment": "",
-			"return_city": "",
-			"return_phone": "",
-			"qc": {
-			"item": [
-			{
-			"images": "",
-			"color": "",
-			"reason": "",
-			"descr": "",
-			"ean": "",
-			"imei": "",
-			"brand": "",
-			"pcat": "",
-			"si": "",
-			"item_quantity": ""
-			}
-			]
-			},
-			"shipment_height": "'.$order->height.'",
-			"shipment_width": "'.$order->width.'",
-			"shipment_length": "'.$order->length.'",
-			"category_of_goods": "",
-			"cod_amount": "'.$order_amount.'",
-			"return_country": "",
-			"document_date": "",
-			"taxable_amount": "",
-			"products_desc": "'.$productNamesString.'",
-			"state": "",
-			"dangerous_good": "",
-			"waybill": "",
-			"consignee_tin": "",
-			"order_date": "'.date('Y-m-d').'",
-			"return_add": "'.$pickup_address.'",
-			"total_amount": "'.$order_amount.'",
-			"seller_add": "'.$pickup_address.'",
-			"country": "'.$vendoraddr->country.'",
-			"return_pin": "",
-			"extra_parameters": {
-			"return_reason": ""
-			},
-			"return_name": "",
-			"supply_sub_type": "",
-			"plastic_packaging": "false",
-			"quantity": ""
-			}
-			],
-			"pickup_location": {
-			"name": "'.$request['warehouse_name'].'",
-			"city": "'.$vendoraddr->city.'",
-			"pin": "'.$vendoraddr->zip_code.'",
-			"country": "'.$vendoraddr->country.'",
-			"phone": "'.$vendor->mobile.'",
-			"add": "'.$pickup_address.'"
-			}
-			}';
-			
-			
-			//	 echo "<pre>"; print_r($data); echo "</pre>"; die;
-			$curl = curl_init();
-			curl_setopt_array($curl, array(
-			CURLOPT_URL => $url.'api/cmu/create.json',
-			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_ENCODING => '',
-			CURLOPT_MAXREDIRS => 10,
-			CURLOPT_TIMEOUT => 0,
-			CURLOPT_FOLLOWLOCATION => true,
-			CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-			CURLOPT_CUSTOMREQUEST => 'POST',
-			CURLOPT_POSTFIELDS =>$data,
-			CURLOPT_HTTPHEADER => array(
-			'Authorization: Token '.$token.'',
-			'Content-Type: application/json' 
-			),
-			));
-			
-			$response = curl_exec($curl); 
-			
-			return json_decode($response,true);
-		}
-		
-		public function orderDownloadManifest(Request $request)
-		{
-			$awb_number = explode(',',$request->ids);
-			
-			$order = Order::whereAwb_number($awb_number[0])->first();
-			
-			$shippingcomp = ShippingCompany::whereId($order->shipping_company_id)->whereStatus(1)->first();
-			if($shippingcomp->id == 1)
-			{ 
-				$token = Helper::xpressBeesToken($shippingcomp->id);
-				
-				$url = $shippingcomp->url.'api/shipments2/manifest/';
-				
-				$dataArray = [
-				'awbs'=> $awb_number
-				];
-				
-				$response = Helper::callCurlApi($url,$dataArray,$token); 
-				
-				if($response['status'] == false)
-				{
-					return back()->with('error',$response['message']);
-				} 
-				return response()->json(['status'=>'success','msg'=>'Manifest generated successfully.','url'=>$response['data']]); 
-			}    
-		}
-		
-		public function orderPickupAll(Request $request)
-		{
-			$date = $request->date;
-			$time = $request->time;
-			$order_id = explode(',',$request->order_id);
-			$orders = Order::whereIn('id',$order_id)->get();
-			$data = [];
-			foreach($orders as $order)
-			{
-				$courierware = CourierWarehouse::where('vendor_address_id',$order->vendor_address_id)->where('shipping_id',$order->shipping_company_id)->first();
-				$data[$order->shipping_company_id.'-'.$courierware->warehouse_name][] = [
-				'order_id'=>$order->id
-				];
-			}
-			$i = 0;
-			foreach($data as $key => $row)
-			{   
-				$explode = explode('-',$key);
-				if($explode[0] == 2)
-				{  
-					$countpackage = count($row);
-					$shippingcomp = ShippingCompany::whereId($explode[0])->whereStatus(1)->first();
-					
-					$token = Helper::xpressBeesToken($shippingcomp->id); 
-					$url = $shippingcomp->url.'fm/request/new/'; 
-					
-					$dataArray = [
-					'pickup_time'=> $time,
-					'pickup_date'=> $date,
-					'pickup_location'=> $explode[1],
-					'expected_package_count'=> $countpackage,
-					];
-					
-					$response = Helper::postCurl($url,json_encode($dataArray),$token);
-					
-					if(isset($response['error']))
-					{
-						$i += count($row);
-						$msg = $i.' order not pickup '.$response['error']['message'];
-						return response()->json(['status'=>'error','msg'=>$msg]);
-					}
-					
-					if(isset($response['pickup_id']))
-					{
-						for($i = 0; $i< $countpackage;$i++)
-						{
-							Order::where('id',$row[$i]['order_id'])->update(['pickup_location_name'=>$response['pickup_location_name'],'pickup_time'=>$response['pickup_time'],'pickup_id'=>$response['pickup_id'],'pickup_date'=>$response['pickup_date'],'expected_package_count'=>$response['expected_package_count']]);
-						}
-						
-						return response()->json(['status'=>'success','msg'=>'The pickup request has been generated.']); 
-					}
-					else
-					{  
-						$msg = "Something went wrong.";
-						if(isset($response['pickup_time']))
-						{
-							$msg = $response['pickup_time'];
-						}
-						if(isset($response['pickup_date']))
-						{
-							$msg = $response['pickup_date'];
-						}
-						if(isset($response['pickup_location']))
-						{
-							$msg = $response['pickup_location'];
-						}
-						if(isset($response['error']))
-						{
-							$msg = $response['error']['message'];
-						}
-						
-						return response()->json(['status'=>'error','msg'=>$msg]);
-					}
-				} 
-			} 
-		}
-		
-		public function orderSchedulePickup(Request $request)
-		{
-			$order_id = $request->order_id;
-			$shipping_id = $request->shipping_id;
-			$date = $request->date;
-			$time = $request->time;
-			
-			$order = Order::where('id',$order_id)->first();
-			$shippingcomp = ShippingCompany::whereId($shipping_id)->whereStatus(1)->first();
-			
-			if($shippingcomp->id == 2)
-			{ 
-				$token = Helper::xpressBeesToken($shippingcomp->id); 
-				$url = $shippingcomp->url.'fm/request/new/'; 
-				
-				$courierware = CourierWarehouse::where('vendor_address_id',$order->vendor_address_id)->where('shipping_id',$shipping_id)->first();
-				
-				$dataArray = [
-				'pickup_time'=> $time,
-				'pickup_date'=> $date,
-				'pickup_location'=> $courierware->warehouse_name,
-				'expected_package_count'=> 1,
-				];
-				
-				$response = Helper::postCurl($url,json_encode($dataArray),$token);
-				
-				// echo "<pre>"; print_r($response); echo "</pre>"; die;
-				if(isset($response['error']))
-				{
-					// 	$msg = $response['error']['message'];
-					$msg = $response['error'];
-					return response()->json(['status'=>'error','msg'=>$msg]);
-				}
-				
-				if(isset($response['pickup_id']))
-				{
-					Order::where('id',$order_id)->update(['pickup_location_name'=>$response['pickup_location_name'],'pickup_time'=>$response['pickup_time'],'pickup_id'=>$response['pickup_id'],'pickup_date'=>$response['pickup_date'],'expected_package_count'=>$response['expected_package_count']]);
-					return response()->json(['status'=>'success','msg'=>'The pickup request has been generated.']); 
-				}
-				else
-				{ 
-					$msg = "Something went wrong.";
-					if(isset($response['pickup_time']))
-					{
-						$msg = $response['pickup_time'];
-					}
-					if(isset($response['pickup_date']))
-					{
-						$msg = $response['pickup_date'];
-					}
-					if(isset($response['pickup_location']))
-					{
-						$msg = $response['pickup_location'];
-					}
-					if(isset($response['error']))
-					{
-						$msg = $response['error']['message'];
-					}
-					return response()->json(['status'=>'error', 'msg'=>$msg]);
-				}
-			}
-		}
-		
 		// Warehouse pickup 
 		public function orderWarehouseList()
 		{
@@ -2687,108 +1528,7 @@
 				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
 			}
 		}
-		
-		public function generatePendingExcel()
-		{ 
-			error_reporting(0);
-			return Excel::download(new PendingStarOrderExport,'star-express-order.xlsx');
-		}
-		
-		
-		public function orderTrackingHistoryGlobal($id)
-		{
-			error_reporting(0);
-			$order = Order::whereId($id)->first();
-			$trackingHistories = [];
-			if(!empty($order->awb_number))
-			{ 
-				$shippingcomp = ShippingCompany::whereId($order->shipping_company_id)->whereStatus(1)->first();
-				if($shippingcomp->id == 1)
-				{ 
-					$token = Helper::xpressBeesToken($shippingcomp->id);
-					
-					$url = $shippingcomp->url.'api/shipments2/track/'.$order->awb_number;
-					
-					$response = Helper::callCurlGetApi($url,$token); 
-					$response = json_decode($response,true);
-					if($response['status'] == true)
-					{
-						$trackingHistories = $response['data']['history'];
-					}
-				} 
-				
-				if($shippingcomp->id == 2)
-				{ 
-					$token = Helper::xpressBeesToken($shippingcomp->id);
-					
-					$url = $shippingcomp->url.'api/v1/packages/json?waybill='.$order->awb_number.'&token='.$token.'';
-					$curl = curl_init();
-					curl_setopt_array($curl, array(
-					CURLOPT_URL => $url,
-					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_ENCODING => '',
-					CURLOPT_MAXREDIRS => 10,
-					CURLOPT_TIMEOUT => 0,
-					CURLOPT_FOLLOWLOCATION => true,
-					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					CURLOPT_CUSTOMREQUEST => 'GET',
-					CURLOPT_HTTPHEADER => array(
-					'Cookie: sessionid=bg71z30eiahrpwfasedox06td1arwx4p'
-					),
-					));
-					
-					$response = curl_exec($curl);
-					
-					curl_close($curl);
-					$response = json_decode($response,true);
-					
-					if(isset($response['Success']))
-					{
-						if(empty($response['Success']))
-						{
-							return back()->with('error',$response['Error']);
-						}
-					}
-					
-					$reversedArray = $response['ShipmentData'][0]['Shipment']['Scans']; 
-					$trackingHistories = array_reverse($reversedArray); 
-				} 
-				
-				if($shippingcomp->id == 3)
-				{ 
-					
-					$curl = curl_init();
-					
-					curl_setopt_array($curl, array(
-					CURLOPT_URL => 'https://shipway.in/api/getOrderShipmentDetails',
-					CURLOPT_RETURNTRANSFER => true,
-					CURLOPT_ENCODING => '',
-					CURLOPT_MAXREDIRS => 10,
-					CURLOPT_TIMEOUT => 0,
-					CURLOPT_FOLLOWLOCATION => true,
-					CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-					CURLOPT_CUSTOMREQUEST => 'POST',
-					CURLOPT_POSTFIELDS =>'{
-					"username":"starexpress",
-					"password":"dafd4ff7d6456bf1d5a25ef2ca69f696",
-					"order_id": "'.$order->awb_number.'"
-					}',
-					));
-					
-					$response = curl_exec($curl);
-					
-					curl_close($curl); 
-					$response = json_decode($response,true);
-					if($response['status'] == "Success")
-					{
-						$trackingHistories = $response['response']['scan']; 
-					}  
-				} 
-			}
-			
-			return view('order.tracking-order',compact('order','trackingHistories','shippingcomp'));
-		}
-		
+		   
 		public function orderRemmitance()
 		{ 
 		    $shippingCompany = ShippingCompany::where('status', 1)->get();  
@@ -3365,197 +2105,5 @@
                 \Log::error($e->getMessage());
                 return redirect()->back()->with('error', 'An error occurred. Please try again.');
 			}
-		}
-		
-		public function pickup()
-		{			
-			$status = (isset($_GET['status']))?$_GET['status']:'New';
-			return view('pickup.index',compact('status'));
-		}
-		
-		public function pickupAjax(Request $request)
-		{
-		    
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			
-			// $status = $request->post('status');
-			$status = "pending pickup";
-			
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			if($order = 'action')  
-			{
-				$order = 'id';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			$query = Order::where('orders.id','!=','');
-			// 			$query->where('orders.shipping_company_id','=',3);
-			$query->where('orders.status_courier', 'LIKE', "%$status%");
-			$query->join('customers as c','c.id','=','orders.customer_id');
-			$query->join('vendors as v','v.id','=','orders.vendor_id');
-			$query->join('users as u','u.id','=','orders.user_id');
-			// echo "<pre>"; print_r($id); echo "</pre>"; die;
-			if($role != "admin") 
-			{
-				$query->where('orders.user_id',$id);
-			}
-			if($role == "staff") 
-			{
-				$query->where('u.staff_id',$id);
-			}
-			// 			if($status != "All") 
-			// 			{
-			// 				$query->where('orders.status_courier', 'LIKE', "%$status%");
-			// 			}
-			$totalData = $query->get()->count();
-			// echo "<pre>";	 print_r($totalData); echo "</pre>"; die;
-			$totalFiltered = Order::where('orders.id','!=','');
-			// 			$totalFiltered->where('orders.shipping_company_id','=',3);
-			$totalFiltered->where('orders.status_courier', 'LIKE', "%$status%");
-			$totalFiltered->join('customers as c','c.id','=','orders.customer_id');
-			$totalFiltered->join('vendors as v','v.id','=','orders.vendor_id');
-			$totalFiltered->join('users as u','u.id','=','orders.user_id');
-			
-			if($role != "admin") 
-			{
-				$totalFiltered->where('orders.user_id',$id);
-			}
-			if($role == "staff") 
-			{
-				$totalFiltered->where('u.staff_id',$id);
-			}
-			// 			if($status != "All") 
-			// 			{
-			// 				$totalFiltered->where('status_courier', 'LIKE', "%$status%");;
-			// 			}
-			
-			$values = Order::select('orders.*','c.first_name as c_first_name','c.mobile as c_mobile','c.email as c_email','c.last_name as c_last_name','v.first_name as v_first_name','v.last_name as v_last_name','v.mobile as v_mobile','v.company_name as v_company_name','u.name as user_name','u.company_name as seller_company','u.email as user_email','u.mobile as user_mobile');
-			// 			$values->where('orders.shipping_company_id','=',3);
-			$values->where('orders.status_courier', 'LIKE', "%$status%");
-			$values->join('customers as c','c.id','=','orders.customer_id');
-			$values->join('vendors as v','v.id','=','orders.vendor_id');
-			$values->join('users as u','u.id','=','orders.user_id');
-			
-			if($request->fromdate)
-			{
-				$values->whereDate('orders.pickup_date','like',$request->fromdate);
-			}
-			if($request->todate)
-			{
-				$values->whereDate('orders.pickup_date','like',$request->todate);
-			}
-			if($role != "admin") 
-			{
-				$values->where('orders.user_id',$id);
-			}
-			if($role == "staff") 
-			{
-				$values->where('u.staff_id',$id);
-			}
-			// 			if($status != "All") 
-			// 			{
-			// 				$values->where('status_courier', 'LIKE', "%$status%");
-			// 			}
-			$values->offset($start)->limit($limit)->orderBy('orders'.'.'.$order,$dir);
-			
-			if(!empty($request->input('search')))
-			{ 
-				$search = $request->input('search');
-				$values = $values->where(function ($query) use ($search) 
-				{
-					return $query->where('c.first_name', 'LIKE', '%' . $search . '%')->orWhere('c.last_name', 'LIKE', '%' . $search . '%')->orWhere('c.email', 'LIKE', '%' . $search . '%')->orWhere('c.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%')->orWhere('orders.created_at', 'LIKE',"%{$search}%")->orWhere('orders.awb_number', 'LIKE',"%{$search}%")->orWhere('orders.courier_name', 'LIKE',"%{$search}%")->orWhere('orders.status_courier', 'LIKE',"%{$search}%")->orWhere('orders.id', 'LIKE',"%{$search}%")->orWhere('orders.order_prefix', 'LIKE',"%{$search}%");
-				});
-				
-				$totalFiltered = $totalFiltered->where(function ($query) use ($search) {
-					return $query->where('c.first_name', 'LIKE', '%' . $search . '%')->orWhere('c.last_name', 'LIKE', '%' . $search . '%')->orWhere('c.email', 'LIKE', '%' . $search . '%')->orWhere('c.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%')->orWhere('orders.created_at', 'LIKE',"%{$search}%")->orWhere('orders.awb_number', 'LIKE',"%{$search}%")->orWhere('orders.courier_name', 'LIKE',"%{$search}%")->orWhere('orders.status_courier', 'LIKE',"%{$search}%")->orWhere('orders.id', 'LIKE',"%{$search}%")->orWhere('orders.order_prefix', 'LIKE',"%{$search}%");
-				});  
-			}
-			
-			$values = $values->get(); 
-			$totalFiltered = $totalFiltered->count();
-			
-			$data = array();
-			if(!empty($values))
-			{
-				$i = $start + 1; 
-				foreach ($values as $value)
-				{    
-					
-					$orderitems = OrderItem::whereOrder_id($value->id)->get();
-					$vendoradd = VendorAddress::whereId($value->vendor_address_id)->first();
-					$product_details = "";
-					foreach($orderitems as $key => $orderitem)
-					{
-						$product_details .= '<p>'.$orderitem->product_name.'  Amount :'.$orderitem->amount.'  QTY : '.$orderitem->quantity.'</p>'; 
-						if(count($orderitems) - 1 != $key)
-						{
-							$product_details .= ' | ';
-						}
-					}
-					$volumetric_wt = $value->length * $value->width * $value->height / 5000;
-					
-					$mainData['id'] = $i;
-					$mainData['seller_details'] = ' <div class="main-cont1-2"><p> '.$value->user_name.' ('.$value->seller_company .') </p><p> '.$value->user_email.'  </p><p> '.$value->user_mobile.' </p></div>';
-					$mainData['order_details'] = '<div class="main-cont1-1"><div class="checkbox checkbox-purple"><a href="'.url('order/details/'.$value->id).'"> #'.$value->order_prefix.' </a> </div><p style="padding-left:0"> '.date('Y M d | h:i A',strtotime($value->created_at)).'</p>  <span  style="padding-left:0"> <a href="javascript:;" ><div class="tooltip" data-toggle="tooltip" data-placement="top" title="'.strip_tags($product_details).'"> View Products</div></a> </span></div>'; 
-					
-					$mainData['customer_details'] = ' <div class="main-cont1-2"><p> '.$value->c_first_name.' '.$value->c_last_name .' </p><p> '.$value->c_email.'  </p><p> '.$value->c_mobile.' </p></div>';
-					
-					$mainData['package_details'] = '<div class="main-cont1-2"><p> Dead wt. : '.$value->weight.' kg </p><p> '.$value->length.' x '.$value->width.' x '.$value->height.' (cm) </p><p> Volumetric wt.: '.$volumetric_wt.' Kg </p></div>';
-					
-					$mainData['total_amount'] =  ' <div class="main-cont1-2"> <p> '.$value->total_amount.' </p><p class="'.strtolower($value->order_type).'"> '.$value->order_type.' </p></div>';
-					
-					$mainData['pickup_address'] =  '<div class="tooltip"> '.strtoupper($value->v_company_name).'<span class="tooltiptext"> <b> '.$value->v_first_name.' '.$value->v_last_name.' </b><br><b>Address </b>: '.$vendoradd->address.' '.$vendoradd->city.' <br> '.$vendoradd->state.'-'.$vendoradd->zip_code.'<br>'.$value->v_mobile.'</span></div>'; 
-					
-					$mainData['status_courier'] = '<p class="prepaid"> '.$value->status_courier.' </p>'; 
-					if($value->pickup_date == '')
-					{
-						$pickup_date = "Not Found";
-					}else
-					{
-						$pickup_date = $value->pickup_date;
-					}
-					if($value->pickup_id == '' )
-					{
-					    $pickup_id = "Not Found";
-					}else
-					{
-					    $pickup_id = $value->pickup_id;
-					}
-					if($value->pickup_time == '')
-					{
-						$pickup_time = "Not Found";
-					}else
-					{
-						$pickup_time = $value->pickup_time;
-					}
-					$mainData['pickup_details'] = ' <div class="main-cont1-2"><p> '.$pickup_id.'  </p><p> '.$pickup_date	.'  </p><p> '.$pickup_time.' </p></div>';
-					
-					$data[] = $mainData;
-					$i++;
-				}
-			}
-			
-			$response = array(
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
-			); 
-			
-			echo json_encode($response);
-			exit;
-		}
+		} 
 	}

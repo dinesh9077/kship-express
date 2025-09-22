@@ -13,8 +13,7 @@ class Order extends Model
         'user_id', 'order_prefix', 'order_type', 'vendor_id', 'vendor_address_id',
         'customer_id', 'customer_address_id', 'shipping_company_id', 'shipping_mode',
         'tax', 'tax_percentage', 'round_off', 'shipping_charge', 'total_amount',
-        'status_courier', 'order_image', 'length_image', 'width_image', 'height_image',
-        'weight_image', 'reason_cancel', 'order_date', 'order_cancel_date', 'delivery_date',
+        'status_courier', 'courier_logo', 'reason_cancel', 'order_date', 'order_cancel_date', 'delivery_date',
         'status', 'is_online', 'weight', 'length', 'width', 'height', 'packaging_id',
         'shipment_id', 'awb_number', 'courier_name', 'courier_id', 'label', 'manifest',
         'weight_status', 'weight_update_date', 'applicable_weight', 'weight_freeze_status',
@@ -26,8 +25,7 @@ class Order extends Model
 		'api_response', 'api_response1', 'invoice_document', 'weight_order', 'insurance_type', 'is_fragile_item'
     ];
 	
-	protected $casts = [
-		'order_image' => 'array',
+	protected $casts = [ 
 		'api_response' => 'array',
 		'api_response1' => 'array',
 		'invoice_document' => 'array'

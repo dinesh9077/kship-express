@@ -209,11 +209,6 @@
 	{ 
 		Route::get('/', [App\Http\Controllers\OrderController::class, 'index'])->name('order')->middleware('permission:order.view');   
 		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'orderAjax'])->name('order.ajax');   
-		
-		Route::get('/invoice_generate/{id}', [App\Http\Controllers\OrderController::class,'invoice_generate'])->name('order.invoice_generate');  
-		Route::post('/multi_invoice_generate', [App\Http\Controllers\OrderController::class,'multi_invoice_generate'])->name('order.multi_invoice_generate'); 
-		Route::get('/invoice_view/{id}', [App\Http\Controllers\OrderController::class,'invoice_view'])->name('order.invoice_view'); 
-		Route::post('/multi_invoice_download', [App\Http\Controllers\OrderController::class,'multi_invoice_download'])->name('order.multi_invoice_download'); 
 		 
 		Route::get('/details/{id}', [App\Http\Controllers\OrderController::class,'orderDetails']);  
 		
@@ -238,18 +233,9 @@
 		Route::get('/shipping-lable/{orderId}', [App\Http\Controllers\OrderController::class, 'orderShippingLableDownload'])->name('order.shipping-download');
 		Route::get('/waybill-copy/{orderId}', [App\Http\Controllers\OrderController::class, 'orderWayBillCopy']); 
 		
-		Route::get('/label/{id}', [App\Http\Controllers\OrderController::class, 'orderLableDownload'])->name('order.downloadLabel');
-		Route::post('/download/all-lable', [App\Http\Controllers\OrderController::class, 'alllabeldownload'])->name('order.download-all-lable');
-		
-		Route::get('/tracking-order/{id}', [App\Http\Controllers\OrderController::class,'orderTrackingHistoryGlobal']);  
-		Route::get('/ecom-tracking-order/{id}', [App\Http\Controllers\OrderController::class,'ecomtrackorder']); 
-		Route::post('/download-manifest', [App\Http\Controllers\OrderController::class, 'orderDownloadManifest'])->name('order.download-manifest');  
-		Route::post('/pickup-all', [App\Http\Controllers\OrderController::class, 'orderPickupAll'])->name('order.pickup.all'); 
-		
-		Route::get('/download/lable/{id}', [App\Http\Controllers\OrderController::class, 'orderLableGenerate']);   
-		Route::get('/lable/{order_id}', [App\Http\Controllers\OrderController::class, 'showLabel'])->name('order.label'); 
-		 
-		Route::post('/schedule/pickup', [App\Http\Controllers\OrderController::class, 'orderSchedulePickup']);  
+		Route::get('/download-label/{id}', [App\Http\Controllers\OrderController::class, 'orderLableDownload'])->name('order.downloadLabel');
+		Route::get('/download/all-lable', [App\Http\Controllers\OrderController::class, 'alllabeldownload'])->name('order.download-all-lable'); 
+		     
 		Route::post('/warehouse/add', [App\Http\Controllers\OrderController::class, 'orderwarehouseAdd'])->name('order.warehouse.address');  
 		
 		// Warehouse Pickup
@@ -261,10 +247,7 @@
 		Route::get('/customer/address-list/{customerId}', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressList'])->name('order.customer.address-list'); 
 		Route::get('/customer/create', [App\Http\Controllers\OrderController::class, 'orderCustomerCreate'])->name('order.customer.create'); 
 		Route::get('/customer-address/create/{customerId}', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressCreate'])->name('order.customer-address.create'); 
-		Route::post('/customer-address/store', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressStore'])->name('order.customer-address.store'); 
-		 
-		Route::get('/generate-pending/excel', [App\Http\Controllers\OrderController::class, 'generatePendingExcel'])->name('order.star-pending.excel');   
-		 
+		Route::post('/customer-address/store', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressStore'])->name('order.customer-address.store');  
 	});	
 	
 	// Remmitance Reports
@@ -291,14 +274,7 @@
 		Route::post('/codRemmitance',[App\Http\Controllers\OrderController::class, 'codRemittance'])->name('codRemmitance');
 		
 	});
-	  
-	// Pickup Reports
-	Route::group(['prefix'=> 'pickup'], function () {
-		Route::get('/', [App\Http\Controllers\OrderController::class, 'pickup'])->name('pickup'); 
-		Route::post('/pickupajax', [App\Http\Controllers\OrderController::class, 'pickupAjax'])->name('pickup.ajax');  
-		
-	});
-	
+	    
 	// Daily Reports
 	Route::get('/report/order', [App\Http\Controllers\ReportController::class, 'index'])->name('report.order')->middleware('permission:order_report.view'); 
 	Route::post('/report/order/ajax', [App\Http\Controllers\ReportController::class, 'reportOrderAjax'])->name('report.order.ajax');

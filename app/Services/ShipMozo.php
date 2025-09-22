@@ -79,12 +79,12 @@
 		{  
 			try {
 				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
-
+ 
 				$requestBody = [
-					"pickup_pincode"   => $request->pickup_code,
-					"delivery_pincode" => $request->delivery_code,
+					"pickup_pincode"   => $request['pickup_code'],
+					"delivery_pincode" => $request['delivery_code'],
 				];
-
+			
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
@@ -181,378 +181,300 @@
 			} 
 		}
 		
-		public function freightEstimate($order, $delhivery)
-		{  	
-			$totalWeightInKg = $order->orderItems->sum(fn($item) => $item->dimensions['weight'] ?? 0);
-			$totalInvoiceAmount = $order->orderItems->sum(fn($item) => $item->amount ?? 0);
-			$sourcePin = $order->warehouse->zip_code ?? '';
-			$consigneePin = $order->customerAddress->zip_code ?? '';
-			
-			$conversionFactors = [
-				"ft"   => 30.48,
-				"inch" => 2.54,
-				"cm"   => 1 // No conversion needed
-			];
-			
-			// Determine the correct conversion factor
-			$factor = $conversionFactors[$order->dimension_type] ?? 1;
+		public function orderRateCaculator($order, $shippingCompany)
+		{  	  
+			try {  
+				$dimensions = []; 
+				if (!empty($order->orderItems->isNotEmpty())) {
+					$conversionFactors = [ 
+						"cm"   => 1
+					]; 
+					
+					$factor = $conversionFactors[$order->dimension_type] ?? 1; 
+					foreach ($order->orderItems as $index => $orderItem) {
+						$dimensions[] = [
+							"no_of_box" => $orderItem->quantity ?? 0,
+							"length" => ($orderItem->dimensions['length'] ?? 0) * $factor,
+							"width"  => ($orderItem->dimensions['width'] ?? 0) * $factor,
+							"height" => ($orderItem->dimensions['height'] ?? 0) * $factor,
+						];
+					}
+				}
 				
-			$dimensions = $order->orderItems->map(fn($orderItem) => [
-				"length_cm" => ($orderItem->dimensions['length'] ?? 0) * $factor,
-				"width_cm" => ($orderItem->dimensions['width'] ?? 0) * $factor,
-				"height_cm" => ($orderItem->dimensions['height'] ?? 0) * $factor,
-				"box_count" => $orderItem->quantity ?? 0,
-			])->toArray();
-			 
-			$requestBody = [
-				"dimensions" => $dimensions,
-				"weight_g" => $totalWeightInKg > 0 ? ($totalWeightInKg * 1000) : 0,
-				"cheque_payment" => false,
-				"source_pin" => $sourcePin,
-				"consignee_pin" => $consigneePin,
-				"payment_mode" => $order->order_type, 
-				"inv_amount" => $totalInvoiceAmount,
-				"freight_mode" => strtolower($order->freight_mode),
-				"rov_insurance" => $order->insurance_type == 1 ? false : true
-			];
-			if($order->order_type === "cod")
-			{
-				$requestBody['cod_amount'] = $order->cod_amount;
-			}
-			$baseUrl = rtrim($delhivery->url ?? '', '/');  
-            $response = Http::withHeaders([ 
-				'Authorization' => 'Bearer '.$delhivery->api_key,
-				'Content-Type' => 'application/json',
-			])
-			->withOptions([
-				'verify' => false,
-			])
-			->post($baseUrl.'/freight/estimate', $requestBody);
-		  
-			// Handle the response
-			if ($response->successful()) {
-				return [
-					'success' => true, 
-					'request' => $requestBody, 
-					'response' => $response->json(),
-				];
-			}
+				$codAmount = strtolower($order->order_type) === "prepaid" ? '' : ($order->cod_amount ?? ''); 
+				$requestBody = [
+					"order_id"        	=> "", 
+					"pickup_pincode" 	=> optional($order->warehouse)->zip_code ?? '',
+					"delivery_pincode" 	=> optional($order->customerAddress)->zip_code ?? '', 
+					"payment_type"    	=> strtoupper($order->order_type),
+					"shipment_type"  	=> "FORWARD",
+					"order_amount"   	=> $order->invoice_amount,
+					"type_of_package"	=> count($dimensions) > 1 ? "MPS" : "SPS",
+					"rov_type"        	=> $order->insurance_type == 1 ? 'ROV_OWNER' : 'ROV_CARRIER',
+					"cod_amount"      	=> $codAmount,
+					"weight"          	=> $order->weight * 1000,
+					"dimensions"        => $dimensions,
+				]; 
+			
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+ 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->post($baseUrl . '/rate-calculator', $requestBody);
 
-			// If the response was unsuccessful, return an error response
-			return [
-				'success' => false, 
-				'request' => $requestBody, 
-				'response' => json_decode($response->body(), true),
-			];  
-		}
+				if ($response->successful()) {
+					return [
+						'success'  => true, 
+						'request'  => $requestBody, 
+						'response' => $response->json(),
+					];
+				}
+
+				return [
+					'success'  => false, 
+					'request'  => $requestBody, 
+					'response' => json_decode($response->body(), true),
+				];
+
+			} catch (\Throwable $e) {  
+				return [
+					'success'  => false,
+					'request'  => $requestBody, 
+					'response' => ['error' => 'Unable to connect to pincode service.'],
+					'message'  => $e->getMessage(),
+				];
+			} 
+		} 
 		
-		
-		
-		public function manifest($order, $requestData, $delhivery)
+		public function pushOrder($order, $requestData, $shippingCompany)
         {  	   
-        	$user = Auth::user()->load('userKyc'); 
-			$pancardNumber = $user->userKyc->pancard ?? $user->pancard_number ?? null;
+			try {  
+				//$user = Auth::user()->load('userKyc'); 
+				//$pancardNumber = $user->userKyc->pancard ?? $user->pancard_number ?? null;
+	
+				$totalWeightInGm = $requestData['applicable_weight'] * 1000;
+				
+				$consigneeName = implode(' ', [
+					$order->customer->first_name ?? '',
+					$order->customer->last_name ?? ''
+				]);
+			
+				$customerAddress = $order->customerAddress ?? null; 
+				$customer_address = $customerAddress 
+				? implode(' ', array_filter([
+					trim($customerAddress->address ?? ''),
+					trim($customerAddress->city ?? ''),
+					trim($customerAddress->state ?? ''),
+					trim($customerAddress->zip_code ?? '')
+				])) . (isset($customerAddress->country) ? ', ' . trim($customerAddress->country) : '')
+				: '';
+	  
+				$productDetail = $order->orderItems->map(function($item) {
+					return [
+						"name"             => $item->product_name,
+						"sku_number"       => $item->sku_number,
+						"quantity"         => $item->quantity,
+						"discount"         => "",
+						"hsn"              => $item->hsn_number,
+						"unit_price"       => $item->amount,
+						"product_category" => $item->product_category,
+					];
+				})->toArray(); 
  
-        	$totalWeightInGm = $order->orderItems->sum(fn($item) => $item->dimensions['weight'] ?? 0) * 1000;
-        	
-        	$consigneeName = implode(' ', [
-        		$order->customer->first_name ?? '',
-        		$order->customer->last_name ?? ''
-        	]);
-        
-        	$dropOffLocation = [
-        		"consignee_name" => $consigneeName,
-        		"address" => $order->customerAddress->address ?? '',
-        		"city" => $order->customerAddress->city ?? '',
-        		"state" => $order->customerAddress->state ?? '',
-        		"zip" => $order->customerAddress->zip_code ?? '',
-        		"phone" => $order->customer->mobile ?? '',
-        		"email" => $order->customer->email ?? '',
-        	];
-        
-        	$shipmentDetails = $order->orderItems->map(fn($item) => [
-        		"order_id" => "{$item->id}",
-        		"box_count" => $item->quantity,
-        		"description" => $item->product_discription,
-        		"weight" => ($item->dimensions['weight'] ?? 0) * 1000, 
-        		"waybills" => [], 
-        		"master" => 0
-        	])->toArray();
-        
-        	$dimensions = $order->orderItems->map(fn($item) => [
-        		"box_count" => $item->quantity,
-        		"length" => $item->dimensions['length'] ?? 0,
-        		"width" => $item->dimensions['width'] ?? 0,
-        		"height" => $item->dimensions['height'] ?? 0
-        	])->toArray();
-        
-        	$invoices = [
-        		[
-        			"inv_num" => $order->invoice_no,
-        			"inv_amt" => $order->invoice_amount,
-        			"inv_qr_code" => '',
-        			"ewaybill" => $order->ewaybillno ?? ''
-        		]
-        	];
-        
-        	$billingAddress = [
-        		"name" => $user->name,
-        		"consignor" => $user->name,
-        		"company" => $user->company_name,
-        		"address" => $user->address,
-        		"city" => $user->city,
-        		"state" => $user->state,
-        		"pin" => $user->zip_code,
-        		"phone" => $user->mobile,
-        		"pan_number" => $pancardNumber ?? null
-        	];
-        
-        	$docData = [
-        		[
-        			"doc_type" => "INVOICE_COPY",
-        			"doc_meta" => [
-        				"invoice_num" => [$order->invoice_no]
-        			]
-        		]
-        	]; 
-        
-        	$requestBody = [
-        		'lrn' => '',
-        		'pickup_location_name' => $order->warehouse->warehouse_name ?? '',
-        		'payment_mode' => $order->order_type,
-        		'cod_amount' => $order->cod_amount,
-        		'weight' => (float) $totalWeightInGm,
-        		'dropoff_location' => json_encode($dropOffLocation),  
-        		'rov_insurance' => 0,
-        		'invoices' => json_encode($invoices),
-        		'shipment_details' => json_encode($shipmentDetails), 
-        		'dimensions' => json_encode($dimensions),  
-        		'doc_data' => json_encode($docData),   
-        		'freight_mode' => strtolower($order->freight_mode),
-        		'fm_pickup' => 1,
-        		'billing_address' => json_encode($billingAddress)
-        	];
-        
-        	// API Base URL
-        	$baseUrl = rtrim($delhivery->url ?? '', '/');  
-        
-			// Start the HTTP request
-        	$request = Http::withHeaders([ 
-        		'Authorization' => 'Bearer ' . $delhivery->api_key,
-        	])->withOptions([
-        		'verify' => false,
-        	]);
-        
-        	// Attach Images One by One
-        	if (!empty($order->invoice_document)) {  
-                $filePath = 'orders/' . $order->id . '/' . $order->invoice_document[0];
-            
-                // Check if the file exists in storage
-                if (!Storage::disk('public')->exists($filePath)) {
-                    return [
-                        'success' => false,
-                        'message' => 'invoice document not found in storage.'
-                    ];
-                }
-            
-                // Get the full path of the file
-                $fullPath = Storage::disk('public')->path($filePath);
-            
-                // Attach the file to the request
-                $request = $request->attach(
-                    'doc_file', file_get_contents($fullPath), basename($fullPath)
-                );
-            }
- 
-        
-        	// Send the request
-        	$response = $request->asMultipart()->post($baseUrl . '/manifest', $requestBody);
-        
-        	// Handle the response
-        	if ($response->successful()) {
-        		return [
-        			'success' => true, 
-        			'request' => $requestBody, 
-        			'response' => $response->json(),
-        		];
-        	} 
-        	
-        	// If the response was unsuccessful, return an error response
-        	return [
-        		'success' => false, 
-        		'request' => $requestBody, 
-        		'response' => json_decode($response->body(), true),
-        	];  
-        }
-		
-		public function createPickupRequest($requestData, $delhivery)
-        {  	 
-			$courierWarehouse = CourierWarehouse::find($requestData['warehouse_id']);
-			$startTime = $requestData['pickup_start_time'] ? date('H:i:s', strtotime($requestData['pickup_start_time'])) : '';
-			$endTime = $requestData['pickup_end_time'] ? date('H:i:s', strtotime($requestData['pickup_end_time'])) : '';
-        	$requestBody = [
-        		'client_warehouse' => $courierWarehouse->warehouse_name,
-        		'pickup_date' => $requestData['pickup_date'] ?? '',
-        		'start_time' => (string)$startTime,
-        		'end_time' => (string)$endTime,
-        		'expected_package_count' => (int)$requestData['expected_package_count'] ?? 0,
-        	];
-			 
-        	// API Base URL
-        	$baseUrl = rtrim($delhivery->url ?? '', '/');  
-        
-			// Start the HTTP request
-        	$request = Http::withHeaders([ 
-        		'Authorization' => 'Bearer ' . $delhivery->api_key,
-        	])->withOptions([
-        		'verify' => false,
-        	]); 
-        	// Send the request
-        	$response = $request->post($baseUrl . '/pickup_requests', $requestBody);
-        
-        	// Handle the response
-        	if ($response->successful()) {
-        		return [
-        			'success' => true, 
-        			'request' => $requestBody, 
-        			'response' => $response->json(),
-        		];
-        	} 
-        	
-        	// If the response was unsuccessful, return an error response
-        	return [
-        		'success' => false, 
-        		'request' => $requestBody, 
-        		'response' => json_decode($response->body(), true),
-        	];  
-        }
-		
-		public function cancelPickupRequest($pickupId, $delhivery)
-        {  	  
-			 
-        	// API Base URL
-        	$baseUrl = rtrim($delhivery->url ?? '', '/');  
-        
-			// Start the HTTP request
-        	$request = Http::withHeaders([ 
-        		'Authorization' => 'Bearer ' . $delhivery->api_key,
-        	])->withOptions([
-        		'verify' => false,
-        	]); 
-        	// Send the request
-        	$response = $request->delete($baseUrl . '/pickup_requests/'.$pickupId);
-        
-        	// Handle the response
-        	if ($response->successful()) {
-        		return [
-        			'success' => true,  
-        			'response' => $response->json(),
-        		];
-        	} 
-        	
-        	// If the response was unsuccessful, return an error response
-        	return [
-        		'success' => false,  
-        		'response' => json_decode($response->body(), true),
-        	];  
-        }
-		
-		public function manifestStatus($jobId, $delhivery)
-		{  
-			$baseUrl = rtrim($delhivery->url ?? '', '/');  
-
-			// Make API request
-			$response = Http::withHeaders([
-				'Authorization' => 'Bearer ' . $delhivery->api_key,
-				'Accept' => 'application/json',
-			])->withOptions([
-				'verify' => false, // Disable SSL verification (only if needed)
-			])->get("$baseUrl/manifest", ['job_id' => $jobId]);
-
-			// Check if request was successful
-			if ($response->successful()) {
+				$codAmount = strtolower($order->order_type) === "prepaid" ? '' : ($order->cod_amount ?? ''); 
+				
+				$requestBody = [
+					"order_id"                     => $order->order_prefix,
+					"order_date"                   => $order->order_date,
+					"order_type"                   => "ESSENTIALS",
+					"consignee_name"               => $consigneeName,
+					"consignee_phone"              => $order->customer->mobile ?? '',
+					"consignee_alternate_phone"    => "",
+					"consignee_email"              => $order->customer->email ?? '',
+					"consignee_address_line_one"   => $customer_address ?? '',
+					"consignee_address_line_two"   => "",
+					"consignee_pin_code"           => $order->customerAddress->zip_code ?? '',
+					"consignee_city"               => $order->customerAddress->city ?? '',
+					"consignee_state"              => $order->customerAddress->state ?? '',
+					"product_detail"               => $productDetail,
+					"payment_type"                 => strtoupper($order->order_type),
+					"cod_amount"                   => $codAmount ?? "",
+					"shipping_charges"             => "",
+					"weight"                       => $totalWeightInGm,
+					"length"                       => $order->length,
+					"width"                        => $order->width,
+					"height"                       => $order->height,
+					"warehouse_id"                 => $order->warehouse->shipping_id ?? '',
+					"gst_ewaybill_number"          => $order->ewaybillno,
+					"gstin_number"                 => $order->customer->gst_number ?? ''
+				]; 
+				 
+				// API Base URL
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+				 
+				// Start the HTTP request 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->post($baseUrl . '/push-order', $requestBody);
+				 
+				// Handle the response
+				if ($response->successful()) {
+					return [
+						'success' => true, 
+						'request' => $requestBody, 
+						'response' => $response->json(),
+					];
+				} 
+				
+				// If the response was unsuccessful, return an error response
 				return [
-					'success' => true,
-					'response' => $response->json(),
+					'success' => false, 
+					'request' => $requestBody, 
+					'response' => json_decode($response->body(), true),
+				];  
+			} catch (\Throwable $e) {  
+				return [
+					'success'  => false,
+					'request'  => $requestBody, 
+					'response' => ['error' => 'Unable to connect to pincode service.'],
+					'message'  => $e->getMessage(),
 				];
-			}
-
-			// Return error response if failed
-			return [
-				'success' => false,
-				'response' => json_decode($response->body(), true),
-			];
-		}
+			} 
+        }
 		 
-		public function cancelShipmentByLrNo($lrNo, $delhivery)
+		public function assignCourier($orderId, $courierId, $shippingCompany)
 		{  
-			try {
-				$baseUrl = rtrim($delhivery->url ?? '', '/');
-
-				// Make API request
-				$response = Http::withHeaders([
-					'Authorization' => 'Bearer ' . $delhivery->api_key,
-					'Accept' => 'application/json',
-				])->withOptions([
-					'verify' => false, 
-				])->delete("$baseUrl/lrn/cancel/$lrNo");
-
-				// Check if request was successful
+			try{
+				// API Base URL
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+				 
+				$requestBody = [
+					'order_id' => $orderId,
+					'courier_id' => $courierId
+				];
+				
+				// Start the HTTP request 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->post($baseUrl . '/assign-courier', $requestBody);
+				 
+				// Handle the response
 				if ($response->successful()) {
 					return [
-						'success' => true,
+						'success' => true, 
+						'request' => $requestBody, 
 						'response' => $response->json(),
 					];
-				}
- 
+				} 
+				
+				// If the response was unsuccessful, return an error response
 				return [
-					'success' => false,
+					'success' => false, 
+					'request' => $requestBody, 
 					'response' => json_decode($response->body(), true),
-				];
-
-			} catch (\Exception $e) {
-				  
+				];  
+			} catch (\Throwable $e) {  
 				return [
-					'success' => false,
-					'response' => ['error' => 'An unexpected error occurred.'],
+					'success'  => false,
+					'request'  => $requestBody, 
+					'response' => ['error' => 'Unable to connect to pincode service.'],
+					'message'  => $e->getMessage(),
 				];
-			}
+			} 
+		}
+		  
+		public function trackOrder($awbNumber, $shippingCompany)
+		{  
+			try{
+				// API Base URL
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+				 
+				$requestBody = [
+					'awb_number' => $awbNumber
+					//'awb_number' => 'SF2079425818SPZ'
+				];
+				
+				// Start the HTTP request 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->get($baseUrl . '/track-order', $requestBody);
+				 
+				// Handle the response
+				if ($response->successful()) {
+					return [
+						'success' => true, 
+						'request' => $requestBody, 
+						'response' => $response->json(),
+					];
+				} 
+				
+				// If the response was unsuccessful, return an error response
+				return [
+					'success' => false, 
+					'request' => $requestBody, 
+					'response' => json_decode($response->body(), true),
+				];  
+			} catch (\Throwable $e) {  
+				return [
+					'success'  => false,
+					'request'  => $requestBody, 
+					'response' => ['error' => 'Unable to connect to pincode service.'],
+					'message'  => $e->getMessage(),
+				];
+			} 
 		}
 		
-		public function trackOrderByLrNo($lrNo, $delhivery)
+		public function cancelShipment($order, $shippingCompany)
 		{  
-			try {
-				$baseUrl = rtrim($delhivery->url ?? '', '/');
-
-				// Make API request
-				$response = Http::withHeaders([
-					'Authorization' => 'Bearer ' . $delhivery->api_key,
-					'Accept' => 'application/json',
-				])->withOptions([
-					'verify' => false, 
-				])->get("$baseUrl/lrn/track", ['lrnum' => $lrNo]);
-
-				// Check if request was successful
+			
+			try{
+				// API Base URL
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+				 
+				$requestBody = [
+					'order_id' => $order->shipment_id,
+					'awb_number' => $order->awb_number,
+				];
+				 
+				// Start the HTTP request 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->post($baseUrl . '/cancel-order', $requestBody);
+				  
+				// Handle the response
 				if ($response->successful()) {
 					return [
-						'success' => true,
+						'success' => true, 
+						'request' => $requestBody, 
 						'response' => $response->json(),
 					];
-				}
- 
+				} 
+				
+				// If the response was unsuccessful, return an error response
 				return [
-					'success' => false,
+					'success' => false, 
+					'request' => $requestBody, 
 					'response' => json_decode($response->body(), true),
-				];
-
-			} catch (\Exception $e) {
-				  
+				];  
+			} catch (\Throwable $e) {  
 				return [
-					'success' => false,
-					'response' => ['error' => 'An unexpected error occurred.'],
+					'success'  => false,
+					'request'  => $requestBody, 
+					'response' => ['error' => 'Unable to connect api.'],
+					'message'  => $e->getMessage(),
 				];
 			}
-		}
+		} 
 		
 		public function shippingLableByLrNo($lrNo, $delhivery)
 		{  

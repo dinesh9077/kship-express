@@ -151,7 +151,10 @@
 									<table class="table mb-0">
 										<thead class="thead-light">
 											<tr> 
-												<th> Description </th> 
+												<th> Product name </th> 
+												<th> Product Category </th> 
+												<th> Sku Number </th> 
+												<th> Hsn Number </th> 
 												<th> Qty (No Of Box)</th> 
 												<th> Amount </th> 
 											</tr>
@@ -160,14 +163,16 @@
 											<tbody>
 												@foreach($order->orderItems as $orderItem)
 												<tr> 
-													<td> {{ $orderItem->product_discription }} </td>   
+													<td> {{ $orderItem->product_name }} </td>   
+													<td> {{ $orderItem->product_category }} </td>   
+													<td> {{ $orderItem->sku_number }} </td>   
+													<td> {{ $orderItem->hsn_number }} </td>   
 													<td> {{ $orderItem->quantity }}  </td>
 													<td> {{ $orderItem->amount }} </td>   
 												</tr>
 												@endforeach 
-												<tr>
-													<td> </td>  
-													<td> <b> Order Total </b> </td>
+												<tr> 
+													<td colspan="5"> <b> Order Total </b> </td>
 													<td> <b> {{ $order->total_amount }} </b> </td>
 												</tr>
 											</tbody>
@@ -215,7 +220,7 @@
 								@endif
 							</div>
 						</div>
-						<div class="main-ord-1-text">
+						{{-- <div class="main-ord-1-text">
 							<div class="main-hed-order-details">
 								<div class="main-headet-det">
 									<img src="{{asset('assets/images/new2.png')}}">
@@ -255,6 +260,7 @@
 								</div>
 							</div>
 						@endif
+						--}}
 					</div>
 					
 					 <div class="col-lg-4">
@@ -291,32 +297,19 @@
 										@if(!empty($order->awb_number) && !empty($trackingHistories))
 											<div class="main-content-001">
 												@foreach($trackingHistories as $key => $trackingHistory) 
-													@if($order->shipping_company_id == 2)
+													@if($order->shipping_company_id == 1)
 														<div class="step {{ $key == 0 ? 'completed' : '' }}  {{ $key == 1 ? 'active' : '' }}">
 															<div class="v-stepper">
 																<div class="circle"></div>
 																<div class="line"></div>
 															</div> 
 															<div class="content">
-																<h4> {{ $trackingHistory['status'] ?? '' }} </h4>
-																<h4> {{ $trackingHistory['scan_remark'] ?? '' }} </h4>
-																<h6> {{ date('d M Y, h:i a', strtotime($trackingHistory['scan_timestamp'])) }} </h6>
+																<h4> {{ $trackingHistory['status'] }} </h4>
+																<h4> {{ $trackingHistory['location'] ?? '' }} </h4>
+																<h6> {{ date('d M Y, h:i a', strtotime($trackingHistory['date'])) }} </h6>
 															</div>
 														</div>
-													@endif 
-													@if($order->shipping_company_id == 3)
-														<div class="step {{ $key == 0 ? 'completed' : '' }}  {{ $key == 1 ? 'active' : '' }}">
-															<div class="v-stepper">
-																<div class="circle"></div>
-																<div class="line"></div>
-															</div> 
-															<div class="content">
-																<h4> {{ $trackingHistory['ScanDetail']['Scan'] ?? '' }} </h4>
-																<h4> {{ $trackingHistory['ScanDetail']['Instructions'] ?? '' }} </h4>
-																<h6> {{ date('d M Y, h:i a', strtotime($trackingHistory['ScanDetail']['ScanDateTime'])) }} </h6>
-															</div>
-														</div>
-													@endif 
+													@endif  
 												@endforeach 
 											</div>
 										@else	

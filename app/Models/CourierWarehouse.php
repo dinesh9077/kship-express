@@ -24,12 +24,14 @@ class CourierWarehouse extends Model
         'city',
         'state',
         'country',
-        'zip_code'
+        'zip_code',
+        'label_options'
     ];
 	
 	protected $casts = [
         'api_response' => 'array',
         'created' => 'array',
+        'label_options' => 'array',
     ];
 	
 	protected $hidden = [

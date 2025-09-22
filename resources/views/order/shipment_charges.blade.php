@@ -16,7 +16,7 @@
 				
 				<div class="main-text1-pickup-from">
 					<p> Invoice Amount </p>
-					<h6> ₹{{ $order->total_amount ?? 0 }} </h6>
+					<h6> ₹{{ $order->invoice_amount ?? 0 }} </h6>
 				</div>
 				
 				<div class="main-text1-pickup-from">
@@ -26,9 +26,12 @@
 				
 				<div class="main-text1-pickup-from">
 					<p> Applicable Weight (in Kg) </p>
-					<h6>{{ $order->orderItems->sum(fn($item) => $item->dimensions['weight'] ?? 0) }} Kg </h6>
-				</div>
-				
+					@php  
+						$volumetricWt = $order->length * $order->width * $order->height / 5000; 
+						$weight = $order->weight; 
+					@endphp
+					<h6>{{ max($volumetricWt, $weight) ?? 0 }} Kg </h6>
+				</div> 
 			</div>
 		</div>
 	</div>
@@ -43,7 +46,8 @@
 				<table id="example" class="" style="width:100%">
 					<thead>
 						<tr>
-							<th style="text-align:left"> Courier Partner </th> 
+							<th style="text-align:left"> Logo </th> 
+							<th> Courier </th>
 							<th> Chargeable Weight </th>
 							<th> Charges </th>
 							<th> Action </th>
@@ -55,19 +59,22 @@
 								<td>
 									<div class="main-img-and-product">
 										<div class="pro-img-11">
-											<img src="{{$courier['shipping_company_logo']}}" style="width: 50px; height: 50px;">
-										</div>
-										<div class="main-content-1-pro">
-											<h5> {{ $courier['courier_name'] }} </h5>
-											<h6>  Min-weight: {{ $courier['min_weight'] }} kg </h6> 
-										</div>
+											<img src="{{$courier['shipping_company_logo']}}" style="width: 80px; height: 70px;">
+										</div> 
 									</div>
 								</td> 
-								<td> {{ $courier['chargeable_weight'] }} Kg </td>
+								<td> {{ $courier['courier_name'] }} </td>
+								<td> {{ $courier['chargeable_weight'] }} </td>
 								<td> ₹{{ $courier['total_charges'] }} </td>
 								<td>
+									<button type="button" 
+										class="btn btn-primary" 
+										data-courier='@json(\Illuminate\Support\Arr::except($courier, ["responseData"]))' 
+										onclick="shipNowOrder(this, event)">
+										Ship Now
+									</button>
+
 									<button type="button" class="btn btn-primary" data-freight-charge='@json($courier)' onclick="viewFreightBreakup(this, event)">View Freight Breakup</button> 
-									<button type="button" class="btn btn-primary" data-courier='@json($courier)' onclick="shipNowOrder(this, event)"> Ship Now </button> 
 								</td> 
 							</tr>
 						@endforeach 

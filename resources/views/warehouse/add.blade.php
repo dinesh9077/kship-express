@@ -101,6 +101,38 @@
 											</div>
 										</div> 
         							</div>
+									<div class="row align-items-end">
+										<div class="col-12">
+											<div class="form-group my-2">
+												<input type="checkbox" name="label_options[]" id="hide_contact_on_label" value="hide_contact">
+												<label for="hide_contact_on_label">Hide End Customer Contact Number in Label</label>
+											</div>  
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-2">
+												<input type="checkbox" name="label_options[]" id="hide_address_on_label" value="hide_address">
+												<label for="hide_address_on_label">Hide Warehouse Address in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-2">
+												<input type="checkbox" name="label_options[]" id="hide_mobile_on_label" value="hide_mobile">
+												<label for="hide_mobile_on_label">Hide Warehouse Mobile Number in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-2">
+												<input type="checkbox" name="label_options[]" id="hide_product_on_label" value="hide_product">
+												<label for="hide_product_on_label">Hide Product Details in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-2">
+												<input type="checkbox" name="label_options[]" id="hide_weight_on_label" value="hide_weight">
+												<label for="hide_weight_on_label">Hide Weight in Label</label>
+											</div>
+										</div> 
+									</div>
         						</div> 
     						</div>
 						</div> 

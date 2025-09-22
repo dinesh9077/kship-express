@@ -204,7 +204,7 @@
 									<div class="col-lg-2 col-sm-6 col-md-6">
                                         <div class="from-group my-2">
                                             <label for="packaging-type"> HSN No </label>
-                                            <input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" required>
+                                            <input type="text" placeholder="HSN No" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" name="hsn_number[]" id="hsn_number" required>
                                         </div>
                                     </div> 
                                     <div class="col-lg-1 col-md-6">
@@ -522,7 +522,7 @@
 			<div class="col-lg-2 col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> HSN No </label>
-					<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" required>
+					<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 			<div class="col-lg-1 col-md-6">
