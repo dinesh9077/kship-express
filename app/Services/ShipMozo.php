@@ -135,6 +135,7 @@
 				}
 				
 				$codAmount = strtolower($requestData['payment_type']) === "prepaid" ? '' : ($requestData['cod_amount'] ?? ''); 
+			 
 				$requestBody = [
 					"order_id"        	=> "", 
 					"pickup_pincode" 	=> $requestData['pickup_code'] ?? '',
@@ -142,13 +143,13 @@
 					"payment_type"    	=> $requestData['payment_type'],
 					"shipment_type"  	=> "FORWARD",
 					"order_amount"   	=> $requestData['inv_amount'] ?? 0,
-					"type_of_package"	=> count($dimensions) > 1 ? "MPS" : "SPS",
+					"type_of_package"	=> $requestData['type_of_package'] == 2 ? "B2B" : "SPS",
 					"rov_type"        	=> $requestData['rov_type'] ?? '',
 					"cod_amount"      	=> $codAmount,
 					"weight"          	=> $requestData['weight'] * 1000,
 					"dimensions"        => $dimensions,
 				]; 
-			
+				 
 				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
  
 				$response = Http::withHeaders(
@@ -185,7 +186,7 @@
 		{  	  
 			try {  
 				$dimensions = []; 
-				if (!empty($order->orderItems->isNotEmpty())) {
+				if (!empty($order->orderItems->isNotEmpty()) && $order->weight_order == 2) {
 					$conversionFactors = [ 
 						"cm"   => 1
 					]; 
@@ -200,6 +201,18 @@
 						];
 					}
 				}
+				else
+				{
+					$quantity = $order->orderItems->sum(fn($q) => $q->quantity);
+
+					$dimensions[] = [
+						"no_of_box" => $quantity ?? 0,
+						"length"    => $order->length,
+						"width"     => $order->width,
+						"height"    => $order->height,
+					];
+
+				}
 				
 				$codAmount = strtolower($order->order_type) === "prepaid" ? '' : ($order->cod_amount ?? ''); 
 				$requestBody = [
@@ -209,7 +222,7 @@
 					"payment_type"    	=> strtoupper($order->order_type),
 					"shipment_type"  	=> "FORWARD",
 					"order_amount"   	=> $order->invoice_amount,
-					"type_of_package"	=> count($dimensions) > 1 ? "MPS" : "SPS",
+					"type_of_package"	=> $order->weight_order == 2 ? "B2B" : "SPS",
 					"rov_type"        	=> $order->insurance_type == 1 ? 'ROV_OWNER' : 'ROV_CARRIER',
 					"cod_amount"      	=> $codAmount,
 					"weight"          	=> $order->weight * 1000,
@@ -282,6 +295,15 @@
 						"product_category" => $item->product_category,
 					];
 				})->toArray(); 
+				
+				$dimensions = $order->orderItems->map(function($item) {
+					return [
+						"no_of_box"   => $item->dimensions['no_of_box'] ?? 0,
+						"length"      => $item->dimensions['length'] ?? 0,
+						"width"       => $item->dimensions['width'] ?? 0,
+						"height"      => $item->dimensions['height'] ?? 0,
+					];
+				})->toArray(); 
  
 				$codAmount = strtolower($order->order_type) === "prepaid" ? '' : ($order->cod_amount ?? ''); 
 				
@@ -302,14 +324,34 @@
 					"payment_type"                 => strtoupper($order->order_type),
 					"cod_amount"                   => $codAmount ?? "",
 					"shipping_charges"             => "",
-					"weight"                       => $totalWeightInGm,
-					"length"                       => $order->length,
-					"width"                        => $order->width,
-					"height"                       => $order->height,
+					"weight"                       => $totalWeightInGm, 
 					"warehouse_id"                 => $order->warehouse->shipping_id ?? '',
 					"gst_ewaybill_number"          => $order->ewaybillno,
 					"gstin_number"                 => $order->customer->gst_number ?? ''
 				]; 
+				
+				if($order->weight_order == 2)
+				{
+					$requestBody = array_merge(
+						$requestBody,
+						[
+							"type_of_package" => "B2B",
+							"dimensions" => $dimensions
+						]
+					);
+				}
+				else
+				{
+					$requestBody = array_merge(
+						$requestBody,
+						[
+							"length" => $order->length,
+							"width"  => $order->width,
+							"height" => $order->height,
+						]
+					);
+
+				}	
 				 
 				// API Base URL
 				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
@@ -476,39 +518,39 @@
 			}
 		} 
 		
-		public function shippingLableByLrNo($lrNo, $delhivery)
+		public function getOrderDetails($orderPrefrenceNo, $shippingCompany)
 		{  
 			try {
-				$baseUrl = rtrim($delhivery->url ?? '', '/');
-
-				// Make API request
-				$response = Http::withHeaders([
-					'Authorization' => 'Bearer ' . $delhivery->api_key,
-					'Accept' => 'application/json',
-				])->withOptions([
-					'verify' => false, 
-				])->get("$baseUrl/label/get_urls/std/$lrNo");
-
-				// Check if request was successful
+			
+				$baseUrl = rtrim($shippingCompany->url ?? '', '/');  
+				  
+				// Start the HTTP request 
+				$response = Http::withHeaders(
+					$this->httpHeader($shippingCompany)
+				)
+				->withOptions(['verify' => false])
+				->get($baseUrl . '/get-order-detail/'.$orderPrefrenceNo);
+				 
+				// Handle the response
 				if ($response->successful()) {
 					return [
-						'success' => true,
+						'success' => true,  
 						'response' => $response->json(),
 					];
-				}
- 
+				} 
+				
+				// If the response was unsuccessful, return an error response
 				return [
-					'success' => false,
+					'success' => false,  
 					'response' => json_decode($response->body(), true),
-				];
-
-			} catch (\Exception $e) {
-				  
+				];  
+			} catch (\Throwable $e) {  
 				return [
-					'success' => false,
-					'response' => ['error' => 'An unexpected error occurred.'],
+					'success'  => false, 
+					'response' => ['error' => 'Unable to connect api.'],
+					'message'  => $e->getMessage(),
 				];
-			}
+			} 
 		}
 		
 		public function getLabelImage($baseUrl)

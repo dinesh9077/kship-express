@@ -25,11 +25,10 @@ class Kernel extends ConsoleKernel
      * @return void
      */
     protected function schedule(Schedule $schedule)
-    {
-        $schedule->command('update:delhivery-token')->daily();
+    { 
 		$schedule->command('lowbalance:check')->dailyAt('10:00');
 		$schedule->command('kyc:pending-check')->dailyAt('11:00'); 
-		$schedule->command('update:delhivery-lrno')->everyMinute(); 
+		$schedule->command('update:awb-number-shipmozo')->everyTwoMinutes(); 
 		$schedule->command('shipment:update-status')->everyTenMinutes(); 
     }
 

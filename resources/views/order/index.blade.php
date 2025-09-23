@@ -225,7 +225,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
 <script>
-	var weightOrder = @json(request('weight_order')) || '';
+	var weightOrder = @json(request('weight_order')) || 1;
 	
 	$('.customization_popup').on('click', function(event) {
 		if ($(event.target).is('.customization_popup_close') || $(event.target).is('.customization_popup')) {
@@ -246,9 +246,10 @@
 			return;
 		} 
 		
-		const orderId = $(obj).attr('data-id');
+		const orderId = $(obj).attr('data-id'); 
 		run_waitMe($('body'), 1, 'win8');
-		$.get(`{{ url('order/shipment/charge') }}/${orderId}`, function(res)
+		
+		$.get(`{{ url('order/shipment/charge') }}/${orderId}?weight_order=${weightOrder}`, function(res)
 		{
 			$('.customization_popup').addClass('is-visible');
 			$('.shipmentChargesByAll').html(res.view);

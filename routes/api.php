@@ -5,6 +5,7 @@
 	use App\Http\Controllers\Api\AuthController;
 	use App\Http\Controllers\Api\CommonController;
 	use App\Http\Controllers\Api\WarehouseController;
+	use App\Http\Controllers\Api\OrderController;
 	
 	/*
 		|--------------------------------------------------------------------------
@@ -39,4 +40,41 @@
 			Route::post('/create', [WarehouseController::class, 'storeWarehouse']);  
 			Route::post('/update/{id}', [WarehouseController::class, 'updateWarehouse']);  
 		});
+		  
+		Route::group(['prefix'=>'customer'], function(){ 
+			Route::post('/list', [WarehouseController::class, 'customerList']);   
+			Route::post('/create', [WarehouseController::class, 'storeCustomer']);  
+			Route::post('/update/{id}', [WarehouseController::class, 'updateCustomer']);  
+			Route::post('/delete/{id}', [WarehouseController::class, 'deleteCustomer']);   
+		});
+			
+		Route::group(['prefix'=>'order'], function()
+		{ 
+			Route::post('/list', [OrderController::class, 'index']);    
+			Route::get('/filter', [OrderController::class, 'filterList']);    
+			 
+			Route::get('/details/{id}', [OrderController::class,'orderDetails']);  
+			
+			Route::post('/create', [OrderController::class,'orderStore']);  
+			Route::get('/edit/{id}', [OrderController::class,'orderEdit']);   
+			Route::post('/update/{id}', [OrderController::class,'orderUpdate']);  
+			Route::get('/cancel/{id}', [OrderController::class,'orderCancel']);
+			
+			Route::get('/bulk-create', [OrderController::class,'orderBulkCreate'])
+			->middleware('permission:bulk_order.add');
+			Route::post('/bulk-store', [OrderController::class, 'orderBulkStore']);
+			
+			Route::get('/shipment/charge/{orderId}', [OrderController::class, 'orderShipCharge']);   
+			Route::post('/ship/now', [OrderController::class, 'orderShipNow']);
+			 
+			Route::get('/cancel-api/{id}', [OrderController::class,'orderCancelApi']); 
+			Route::get('/tracking-history/{id}', [OrderController::class,'orderTrackingHistory']);  
+			
+			Route::get('/shipping-lable/{orderId}', [OrderController::class, 'orderShippingLableDownload']);
+			Route::get('/waybill-copy/{orderId}', [OrderController::class, 'orderWayBillCopy']); 
+			
+			Route::get('/download-label/{id}', [OrderController::class, 'orderLableDownload']);
+			Route::get('/download/all-lable', [OrderController::class, 'alllabeldownload']);  
+			Route::post('/warehouse/add', [OrderController::class, 'orderwarehouseAdd']);  
+		});	
 	});	

@@ -202,7 +202,6 @@
 		Route::post('/ndrajax', [App\Http\Controllers\NDRController::class, 'ndrAjax'])->name('ndr.ajax');  
 		Route::post('/raiserequest', [App\Http\Controllers\NDRController::class, 'raiserequest'])->name('ndr.raiserequest'); 
 	});	
-	
 	 
 	//Order 
 	Route::group(['prefix'=>'order'], function()
@@ -213,9 +212,9 @@
 		Route::get('/details/{id}', [App\Http\Controllers\OrderController::class,'orderDetails']);  
 		
 		Route::get('/create', [App\Http\Controllers\OrderController::class,'orderCreate'])->name('order.create')->middleware('permission:order.add'); 
-		Route::post('/store', [App\Http\Controllers\OrderController::class, 'orderStore'])->name('order.store');
+		Route::post('/store', [App\Http\Controllers\OrderController::class, 'orderStore'])->name('order.store'); 
 		Route::get('/edit/{id}', [App\Http\Controllers\OrderController::class,'orderEdit'])->middleware('permission:order.edit');   
-		Route::post('/update/{id}', [App\Http\Controllers\OrderController::class,'orderUpdate'])->name('order.update');
+		Route::post('/update/{id}', [App\Http\Controllers\OrderController::class,'orderUpdate'])->name('order.update'); 
 		Route::get('/delete/{id}', [App\Http\Controllers\OrderController::class,'orderDelete']); 
 		Route::get('/clone/{id}', [App\Http\Controllers\OrderController::class,'orderClone']);   
 		Route::get('/cancel/{id}', [App\Http\Controllers\OrderController::class,'orderCancel']);

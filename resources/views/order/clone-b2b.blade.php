@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
-@section('title', config('setting.company_name') . ' - Edit Shipments')
-@section('header_title', 'Edit Shipments')
+@section('title', config('setting.company_name') . ' - Clone Shipments')
+@section('header_title', 'Clone Shipments')
 @section('content')
 <style>
     button.d-002 {
@@ -24,7 +24,7 @@
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-		height: 35px !important;
+            height: 35px !important;
         }
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
@@ -38,11 +38,12 @@
 	}
 
 </style>
+
 <div class="content-page">
     <div class="content">
         <!-- Start Content-->
         <div class="container-fluid">
-            <form id="orderForm" method="post" action="{{ route('order.update', ['id' => $order->id]) }}" enctype="multipart/form-data">
+            <form id="orderForm" method="post" action="{{ route('order.store') }}" enctype="multipart/form-data">
                 <div class="main-create-order mt-3"> 
                     <div class="main-rowx-1">
                         <div class="main-order-001">
@@ -50,7 +51,7 @@
                                 <div class="col-lg-3 col-sm-6">
                                     <div class="from-group my-2">
                                         <label for="order-id"> Order ID </label>
-                                        <input type="text" placeholder="Order Id" readonly name="order_prefix" value="{{ $order->order_prefix }}">
+                                        <input type="text" placeholder="Order Id" readonly name="order_prefix" value="{{ \App\Models\Order::generateOrderNumber($user->id) }}">
                                     </div>
                                 </div> 
                                 <div class="col-lg-3 col-sm-6 ">
@@ -177,7 +178,7 @@
 						</div>
                     </div>
 
-                    <div class="main-rowx-1">
+                   <div class="main-rowx-1">
                         <div class="main-order-001">
                             <div class="main-vender">
                                 <h5> Product Information </h5>
@@ -219,8 +220,8 @@
 
 											<div class="col-lg-1 col-md-6">
 												<div class="from-group my-2">
-													<label for="packaging-type"> No of Box/Qty </label>
-													<input type="number" data-id="{{ $key }}" id="noofbox_{{ $key }}" name="quantity[]" class="noofbox" id="quantity" value="{{ $orderItem->quantity }}" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
+													<label for="packaging-type"> Quantity </label>
+													<input type="number" data-id="{{ $key }}" id="quantity_{{ $key }}" name="quantity[]" class="quantity" value="{{ $orderItem->quantity }}" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
 												</div>
 											</div>
 											<div class="col-lg-1 col-md-6">
@@ -271,8 +272,8 @@
 
 										<div class="col-lg-1 col-md-6">
 											<div class="from-group my-2">
-												<label for="packaging-type"> No of Box/Qty </label>
-												<input type="number" data-id="0" id="noofbox_0" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
+												<label for="packaging-type"> Quantity </label>
+												<input type="number" data-id="0" id="quantity_0" name="quantity[]" class="quantity" value="" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
 											</div>
 										</div>
 										<div class="col-lg-1 col-md-6">
@@ -334,22 +335,27 @@
 							@if($order->orderItems->isNotEmpty())
 								@foreach($order->orderItems as $key => $orderItem)
 									<div class="row" id="removeDimension{{ $key }}">
-										<div class="col-lg-3 col-sm-6 col-md-6"> 
+										<div class="col-lg-2 col-sm-6 col-md-6">
 											<div class="from-group my-2">
-    											<label for="packaging-type"> Weight (KG) </label>
-    											<input type="text" name="weight[]" id="weight" class="weight" placeholder="Weight (GM/KG)" value="{{ $orderItem->dimensions['weight'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
-    										</div>
-											<label id="volumatric_weight" style="font-weight: 900;"></label>
+												<label for="packaging-type"> No Of Box </label>
+												<input type="text" data-id="{{ $key }}" name="no_of_box[]" id="no_of_box_{{ $key }}" class="no_of_box" placeholder="No Of Box" value="{{ $orderItem->dimensions['no_of_box'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+											</div> 
+										</div>
+										<div class="col-lg-2 col-sm-6 col-md-6">
+											<div class="from-group my-2">
+												<label for="packaging-type"> Weight Per Box(KG) </label>
+												<input type="text" data-id="{{ $key }}" name="weight[]" id="weight_{{ $key }}" class="weight" placeholder="Weight (KG)" value="{{ $orderItem->dimensions['weight'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+											</div> 
 										</div>
 
-										<div class="col-lg-3 col-sm-6 col-md-6">
+										<div class="col-lg-2 col-sm-6 col-md-6">
 											<div class="from-group my-2">
 												<label for="packaging-type"> Length </label>
 												<input type="text" name="length[]" id="length" placeholder="Length" value="{{ $orderItem->dimensions['length'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 											</div>
 										</div>
 
-										<div class="col-lg-3 col-sm-6 col-md-6">
+										<div class="col-lg-2 col-sm-6 col-md-6">
 											<div class="from-group my-2">
 												<label for="packaging-type"> Width </label>
 												<input type="text" name="width[]" id="width" placeholder="Width" value="{{ $orderItem->dimensions['width'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
@@ -366,22 +372,27 @@
 								@endforeach
 							@else
 								<div class="row">
-									<div class="col-lg-3 col-sm-6 col-md-6"> 
+									<div class="col-lg-2 col-sm-6 col-md-6">
 										<div class="from-group my-2">
-    											<label for="packaging-type"> Weight (KG) </label>
-    											<input type="text" name="weight[]" id="weight" class="weight" placeholder="Weight (GM/KG)" value="0" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
-    										</div>
-										<label id="volumatric_weight" style="font-weight: 900;"></label>
+											<label for="packaging-type"> No Of Box </label>
+											<input type="text" data-id="0" name="no_of_box[]" id="no_of_box_0" class="no_of_box" placeholder="No Of Box" value="{{ $orderItem->dimensions['no_of_box'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+										</div> 
+									</div>
+									<div class="col-lg-2 col-sm-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="packaging-type"> Weight Per Box(KG) </label>
+											<input type="text" data-id="0" name="weight[]" id="weight_0" class="weight" placeholder="Weight (KG)" value="{{ $orderItem->dimensions['weight'] ?? '' }}" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+										</div> 
 									</div>
 
-									<div class="col-lg-3 col-sm-6 col-md-6">
+									<div class="col-lg-2 col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Length </label>
 											<input type="text" name="length[]" id="length" placeholder="Length" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 										</div>
 									</div>
 
-									<div class="col-lg-3 col-sm-6 col-md-6">
+									<div class="col-lg-2 col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Width </label>
 											<input type="text" name="width[]" id="width" placeholder="Width" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
@@ -626,7 +637,7 @@
 		} 
 	}
 	 
-    var i = 100; 
+   var i = 100; 
     $(`#add_more_product`).click(function()
 	{ 
         var html = `<div class="row align-items-end mt-2 removeProductRows"> 
@@ -662,8 +673,8 @@
 			</div>  
 			<div class="col-lg-1 col-md-6">
 				<div class="from-group my-2">
-					<label for="packaging-type"> No of Box </label>
-					<input type="number" data-id="${i}" id="noofbox_${i}" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" oninput="allowOnlyNumbers(this)" required>
+					<label for="packaging-type"> Quantity </label>
+					<input type="number" data-id="${i}" id="quantity_${i}" name="quantity[]" class="quantity" value="" placeholder="Quantity" oninput="allowOnlyNumbers(this)" required>
 				</div>
 			</div>
 			<div class="col-lg-1 col-md-6">
@@ -696,7 +707,7 @@
 
 		$('.totalAmount').each(function () {
 			let index = $(this).data('id');
-			let qty = parseInt($(`#noofbox_${index}`).val()) || 0;   // ✅ correct selector
+			let qty = parseInt($(`#quantity_${index}`).val()) || 0;   // ✅ correct selector
 			let value = parseFloat($(this).val()) || 0;
 			totalAmount += (value * qty);
 		}); 
@@ -711,8 +722,10 @@
 		
 		let totalWeight = 0;
 		$('.weight').each(function () {  
+			let index = $(this).data('id'); 
+			let no_of_box = parseInt($(`#no_of_box_${index}`).val()) || 0; 
 			let value = parseFloat($(this).val()) || 0;
-			totalWeight += value;
+			totalWeight += (value * no_of_box); 
 		}); 
 		$orderForm.find('#total_weight').val(totalWeight);
 	}
@@ -727,7 +740,12 @@
 		ewayBillRequired()
 	});
 	
-	$(document).on('input', '.noofbox', function()
+	$(document).on('input', '.quantity', function()
+	{ 
+		ewayBillRequired()
+	});
+	
+	$(document).on('input', '.no_of_box', function()
 	{ 
 		ewayBillRequired()
 	});
@@ -735,22 +753,27 @@
 	function noOfBoxDimenstion(rowId)
 	{ 
 		let html = `<div class="row" id="removeDimension${rowId}">
-			<div class="col-lg-3 col-sm-6 col-md-6">
+			<div class="col-lg-2 col-sm-6 col-md-6">
 				<div class="from-group my-2">
-					<label for="packaging-type"> Weight (KG) </label>
-					<input type="text" name="weight[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="weight" placeholder="Weight (KG)" class="weight" value="" required>
-				</div>
-				<label id="volumatric_weight" style="font-weight: 900;"></label>
+					<label for="packaging-type"> No Of Box </label>
+					<input type="text" data-id="${rowId}" name="no_of_box[]" id="no_of_box_${rowId}" class="no_of_box" placeholder="No Of Box" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+				</div> 
+			</div>
+			<div class="col-lg-2 col-sm-6 col-md-6">
+				<div class="from-group my-2">
+					<label for="packaging-type"> Weight Per Box(KG) </label>
+					<input type="text" data-id="${rowId}" name="weight[]" id="weight_${rowId}" class="weight" placeholder="Weight (KG)" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+				</div> 
 			</div>
 
-			<div class="col-lg-3 col-sm-6 col-md-6">
+			<div class="col-lg-2 col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Length </label>
 					<input type="text" name="length[]" id="length" placeholder="Length" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 
-			<div class="col-lg-3 col-sm-6 col-md-6">
+			<div class="col-lg-2 col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Width </label>
 					<input type="text" name="width[]" id="width" placeholder="Width" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>

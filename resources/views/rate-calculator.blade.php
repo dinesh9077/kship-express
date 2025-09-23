@@ -84,6 +84,15 @@
 													<input type="text" name="weight" id="weight" placeholder="Total Weight In KG" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required> 
 												</div>
 											</div>		
+											<div class="col-lg-3 col-sm-6">
+												<div class="from-group"> 
+													<label for="pickup-pincode">Type Of Package</label>
+													<select name="type_of_package" id="type_of_package" class="form-control" required>
+														<option value="1">B2C</option>
+														<option value="2">B2B</option>
+													</select>
+												</div>
+											</div>
 											<div class="col-lg-3 col-sm-6" style="display:none;">
 												<div class="from-group">
 													<label for="packaging-type"> Dimensions </label>
@@ -120,7 +129,7 @@
 														<input type="text" name="width[]" id="width" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" placeholder="0.00" value="0.00"> 
 													</div>
 												</div>
-												<div class="col-lg-1 col-sm-6">
+												<div class="col-lg-1 col-sm-6" id="hideB2c" style="display:none;">
 													<div class="from-group my-2">
 														<label for="packaging-type" class="text-white">. </label>
 														<button type="button" class="btn btn-primary btn-main-1 d-002" onclick="addMoreDimension(this, event)"> + </button>
@@ -192,19 +201,31 @@
 			debounceFetch("delivery");
 		}); */
 	});
-	
+	 
+	$('#rateForm select[name="type_of_package"]').on('change', function () 
+	{
+		const packageType = $(this).val().toLowerCase();  
+		const $rateForm = $('#rateForm'); 
+		if(packageType == 1)
+		{
+			$rateForm.find('.removeDimenionRow').not(':first').remove(); 
+			$rateForm.find('#hideB2c').hide();
+		}
+		else
+		{ 
+			$rateForm.find('#hideB2c').show(); 
+		}
+	});
 	
 	$('#rateForm select[name="payment_type"]').on('change', function () 
 	{
-		const orderType = $(this).val().toLowerCase(); // Get selected radio button value
-		 
-		const $rateForm = $('#rateForm'); // Define $rateForm
-		const $codAmount = $rateForm.find('#cod_amount');
-		
-		$codAmount.prop('readonly', false); // Enable input by default
+		const orderType = $(this).val().toLowerCase(); 
+		const $rateForm = $('#rateForm');
+		const $codAmount = $rateForm.find('#cod_amount'); 
+		$codAmount.prop('readonly', false);
 		
 		if (orderType === "prepaid") {
-			$codAmount.val(0).prop('readonly', true); // Disable and set value to 0
+			$codAmount.val(0).prop('readonly', true);
 		}
 	});
 	

@@ -1,7 +1,8 @@
 <?php
 	
-	namespace App\Http\Controllers;
+	namespace App\Http\Controllers\Api;
 	
+	use App\Http\Controllers\Controller;
 	use Illuminate\Http\Request;
 	use Illuminate\Support\Facades\{DB, Auth, File, Storage, Validator, Http, Log};
 	use App\Models\{
@@ -16,60 +17,36 @@
 	use App\Services\DelhiveryService;
 	use App\Services\DelhiveryB2CService;
 	use App\Imports\BulkOrder;
+	use App\Traits\ApiResponse;   
 	use Helper; 
 	use DNS1D;
 	
 	class OrderController extends Controller
 	{
+		use ApiResponse; 
+		
 		protected $delhiveryService;
-		protected $delhiveryB2CService;
 		protected $shipMozo;
+		protected $delhiveryB2CService;
 		public function __construct()
-		{  
-			$this->middleware('auth')->except(['orderLableGenerate']);  
+		{   
 			$this->shipMozo = new ShipMozo();  
 			$this->delhiveryService = new DelhiveryService();  
 			$this->delhiveryB2CService = new DelhiveryB2CService();  
 		}
-		
-		public function index()
+		 
+		public function index(Request $request)
 		{   
-			$status = $_GET['status'] ?? 'New';  
-			$authUser = Auth::user();
-			
-			$sellers = Order::join('users', 'users.id', '=', 'orders.user_id')
-			->select('users.id', 'users.name')
-			->groupBy('users.id', 'users.name')
-			->orderBy('users.name', 'asc')
-			->get();
+			$start = $request->post("offset");
+			$limit = $request->post("limit"); 
 			 
-			return view('order.index',compact('status', 'sellers', 'authUser'));
-		}
-		
-		public function orderAjax(Request $request)
-		{  
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
+			$search = $request->post('search');
 			$status = strtolower($request->post('status'));
-			$weightOrder = strtolower($request->post('weightOrder'));
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // Sorting direction
-			
-			// Ensure 'action' column is ordered by 'id'
-			if ($order == 'action') {
-				$order = 'id';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
+			$weightOrder = strtolower($request->get('weight_order'));
+			 
+			$user = Auth::user(); 
+			$role = $user->role;
+			$id = $user->id;
 			
 			// Build the query for orders
 			$query = Order::with([
@@ -115,13 +92,9 @@
 			{
 				$query->where('orders.weight_order', $weightOrder);
 			}
-			$totalData = $query->count();
-			$totalFiltered = $totalData;
-			
+			   
 			// Apply search filter
-			if (!empty($search_arr)) {
-				$search = $search_arr;
-				
+			if (!empty($search)) { 
 				$query->where(function ($q) use ($search) {
 					// Search in the main `orders` table
 					$q->where('orders.id', 'LIKE', "%$search%")
@@ -162,255 +135,37 @@
 						->orWhere('amount', 'LIKE', "%$search%")
 						->orWhere('quantity', 'LIKE', "%$search%");
 					});
-				});
-				
-				$totalFiltered = $query->count();
-			}
-			// Fetch paginated and sorted data
+				}); 
+			} 
+			
 			$orders = $query->offset($start)
 			->limit($limit)
-			->orderBy('orders.' . $order, $dir)
+			->latest()
 			->get();
 			
-			// Prepare data response
-			$data = [];
-			$i = $start + 1;
-			
-			foreach ($orders as $j => $order) {    
-				$isCOD   = strtolower($order->order_type) === "cod";
-				$amount  = $isCOD ? $order->cod_amount : $order->invoice_amount;
-				$label   = $isCOD ? 'COD Amount' : 'Invoice Amount';
-
-				$warehouse = optional($order->warehouse);
-				$customer  = optional($order->customer);
-				$address   = optional($order->customerAddress)->address;
-
-				$data[] = [
-					'id' => $status == "new" || $status == "all" ? $i : "<input type='checkbox' class='order-checkbox' value={$order->id}>",
-					//'id' => $i,
-
-					// Order + Admin info
-					'order_id' => '#' . $order->id
-						. ($role === "admin" ? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>" : ''),
-
-					// Seller details
-					'seller_details' => "
-						<div class='main-cont1-2'>
-							<p>{$warehouse->warehouse_name} ({$warehouse->company_name})</p>
-							<p>{$warehouse->contact_name}</p>
-							<p>{$warehouse->contact_number}</p>
-							<p>{$warehouse->address}</p>
-						</div>",
-
-					// Customer details + Tooltip
-					'customer_details' => "
-						<div class='main-cont1-2'> 
-							<p>" . optional($order->customer)->first_name . " " . optional($order->customer)->last_name . "</p> 
-							<p>" . optional($order->customer)->mobile . "</p> 
-							<span style='padding-left:0'> 
-								<a href='javascript:;'> 
-									<div class='tooltip' 
-										 data-toggle='tooltip' 
-										 data-placement='top' 
-										 title='" . optional($order->customerAddress)->address . "'> 
-										 View Address 
-									</div> 
-								</a> 
-							</span> 
-						</div>
-					",
- 
-					// Shipment details
-					'shipment_details' => $this->orderShipmentDetailHtml($order, $status, $weightOrder),
-
-					// Package details
-					'package_details' => $this->orderPackageDetailHtml($order),
-
-					// Order type + Amount
-					'total_amount' => "
-						<div class='main-cont1-2'>
-							<p class='" . strtolower($order->order_type) . "'>{$order->order_type}</p>
-							<p>{$label}: {$amount}</p>
-						</div>",
-
-					// Courier + Action
-					'status_courier' => $this->statusCourieHtml($order),
-					'action'         => $this->orderAction($order, $status, $weightOrder),
-				];
-
-				$i++;
-			}
-
-			
-			return response()->json([
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
-			]);
+			return $this->successResponse($orders, 'orders fetched successfully.');
 		}
-		
-		public function statusCourieHtml($order)
-		{
-			$statusColor = strtolower($order->status_courier) == "cancelled" ? 'cod' : 'prepaid';
-			$output = "<p class='{$statusColor}'>{$order->status_courier}</p>";
-			if(strtolower($order->status_courier) == "cancelled")
-			{
-				$output .= "<p style='padding-left:0'>" . $order->reason_cancel ?? 'The client has cancelled this order before it was shipped.' . "</p>";
-			}
-			$output .= "<p style='padding-left:0'>" . date('Y M d | h:i A', strtotime($order->created_at)) . "</p>";
-			return $output;
-		}
-		
-		function orderShipmentDetailHtml($order, $status, $weightOrder)
-		{
-			$productDetails = $order->orderItems
-			->map(fn($item) => "<p>{$item->product_description} Amount: {$item->amount} No Of Box: {$item->quantity}</p>")
-			->implode(' | ');
-			
-			$output = '';
-			
-			$output .= "<div class='main-cont1-1'>
-			<div class='checkbox checkbox-purple'>
-			Order Prefix/LR No: <a href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>#{$order->order_prefix}</a> 
-			</div>
-			<div class='checkbox checkbox-purple'>
-			Courier: {$order->courier_name} 
-			</div>"; 
-			if($status != "new")
-			{
-				$output .= "<div class='checkbox checkbox-purple'>
-				AWB Number: <a href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>#{$order->awb_number}</a>
-				</div>"; 
-			} 
-			$output .= "<span style='padding-left:0'> 
-			<a href='javascript:;'> 
-			<div class='tooltip' data-toggle='tooltip' data-placement='top' title='" . strip_tags($productDetails) . "'> 
-			View Products 
-			</div>
-			</a> 
-			</span>
-			</div>";
-			
-			return $output;
-		}
-		
-		function orderPackageDetailHtml($order)
-		{
-			if (!$order) {
-				return '';
-			}
-
-			$length = (float) $order->length;
-			$width  = (float) $order->width;
-			$height = (float) $order->height;
-			$weight = (float) $order->weight;
-
-			// Avoid division by zero → standard divisor 5000
-			$volumetricWt = ($length * $width * $height) / 5000;
-
-			return "
-				<div class='main-cont1-2'>
-					<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
-					<p>{$length} x {$width} x {$height} (cm)</p>
-					<p>Volumetric wt.: " . number_format($volumetricWt, 2) . " Kg</p>
-				</div>
-			";
-		}
- 
-		function orderAction($order, $status, $weightOrder)
+		 
+		public function filterList()
 		{ 
-			$output = "<div class='main-btn-1'>"; 
-			if($order->status_courier === "New")
-			{
-				$output .= "<a href='javascript:;'> 
-				<button type='button' class='customization_popup_trigger btn-light-1' data-weight-order=".$weightOrder." onclick='shipNow(this, event)' data-id='{$order->id}'> 
-				Ship Now 
-				</button> 
-				</a>";
-			}
-			$output .= "<div class='mian-btn'>
-			<div class='btn-group'>
-			<button class='dropbtn' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'> 
-			<i class='fas fa-ellipsis-h'></i> 
-			</button>
-			<div class='dropdown-menu'>"; 
-			$output .="<a class='dropdown-item' href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>View Order</a>
-			<hr class='m-0' />"; 
-			if(config('permission.order.add'))
-			{
-				$output .="<a class='dropdown-item' href='" . url("order/clone/{$order->id}") . "?weight_order=".$weightOrder."'>Clone Order</a>
-				<hr class='m-0' />"; 
-			}
+			$sellers = Order::join('users', 'users.id', '=', 'orders.user_id')
+			->select('users.id', 'users.name')
+			->groupBy('users.id', 'users.name')
+			->orderBy('users.name', 'asc')
+			->get();
 			
-			if($order->status_courier === "New")
-			{
-				if(config('permission.order.edit'))
-				{
-					$output .="<a class='dropdown-item' href='" . url("order/edit/{$order->id}") . "?weight_order=".$weightOrder."'>Edit Order</a>
-					<hr class='m-0' />";
-				}
-				
-				if(config('permission.order.delete'))
-				{
-					/* $output .="<a class='dropdown-item' href='" . url("order/delete/{$order->id}") . "?weight_order=".$weightOrder."' onclick='deleteOrder(this, event)'>Delete Order</a>
-					<hr class='m-0' />"; */ 
-					$output .="<a class='dropdown-item' href='" . url("order/cancel/{$order->id}") . "?weight_order=".$weightOrder."' style='color: red;' onclick='cancelNewOrder(this, event)'> 
-					Cancel Order 
-					</a>"; 
-				}
-				
-			}
-			
-			if(in_array($status, ["manifested", "in transit", "delivered", "all"]) && !empty($order->shipping_company_id) && !empty($order->awb_number))
-			{   
-				if(!in_array(strtolower($order->status_courier), ["cancelled", "new"]))
-				{
-					$output .="<a class='dropdown-item' href='" . url("order/tracking-history/{$order->id}") . "?weight_order=".$weightOrder."'> Tracking Order </a><hr class='m-0' />"; 
-					if($order->shipping_company_id == 2)
-					{
-						$output .="<a class='dropdown-item' href='" . url("order/waybill-copy/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Waybill Copy</a><hr class='m-0' />"; 
-						
-						$output .="<a class='dropdown-item' href='" . url("order/shipping-lable/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Shipping Label </a><hr class='m-0' />"; 
-					}
-					$output .="<a class='dropdown-item' href='" . url("order/download-label/{$order->id}") . "?weight_order=".$weightOrder."' target='_blank'> Order Label </a><hr class='m-0' />"; 
-					
-					if(in_array(strtolower($order->status_courier), ["manifested", "in transit", "Pickup Pending", "open", "scheduled"]))
-					{
-						if(config('permission.order.delete'))
-						{
-							$output .="<a class='dropdown-item' href='" . url("order/cancel-api/{$order->id}") . "?weight_order=".$weightOrder."' style='color: red;' onclick='cancelOrderApi(this, event)'> 
-							Cancel Order 
-							</a>";  
-						}
-					}
-				}
-			}
-			
-			$output .="</div>
-			</div>
-			</div>
-			</div>";
-			return $output;
-		} 
-		
-		public function orderCreate()
-		{
-			$user = Auth::user();  
-			$weightOrder = request('weight_order', 1);
-			return view($weightOrder == 1 ? 'order.create-b2c' : 'order.create-b2b', compact('user'));
+			$statuses = Order::distinct()->pluck('status_courier');
+			$data = [
+				'users' => $sellers,
+				'statuses' => $statuses,
+			];
+			return $this->successResponse($data, 'filter fetched successfully.');
 		}
 		  
 		public function orderStore(Request $request)
-		{     
+		{      
 			$user_id = Auth::id();  
-			
-			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
-			if ($request->weight_order == 2) { 
-				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
-			} 
-			$data = $request->except($exclude); 
-			
+			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
 			$data['user_id'] = $user_id;
 			$data['status_courier'] = 'New';
 			$data['weight'] = $request->total_weight;
@@ -422,7 +177,7 @@
 			
 			// Check if order prefix already exists
 			if (Order::where('order_prefix', $request->order_prefix)->exists()) {
-				return response()->json(['status' => 'error', 'msg' => 'The order number already exists.']);
+				return $this->errorResponse('The order number already exists.'); 
 			}
 			
 			DB::beginTransaction();
@@ -450,15 +205,51 @@
 					}
 				} 
 				$order->update(['order_image' => $imagePaths, 'invoice_document' => $invoiceDocPaths]);
+				 
+				$orderItems = [];
+				$height = $width = $length = $weight = 0;
 				
-				if($request->weight_order == 2)
-				{ 
-					$this->b2bStore($order, $request);
-				}
-				else
+				if (!empty($request->product_category)) 
 				{
-					$this->b2cStore($order, $request);
-				}  
+					foreach ($request->product_category as $key => $productCategory) { 
+						$amount = $request->amount[$key] ?? 0;
+						$quantity = $request->quantity[$key] ?? 1;
+						  
+						$orderItems[] = [
+							'order_id' => $order->id, 
+							'product_category' => $productCategory,
+							'product_name' => $request->product_name[$key] ?? null,
+							'sku_number' => $request->sku_number[$key] ?? null,
+							'hsn_number' => $request->hsn_number[$key] ?? null,
+							'amount' => $amount, 
+							'ewaybillno' => null, 
+							'quantity' => $quantity,
+							'created_at' => now(),
+							'updated_at' => now(),
+							'dimensions' => json_encode([
+								'weight' => $request->weight[$key] ?? 0,
+								'length' => $request->length[$key] ?? 0,
+								'width' => $request->width[$key] ?? 0,
+								'height' => $request->height[$key] ?? 0,
+							]),
+						];
+						
+						// Accumulate totals
+						$height += $request->height[$key] ?? 0;
+						$width  += $request->width[$key] ?? 0;
+						$length += $request->length[$key] ?? 0;
+						$weight += $request->weight[$key] ?? 0; 
+					}
+					
+					OrderItem::insert($orderItems);  
+				}
+				  
+				$order->update([
+					'weight' => $weight,
+					'length' => $length,
+					'width'  => $width,
+					'height' => $height
+				]);
 				
 				// Insert order status
 				OrderStatus::insert([
@@ -471,230 +262,29 @@
 				Helper::orderActivity($order->id, 'Order created.');
 				
 				DB::commit(); // Commit Transaction
-				return response()->json(['status' => 'success', 'msg' => 'The order has been successfully added.']);
+				return $this->successResponse($order, 'The order has been successfully added.'); 
 			} 
 			catch (\Exception $e) {
-				DB::rollback(); // Rollback in case of failure
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
+				DB::rollback();  
+				return $this->errorResponse($order, 'failed to add order.please try again.'); 	 
 			}
 		}
-		
-		private function b2cStore($order, $request)
-		{
-			$orderItems = []; 
-			if (!empty($request->product_category)) 
-			{
-				foreach ($request->product_category as $key => $productCategory) { 
-					$amount = $request->amount[$key] ?? 0;
-					$quantity = $request->quantity[$key] ?? 1;
-					  
-					$orderItems[] = [
-						'order_id' => $order->id, 
-						'product_category' => $productCategory,
-						'product_name' => $request->product_name[$key] ?? null,
-						'sku_number' => $request->sku_number[$key] ?? null,
-						'hsn_number' => $request->hsn_number[$key] ?? null,
-						'amount' => $amount, 
-						'ewaybillno' => null, 
-						'quantity' => $quantity,
-						'created_at' => now(),
-						'updated_at' => now() 
-					]; 
-				} 
-				OrderItem::insert($orderItems);  
-			}  
-		}
-		
-		private function b2bStore($order, $request)
-		{
-			$orderItems = [];
-			$height = $width = $length = $weight = 0;
-			
-			if (!empty($request->product_category)) 
-			{
-				foreach ($request->product_category as $key => $productCategory) { 
-					$amount = $request->amount[$key] ?? 0;
-					$quantity = $request->quantity[$key] ?? 1;
-					  
-					$orderItems[] = [
-						'order_id' => $order->id, 
-						'product_category' => $productCategory,
-						'product_name' => $request->product_name[$key] ?? null,
-						'sku_number' => $request->sku_number[$key] ?? null,
-						'hsn_number' => $request->hsn_number[$key] ?? null,
-						'amount' => $amount, 
-						'ewaybillno' => null, 
-						'quantity' => $quantity,
-						'created_at' => now(),
-						'updated_at' => now(),
-						'dimensions' => json_encode([
-							'no_of_box' => $request->no_of_box[$key] ?? 0,
-							'weight' => $request->weight[$key] ?? 0,
-							'length' => $request->length[$key] ?? 0,
-							'width' => $request->width[$key] ?? 0,
-							'height' => $request->height[$key] ?? 0,
-						]),
-					];
-					
-					// Accumulate totals
-					$height += $request->height[$key] ?? 0;
-					$width  += $request->width[$key] ?? 0;
-					$length += $request->length[$key] ?? 0; 
-				}
-				
-				OrderItem::insert($orderItems);  
-			}
-			  
-			$order->update([ 
-				'length' => $length,
-				'width'  => $width,
-				'height' => $height
-			]);	
-			return;
-		}
-		
-		public function orderBulkCreate()
-		{
-			$user = Auth::user();  
-			return view('order.bulk-create', compact('user'));
-		}
-		
-		public function orderBulkStore(Request $request)
-		{  
-			$user = Auth::user();
-			DB::beginTransaction(); // Begin Transaction
-
-			try {  
-				// Import the Excel file
-				$bulkOrder = new BulkOrder();
-				Excel::import($bulkOrder, $request->file('bulk_excel'));
-
-				// Check if rows exist after removing the header
-				if (empty($bulkOrder->rows)) {
-					return response()->json(['status' => 'error', 'msg' => 'No valid data found in the Excel file.']);
-				}
-				 
-				foreach ($bulkOrder->rows as $row) {
-					// Assuming the column order matches the Excel data structure
-					$data = [
-						'order_prefix' => Order::generateOrderNumber($user->id),
-						'shipping_mode' => $row[0] ? strtolower($row[0]) : null,
-						'order_date' => now()->toDateString(),
-						'freight_mode' => $row[1] ?? null, 
-						'order_type' => $row[9] ?? 'prepaid', 
-						'cod_amount' => $row[10] ?? 0,
-						'warehouse_id' => $request->warehouse_id,
-						'customer_id' => $request->customer_id,
-						'customer_address_id' => $request->customer_address_id,
-						'invoice_no' => $row[11] ?? null,
-						'invoice_amount' => $row[12] ?? 0,
-						'ewaybillno' => $row[13] ?? 0,
-						'dimension_type' => 'cm',
-						'total_amount' => 0,  
-						'user_id' => $user->id,
-						'status_courier' => 'new',
-						'status' => 1,
-						'created_at' => now(),
-						'updated_at' => now()
-					]; 
-			
-					// Insert Order and get ID 
-					$order = Order::create($data);
-
-					// Handle invoice documents
-					$invoiceDocPaths = []; 
-					if ($request->hasFile('invoice_document')) {
-						foreach ($request->file('invoice_document') as $image) { 
-							$filename = time() . '_' . $image->getClientOriginalName(); 
-							$path = $image->storeAs('public/orders/' . $order->id, $filename);  
-							$invoiceDocPaths[] = $filename;
-						}
-					} 
-					$order->update(['invoice_document' => $invoiceDocPaths]);
-
-					// Extract and explode values
-					$productDiscriptions = $row[2] ? explode(',', $row[2]) : null;
-					$productAmount = $row[3] ? explode(',', $row[3]) : null;
-					$boxCounts = $row[4] ? explode(',', $row[4]) : null;
-					$boxLength = $row[5] ? explode(',', $row[5]) : null;
-					$boxWidth = $row[6] ? explode(',', $row[6]) : null;
-					$boxHeight = $row[7] ? explode(',', $row[7]) : null;
-					$boxWeight = $row[8] ? explode(',', $row[8]) : null;
-
-					$orderItems = [];
-					$totalAmount = 0; // Initialize total amount
-
-					if ($productDiscriptions) {
-						foreach ($productDiscriptions as $key => $productDiscription) {
-							$amount = $productAmount[$key] ?? 0;
-							$totalAmount += $amount; // Calculate total amount
-
-							$orderItems[] = [
-								'order_id' => $order->id, 
-								'product_discription' => $productDiscription,
-								'amount' => $amount, 
-								'ewaybillno' => null, 
-								'quantity' => $boxCounts[$key] ?? 0, 
-								'created_at' => now(),
-								'updated_at' => now(),
-								'dimensions' => json_encode([
-									'weight' => $boxWeight[$key] ?? 0,
-									'length' => $boxLength[$key] ?? 0,
-									'width' => $boxWidth[$key] ?? 0,
-									'height' => $boxHeight[$key] ?? 0,
-								]),
-							];
-						} 
-					}
-
-					// Bulk Insert Order Items
-					OrderItem::insert($orderItems); 
-
-					// Update Order Total Amount
-					$order->update(['total_amount' => $totalAmount]);
-
-					// Insert Order Status
-					OrderStatus::insert([
-						'order_id' => $order->id, 
-						'order_status' => 'New', 
-						'created_at' => now(), 
-						'updated_at' => now()
-					]);
-
-					Helper::orderActivity($order->id, 'Order created.');
-				}
-
-				DB::commit(); // Commit Transaction
-				return response()->json(['status' => 'success', 'msg' => 'The order has been successfully added.']);
-			} 
-			catch (\Exception $e) {
-				DB::rollback(); // Rollback in case of failure
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
-			}
-		}
- 
- 
+		   
 		public function orderEdit($id)
-		{ 
-			$user = Auth::user();
-			$order = Order::with( 'orderItems')->find($id);  
-			$weightOrder = request('weight_order', 1);
-			return view($weightOrder == 1 ? 'order.edit-b2c' : 'order.edit-b2b', compact('user', 'order', 'weightOrder')); 
+		{  
+			$order = Order::with('orderItems')->find($id);
+			return $this->successResponse($order, 'order fetch successfully.'); 
 		}
 		
 		public function orderUpdate(Request $request, $id)
 		{  
 			$user_id = Auth::id();  
-			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
-			if ($request->weight_order == 2) { 
-				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
-			} 
-			$data = $request->except($exclude); 
-			 
+			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
 			$data['user_id'] = $user_id;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 			$data['weight'] = $request->total_weight; 
-			$data['total_amount'] = $request->invoice_amount; 
+			$data['total_amount'] = $request->invoice_amount;
+			$data['status_courier'] = 'New';
 			$data['status'] = 1;
 			$data['created_at'] = now();
 			$data['updated_at'] = now();
@@ -728,188 +318,78 @@
 				$data['invoice_document'] = $invoiceDocPaths;
 				$order->update($data);
 				
-				if($request->weight_order == 2)
-				{ 
-					$this->b2bUpdate($order, $request);
-				}
-				else
+				$totalAmount = 0;
+				$orderItems = [];
+				$height = $width = $length = $weight = 0;
+				
+				if (!empty($request->product_category)) 
 				{
-					$this->b2cUpdate($order, $request);
+					OrderItem::where('order_id', $id)->whereNotIn('id', $request->id ?? [])->delete();
+					foreach ($request->product_category as $key => $productCategory)
+					{  
+						$amount = $request->amount[$key] ?? 0;
+						$quantity = $request->quantity[$key] ?? 1;
+						 
+						$orderItemData = [
+							'order_id' => $order->id, 
+							'product_category' => $productCategory,
+							'product_name' => $request->product_name[$key],
+							'sku_number' => $request->sku_number[$key],
+							'hsn_number' => $request->hsn_number[$key],
+							'amount' => $amount, 
+							'ewaybillno' => null, 
+							'quantity' => $quantity,
+							'updated_at' => now(),
+							'dimensions' => json_encode([
+								'weight' => $request->weight[$key] ?? 0,
+								'length' => $request->length[$key] ?? 0,
+								'width' => $request->width[$key] ?? 0,
+								'height' => $request->height[$key] ?? 0,
+							]),
+						];
+						
+						// Accumulate totals
+						$height += $request->height[$key] ?? 0;
+						$width  += $request->width[$key] ?? 0;
+						$length += $request->length[$key] ?? 0;
+						$weight += $request->weight[$key] ?? 0; 
+						
+						// Check if order_item_id exists in the request
+						if (!empty($request->id[$key])) {
+							$orderItem = OrderItem::find($request->id[$key]);
+							if ($orderItem) {
+								$orderItemData['dimensions'] = json_decode($orderItemData['dimensions'], true);
+								$orderItem->update($orderItemData); // Update existing item
+							}
+							} else {
+							$orderItemData['created_at'] = now();
+							$orderItems[] = $orderItemData; // Add new item for bulk insert
+						}
+					}
+					 
+					$order->update([
+						'weight' => $weight,
+						'length' => $length,
+						'width'  => $width,
+						'height' => $height
+					]);
+					
+					// Bulk insert for new items if any
+					if (!empty($orderItems)) {
+						OrderItem::insert($orderItems);
+					} 
 				}
-				 
+				
 				Helper::orderActivity($order->id, 'Order updated.');
 				
 				DB::commit(); // Commit Transaction
-				return response()->json(['status' => 'success', 'msg' => 'The order have been updated successfully.']);
+				return $this->successResponse($order, 'The order have been updated successfully.');  
 			} 
 			catch (\Exception $e) {
 				DB::rollback(); // Rollback in case of failure
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
+				return $this->errorResponse($order, 'failed to update order.please try again.'); 	 
 			}
-		}
-		
-		private function b2cUpdate($order, $request)
-		{ 
-			$orderItems = []; 
-			
-			if (!empty($request->product_category)) 
-			{
-				OrderItem::where('order_id', $order->id)->whereNotIn('id', $request->id ?? [])->delete();
-				foreach ($request->product_category as $key => $productCategory)
-				{  
-					$amount = $request->amount[$key] ?? 0;
-					$quantity = $request->quantity[$key] ?? 1;
-					 
-					$orderItemData = [
-						'order_id' => $order->id, 
-						'product_category' => $productCategory,
-						'product_name' => $request->product_name[$key],
-						'sku_number' => $request->sku_number[$key],
-						'hsn_number' => $request->hsn_number[$key],
-						'amount' => $amount, 
-						'ewaybillno' => null, 
-						'quantity' => $quantity,
-						'updated_at' => now() 
-					];
-					 
-					// Check if order_item_id exists in the request
-					if (!empty($request->id[$key])) 
-					{
-						$orderItem = OrderItem::find($request->id[$key]);
-						if ($orderItem) { 
-							$orderItem->update($orderItemData); // Update existing item
-						}
-					} else {
-						$orderItemData['created_at'] = now();
-						$orderItems[] = $orderItemData; // Add new item for bulk insert
-					}
-				} 
-				
-				// Bulk insert for new items if any
-				if (!empty($orderItems)) {
-					OrderItem::insert($orderItems);
-				} 
-			}
-			return;
-		}
-		
-		private function b2bUpdate($order, $request)
-		{
-			$totalAmount = 0;
-			$orderItems = [];
-			$height = $width = $length = $weight = 0;
-			
-			if (!empty($request->product_category)) 
-			{
-				OrderItem::where('order_id', $order->id)->whereNotIn('id', $request->id ?? [])->delete();
-				foreach ($request->product_category as $key => $productCategory)
-				{  
-					$amount = $request->amount[$key] ?? 0;
-					$quantity = $request->quantity[$key] ?? 1;
-					 
-					$orderItemData = [
-						'order_id' => $order->id, 
-						'product_category' => $productCategory,
-						'product_name' => $request->product_name[$key],
-						'sku_number' => $request->sku_number[$key],
-						'hsn_number' => $request->hsn_number[$key],
-						'amount' => $amount, 
-						'ewaybillno' => null, 
-						'quantity' => $quantity,
-						'updated_at' => now(),
-						'dimensions' => json_encode([
-							'no_of_box' => $request->no_of_box[$key] ?? 0,
-							'weight' => $request->weight[$key] ?? 0,
-							'length' => $request->length[$key] ?? 0,
-							'width' => $request->width[$key] ?? 0,
-							'height' => $request->height[$key] ?? 0,
-						]),
-					];
-					
-					// Accumulate totals
-					$height += $request->height[$key] ?? 0;
-					$width  += $request->width[$key] ?? 0;
-					$length += $request->length[$key] ?? 0; 
-					
-					// Check if order_item_id exists in the request
-					if (!empty($request->id[$key])) {
-						$orderItem = OrderItem::find($request->id[$key]);
-						if ($orderItem) {
-							$orderItemData['dimensions'] = json_decode($orderItemData['dimensions'], true);
-							$orderItem->update($orderItemData); // Update existing item
-						}
-						} else {
-						$orderItemData['created_at'] = now();
-						$orderItems[] = $orderItemData; // Add new item for bulk insert
-					}
-				}
-				 
-				$order->update([ 
-					'length' => $length,
-					'width'  => $width,
-					'height' => $height
-				]);
-				
-				// Bulk insert for new items if any
-				if (!empty($orderItems)) {
-					OrderItem::insert($orderItems);
-				} 
-			}
-			return;
-		}
-		
-		public function orderClone($id)
-		{
-		    $user = Auth::user();
-			$order = Order::with( 'orderItems')->find($id);  
-			$weightOrder = request('weight_order', 1);
-			return view($weightOrder == 1 ? 'order.clone-b2c' : 'order.clone-b2b', compact('user', 'order', 'weightOrder'));  
-		}
-		
-		public function orderDelete($id)
-		{ 
-			DB::beginTransaction();
-			try
-			{ 
-				$order = Order::find($id); 
-				$order->orderItems()->delete();
-				
-				$documents = [
-					'order_image',
-					'invoice_document'
-				];
-
-				foreach ($documents as $document) {
-					$imagePaths = $order->$document ?? [];
-
-					if (!empty($imagePaths) && is_array($imagePaths)) {
-						foreach ($imagePaths as $image) {
-							$filePath = "public/orders/{$order->id}/{$image}";
-
-							if (Storage::exists($filePath)) {
-								Storage::delete($filePath);
-							}
-						}
-					}
-				}
- 
-				// Remove the entire order directory if it's empty
-				$orderDirectory = 'public/orders/' . $order->id;
-				if (Storage::exists($orderDirectory) && count(Storage::files($orderDirectory)) === 0) {
-					Storage::deleteDirectory($orderDirectory);
-				}
-				
-				$order->delete();
-				
-				DB::commit();
-				return redirect()->back()->with('success','The order has been successfully deleted.'); 
-			}
-			catch(\Exception $e)
-			{ 
-				return redirect()->back()->with('error','Something went wrong.'); 
-			}  	
-			
-		}
+		} 
 		
 		public function orderShippingLableDownload($orderId)
         {
@@ -1445,7 +925,7 @@
 					'shipping_charge' => $requestData['total_charges'] ?? 0,
 					'shipping_company_id' => $shippingCompany->id,
 					'shipment_id' => $shipment_id,
-					'awb_number' => $awb_number ?? null,
+					'awb_number' => $awb_number,
 					'courier_name' => $requestData['courier_name'],
 					'courier_id' => $courier_id,
 					'courier_logo' => $courierLogo,

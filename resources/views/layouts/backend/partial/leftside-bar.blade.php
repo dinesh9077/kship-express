@@ -43,14 +43,14 @@
 						</a>
 					</li>
 					@if(config('permission.order.view'))
-						<li>
+						<!--<li>
 							<a href="{{ route('order') }}?weight_order=1" class="{{ request()->is(['order', 'order/create', 'order/edit*', 'order/details*', 'order/clone*', 'order/label*', 'order/tracking-history*', 'order/shipping-label*']) ? 'active' : '' }}">
 								<i class="mdi mdi-package-variant-closed"></i>
 								<span> Order </span>
 							</a>
-						</li>
+						</li>-->
 						
-						<!--<li class="{{ request()->is('order*') && request('weight_order') ? 'mm-active' : '' }}">
+						<li class="{{ request()->is('order*') && request('weight_order') ? 'mm-active' : '' }}">
 							<a href="javascript: void(0);" class="{{ request()->is('order*') && request('weight_order') ? 'active' : '' }}">
 								<i class="mdi mdi-package-variant-closed"></i>
 								<span> Order </span>
@@ -60,18 +60,17 @@
 								<li class="{{ request()->is('order*') && request('weight_order') == 1 ? 'mm-active' : '' }}">
 									<a class="{{ request()->is('order*') && request('weight_order') == 1 ? 'active' : '' }}" 
 									   href="{{ route('order') }}?weight_order=1"> 
-									   Lightweight Order 
+									   B2C Order 
 									</a>
 								</li> 
 								<li class="{{ request()->is('order*') && request('weight_order') == 2 ? 'mm-active' : '' }}">
 									<a class="{{ request()->is('order*') && request('weight_order') == 2 ? 'active' : '' }}" 
 									   href="{{ route('order') }}?weight_order=2"> 
-									   Heavyweight Order 
+									   B2B Order 
 									</a>
 								</li>  
 							</ul>
-						</li>--> 
-
+						</li> 
 					@endif
 					@if(config('permission.bulk_order.view'))
 						<li>
@@ -93,7 +92,7 @@
 						<li>
 							<a href="{{route('customer')}}" class="{{ request()->is('customer*') ? 'active' : '' }}">
 								<i class="mdi mdi-account"></i>
-								<span> Client </span>
+								<span> Recipeint/Customer </span>
 							</a>
 						</li>
 					@endif

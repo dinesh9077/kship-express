@@ -7,6 +7,8 @@
 	use App\Models\User; 
 	use App\Models\ShippingCompany;
 	use App\Models\PickupRequest;
+	use App\Models\Customer;
+	use App\Models\CustomerAddress;
 	use App\Models\CourierWarehouse;
 	use DB,Auth,File,Helper; 
 	use App\Services\DelhiveryService;
@@ -55,10 +57,12 @@
 				});
 			} 
 			 
-			$values = $query->orderBy('id')
-			->offset($offset)
-			->limit($limit)
-			->get();
+			$query->orderBy('id');
+			if($offset && $limit)
+			{
+				$query->offset($offset)->limit($limit);
+			}
+			$values = $query->get();
 			
 			return $this->successResponse($values, 'warehouse fetched successfully.');
 		}
@@ -104,7 +108,7 @@
 				return $this->successResponse($courierWarehouse, 'The warehouse has been successfully added.'); 
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return $this->errorResponse([], 'Failed to add warehouse. Please try again.');  
+				return $this->errorResponse('Failed to add warehouse. Please try again.');  
 			}
 		}
 
@@ -191,7 +195,7 @@
 				return $this->successResponse($courierWarehouse, 'The warehouse has been successfully updated.'); 
 			} catch (\Exception $e) {
 				DB::rollBack();
-				return $this->errorResponse([], 'Failed to update warehouse. Please try again.');   
+				return $this->errorResponse('Failed to update warehouse. Please try again.');   
 			}
 		}
  
@@ -225,7 +229,270 @@
 				}
 			}
 		}
-    
+		
+		//customer
+		public function customerList(Request $request)
+		{ 
+			$offset = $request->get("offset");
+			$limit = $request->get("limit"); 
+			$search_arr = $request->get('search');
+			  
+			$user = Auth::user();
+			$role = $user->role;
+			$userId = $user->id;
+			
+			// Base Query
+			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
+			->when($role === "user", fn($q) => $q->where('user_id', $userId));
+			 
+			// Apply search filter
+			if (!empty($search)) { 
+				$query->where(function ($q) use ($search) {
+					$q->where('first_name', 'LIKE', "%{$search}%")
+					->orWhere('last_name', 'LIKE', "%{$search}%")
+					->orWhere('mobile', 'LIKE', "%{$search}%")
+					->orWhere('email', 'LIKE', "%{$search}%")
+					->orWhere('status', 'LIKE', "%{$search}%")
+					->orWhere('created_at', 'LIKE', "%{$search}%");
+				});
+			}
+			 
+			// Fetch paginated records
+			$query->with('user:id,name', 'customerAddresses');
+			if($offset && $limit)
+			{
+				$query->offset($offset)->limit($limit);
+			}
+			$customers = $query->latest()->get();
+			return $this->successResponse($customers, 'customer fetched successfully.');
+		} 
+		  
+		public function storeCustomer(Request $request)
+		{
+			// Validate input, including warehouse name uniqueness
+			$validator = Validator::make($request->all(), [
+				'first_name' => 'required|string|max:255',
+				'last_name'  => 'required|string|max:255',
+				'email'      => 'required|email|max:255',
+				'mobile'     => 'required|digits_between:8,15', 
+				'address'    => 'required|array|min:1',
+				'address.*'  => 'required|string|max:500', 
+				'zip_code'   => 'required|array|min:1',
+				'zip_code.*' => 'required|string|max:20', 
+				'country'    => 'required|array|min:1',
+				'country.*'  => 'required|string|max:100', 
+				'state'      => 'required|array|min:1',
+				'state.*'    => 'required|string|max:100', 
+				'city'       => 'required|array|min:1',
+				'city.*'     => 'required|string|max:100', 
+				'gst_number' => 'nullable|string|max:50',
+				'status'     => 'required|in:0,1',
+			]);
+ 
+			if ($validator->fails()) {
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
+			}
+			
+			$userId = Auth::id();
+			$data = $request->except('_token', 'address', 'country', 'state', 'city', 'zip_code', 'aadhar_front', 'aadhar_back', 'pancard');
+			$data['user_id'] = $userId;
+
+			if (Customer::where('mobile', $request->mobile)->exists()) {
+				return $this->errorResponse('The mobile number already exists.');   
+			}
+
+			if (Customer::where('email', $request->email)->exists()) {
+				return $this->errorResponse('The mobile number already exists.');  
+			}
+
+			try {
+				DB::beginTransaction();
+				
+				if ($request->hasFile('aadhar_front')) { 
+					$file = $request->file('aadhar_front');  
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$path = $file->storeAs('public/customer/aadhar', $filename);  
+					$data['aadhar_front'] = $filename;
+				}
+				if ($request->hasFile('aadhar_back')) { 
+					$file = $request->file('aadhar_back');  
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$path = $file->storeAs('public/customer/aadhar', $filename);  
+					$data['aadhar_back'] = $filename;
+				}
+				if ($request->hasFile('pancard')) { 
+					$file = $request->file('pancard');  
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$path = $file->storeAs('public/customer/panacrd', $filename);  
+					$data['pancard'] = $filename;
+				}
+				
+				$customer = Customer::create($data);
+				if ($request->has('address') && count($request->address) > 0) {
+					$addresses = [];
+					foreach ($request->address as $key => $addr) {
+						$addresses[] = [
+							'customer_id' => $customer->id,
+							'address' => $addr,
+							'country' => $request->country[$key],
+							'state' => $request->state[$key],
+							'city' => $request->city[$key],
+							'zip_code' => $request->zip_code[$key],
+							'status' => 1,
+							'created_at' => now(),
+							'updated_at' => now(),
+						];
+					}
+					CustomerAddress::insert($addresses);
+				}
+				$customerAddressId = optional($customer->latestCustomerAddress)->id ?? ''; 
+				DB::commit();
+				return $this->successResponse($customer, 'The customer has been successfully added.');  
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('Failed to add customer. Please try again.');   
+			}
+		}
+		   
+		public function updateCustomer(Request $request, $id)
+		{
+			// Validate input, including warehouse name uniqueness
+			$validator = Validator::make($request->all(), [
+				'first_name' => 'required|string|max:255',
+				'last_name'  => 'required|string|max:255',
+				'email'      => 'required|email|max:255',
+				'mobile'     => 'required|digits_between:8,15', 
+				'address'    => 'required|array|min:1',
+				'address.*'  => 'required|string|max:500', 
+				'zip_code'   => 'required|array|min:1',
+				'zip_code.*' => 'required|string|max:20', 
+				'country'    => 'required|array|min:1',
+				'country.*'  => 'required|string|max:100', 
+				'state'      => 'required|array|min:1',
+				'state.*'    => 'required|string|max:100', 
+				'city'       => 'required|array|min:1',
+				'city.*'     => 'required|string|max:100', 
+				'gst_number' => 'nullable|string|max:50',
+				'status'     => 'required|in:0,1',
+			]);
+ 
+			if ($validator->fails()) {
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
+			}
+			
+			$userId = Auth::id();
+			$data = $request->except('_token', 'address', 'country', 'state', 'city', 'zip_code', 'id', 'aadhar_front', 'aadhar_back', 'pancard');
+			$data['user_id'] = $userId;
+
+			if (Customer::where('id', '!=', $id)->where('mobile', $request->mobile)->exists()) {
+				return $this->errorResponse('The mobile number already exists.');   
+			}
+
+			if (Customer::where('id', '!=', $id)->where('email', $request->email)->exists()) {
+				return $this->errorResponse('The email already exists.');    
+			}
+
+			try {
+				DB::beginTransaction();
+				$customer = Customer::findOrFail($id); // Fetch the customer record
+			 
+				if ($request->hasFile('aadhar_front')) { 
+					// Delete the old file if it exists
+					if (!empty($customer->aadhar_front) && Storage::exists("public/customer/aadhar/{$customer->aadhar_front}")) {
+						Storage::delete("public/customer/aadhar/{$customer->aadhar_front}");
+					}
+
+					// Store the new file
+					$file = $request->file('aadhar_front');  
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$file->storeAs('public/customer/aadhar', $filename);  
+					$data['aadhar_front'] = $filename;
+				}
+
+				if ($request->hasFile('aadhar_back')) { 
+					if (!empty($customer->aadhar_back) && Storage::exists("public/customer/aadhar/{$customer->aadhar_back}")) {
+						Storage::delete("public/customer/aadhar/{$customer->aadhar_back}");
+					}
+
+					$file = $request->file('aadhar_back');  
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$file->storeAs('public/customer/aadhar', $filename);  
+					$data['aadhar_back'] = $filename;
+				}
+
+				if ($request->hasFile('pancard')) { 
+					if (!empty($customer->pancard) && Storage::exists("public/customer/pancard/{$customer->pancard}")) {
+						Storage::delete("public/customer/pancard/{$customer->pancard}");
+					}
+
+					$file = $request->file('pancard');  // FIXED: Removed incorrect `public/pancard`
+					$filename = time() . '_' . $file->getClientOriginalName(); 
+					$file->storeAs('public/customer/pancard', $filename);  
+					$data['pancard'] = $filename;
+				} 
+
+				// Update customer record with new file names
+				$customer->update($data);
+				
+				if ($request->has('address') && count($request->address) > 0) { 
+					CustomerAddress::where('customer_id', $id)->whereNotIn('id', $request->id ?? [])->delete();
+
+					foreach ($request->address as $key => $addr) {
+						$addressData = [
+							'address' => $addr,
+							'country' => $request->country[$key],
+							'state' => $request->state[$key],
+							'city' => $request->city[$key],
+							'zip_code' => $request->zip_code[$key],
+							'updated_at' => now(),
+						];
+
+						if (!empty($request->id[$key])) {
+							CustomerAddress::whereId($request->id[$key])->update($addressData);
+						} else {
+							$addressData['customer_id'] = $id;
+							$addressData['status'] = 1;
+							$addressData['created_at'] = now();
+							CustomerAddress::create($addressData);
+						}
+					}
+				}
+				
+				DB::commit(); 
+				return $this->successResponse($customer, 'The customer has been successfully updated.');  
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('Failed to add customer. Please try again.');   
+			}
+		}
+		
+		public function deleteCustomer($id)
+		{
+			try {
+				DB::beginTransaction();
+				
+				$customer = Customer::find($id);
+				if (!empty($customer->aadhar_front) && Storage::exists("public/customer/aadhar/{$customer->aadhar_front}")) {
+					Storage::delete("public/customer/aadhar/{$customer->aadhar_front}");
+				}
+				if (!empty($customer->aadhar_back) && Storage::exists("public/customer/aadhar/{$customer->aadhar_back}")) {
+					Storage::delete("public/customer/aadhar/{$customer->aadhar_back}");
+				}
+				if (!empty($customer->pancard) && Storage::exists("public/customer/pancard/{$customer->pancard}")) {
+					Storage::delete("public/customer/pancard/{$customer->pancard}");
+				}
+				$customer->customerAddresses()->delete();
+				$customer->delete(); 
+				
+				DB::commit(); 
+				return $this->successResponse([], 'The customer has been successfully deleted.');  
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('Failed to delete customer. Please try again.');   
+			}
+		}
+		
+		// pickup request
 		public function pickupRequestList()
 		{ 
 			$user = Auth::user();

@@ -73,7 +73,7 @@
 			$totalFiltered = $query->count();
 			
 			// Fetch paginated records
-			$customers = $query->with('user')
+			$customers = $query->with('user:id,name')
 			->offset($start)
 			->limit($limit)
 			->orderBy($orderColumn, $dir)
@@ -127,7 +127,7 @@
 		}
 		
 		public function storeCustomer(Request $request)
-		{
+		{ 
 			$userId = Auth::id();
 			$data = $request->except('_token', 'address', 'country', 'state', 'city', 'zip_code', 'aadhar_front', 'aadhar_back', 'pancard');
 			$data['user_id'] = $userId;
