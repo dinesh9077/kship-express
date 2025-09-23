@@ -42,8 +42,7 @@
 			 
 			$search = $request->post('search');
 			$status = strtolower($request->post('status'));
-			$weightOrder = strtolower($request->get('weight_order'));
-			 
+			$weightOrder = $request->get('weight_order', 1); 
 			$user = Auth::user(); 
 			$role = $user->role;
 			$id = $user->id;
@@ -146,26 +145,40 @@
 			return $this->successResponse($orders, 'orders fetched successfully.');
 		}
 		 
-		public function filterList()
+		public function filterList(Request $request)
 		{ 
-			$sellers = Order::join('users', 'users.id', '=', 'orders.user_id')
-			->select('users.id', 'users.name')
-			->groupBy('users.id', 'users.name')
-			->orderBy('users.name', 'asc')
-			->get();
-			
-			$statuses = Order::distinct()->pluck('status_courier');
-			$data = [
-				'users' => $sellers,
+			$weightOrder = $request->get('weight_order', 1);
+
+			// Fetch sellers (users with orders for given weight_order)
+			$sellers = User::select('users.id', 'users.name')
+				->whereHas('orders', function ($q) use ($weightOrder) {
+					$q->where('weight_order', $weightOrder);
+				})
+				->orderBy('users.name')
+				->distinct()
+				->get();
+
+			// Fetch distinct statuses for given weight_order
+			$statuses = Order::where('weight_order', $weightOrder)
+				->distinct()
+				->pluck('status_courier');
+
+			return $this->successResponse([
+				'users'    => $sellers,
 				'statuses' => $statuses,
-			];
-			return $this->successResponse($data, 'filter fetched successfully.');
+			], 'Filter fetched successfully.');
 		}
 		  
 		public function orderStore(Request $request)
-		{      
+		{     
 			$user_id = Auth::id();  
-			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
+			
+			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
+			if ($request->weight_order == 2) { 
+				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
+			} 
+			$data = $request->except($exclude); 
+			
 			$data['user_id'] = $user_id;
 			$data['status_courier'] = 'New';
 			$data['weight'] = $request->total_weight;
@@ -205,51 +218,15 @@
 					}
 				} 
 				$order->update(['order_image' => $imagePaths, 'invoice_document' => $invoiceDocPaths]);
-				 
-				$orderItems = [];
-				$height = $width = $length = $weight = 0;
 				
-				if (!empty($request->product_category)) 
-				{
-					foreach ($request->product_category as $key => $productCategory) { 
-						$amount = $request->amount[$key] ?? 0;
-						$quantity = $request->quantity[$key] ?? 1;
-						  
-						$orderItems[] = [
-							'order_id' => $order->id, 
-							'product_category' => $productCategory,
-							'product_name' => $request->product_name[$key] ?? null,
-							'sku_number' => $request->sku_number[$key] ?? null,
-							'hsn_number' => $request->hsn_number[$key] ?? null,
-							'amount' => $amount, 
-							'ewaybillno' => null, 
-							'quantity' => $quantity,
-							'created_at' => now(),
-							'updated_at' => now(),
-							'dimensions' => json_encode([
-								'weight' => $request->weight[$key] ?? 0,
-								'length' => $request->length[$key] ?? 0,
-								'width' => $request->width[$key] ?? 0,
-								'height' => $request->height[$key] ?? 0,
-							]),
-						];
-						
-						// Accumulate totals
-						$height += $request->height[$key] ?? 0;
-						$width  += $request->width[$key] ?? 0;
-						$length += $request->length[$key] ?? 0;
-						$weight += $request->weight[$key] ?? 0; 
-					}
-					
-					OrderItem::insert($orderItems);  
+				if($request->weight_order == 2)
+				{ 
+					$this->b2bStore($order, $request);
 				}
-				  
-				$order->update([
-					'weight' => $weight,
-					'length' => $length,
-					'width'  => $width,
-					'height' => $height
-				]);
+				else
+				{
+					$this->b2cStore($order, $request);
+				}  
 				
 				// Insert order status
 				OrderStatus::insert([
@@ -261,13 +238,87 @@
 				
 				Helper::orderActivity($order->id, 'Order created.');
 				
-				DB::commit(); // Commit Transaction
-				return $this->successResponse($order, 'The order has been successfully added.'); 
+				DB::commit(); 
+				return $this->successResponse($order, 'The order has been successfully added.');  
 			} 
 			catch (\Exception $e) {
-				DB::rollback();  
-				return $this->errorResponse($order, 'failed to add order.please try again.'); 	 
+				DB::rollback();
+				return $this->errorResponse('The failed to create order.please try again.'); 
 			}
+		}
+		
+		private function b2cStore($order, $request)
+		{
+			$orderItems = []; 
+			if (!empty($request->product_category)) 
+			{
+				foreach ($request->product_category as $key => $productCategory) { 
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					  
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCategory,
+						'product_name' => $request->product_name[$key] ?? null,
+						'sku_number' => $request->sku_number[$key] ?? null,
+						'hsn_number' => $request->hsn_number[$key] ?? null,
+						'amount' => $amount, 
+						'ewaybillno' => null, 
+						'quantity' => $quantity,
+						'created_at' => now(),
+						'updated_at' => now() 
+					]; 
+				} 
+				OrderItem::insert($orderItems);  
+			}  
+		}
+		
+		private function b2bStore($order, $request)
+		{
+			$orderItems = [];
+			$height = $width = $length = $weight = 0;
+			
+			if (!empty($request->product_category)) 
+			{
+				foreach ($request->product_category as $key => $productCategory) { 
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					  
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCategory,
+						'product_name' => $request->product_name[$key] ?? null,
+						'sku_number' => $request->sku_number[$key] ?? null,
+						'hsn_number' => $request->hsn_number[$key] ?? null,
+						'amount' => $amount, 
+						'ewaybillno' => null, 
+						'quantity' => $quantity,
+						'created_at' => now(),
+						'updated_at' => now(),
+						'dimensions' => json_encode([
+							'no_of_box' => $request->no_of_box[$key] ?? 0,
+							'weight' => $request->weight[$key] ?? 0,
+							'length' => $request->length[$key] ?? 0,
+							'width' => $request->width[$key] ?? 0,
+							'height' => $request->height[$key] ?? 0,
+						]),
+					];
+					
+					// Accumulate totals
+					$height += $request->height[$key] ?? 0;
+					$width  += $request->width[$key] ?? 0;
+					$length += $request->length[$key] ?? 0; 
+				}
+				
+				OrderItem::insert($orderItems);  
+			}
+			  
+			$order->update([ 
+				'length' => $length,
+				'width'  => $width,
+				'height' => $height
+			]);	
+			return;
 		}
 		   
 		public function orderEdit($id)
@@ -277,14 +328,18 @@
 		}
 		
 		public function orderUpdate(Request $request, $id)
-		{  
+		{   
 			$user_id = Auth::id();  
-			$data = $request->except('_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'weight', 'length', 'width', 'height', 'order_image', 'invoice_document'); 
+			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
+			if ($request->weight_order == 2) { 
+				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
+			} 
+			$data = $request->except($exclude); 
+			 
 			$data['user_id'] = $user_id;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 			$data['weight'] = $request->total_weight; 
-			$data['total_amount'] = $request->invoice_amount;
-			$data['status_courier'] = 'New';
+			$data['total_amount'] = $request->invoice_amount; 
 			$data['status'] = 1;
 			$data['created_at'] = now();
 			$data['updated_at'] = now();
@@ -317,396 +372,135 @@
 				$data['order_image'] = $imagePaths;
 				$data['invoice_document'] = $invoiceDocPaths;
 				$order->update($data);
-				
-				$totalAmount = 0;
-				$orderItems = [];
-				$height = $width = $length = $weight = 0;
-				
-				if (!empty($request->product_category)) 
-				{
-					OrderItem::where('order_id', $id)->whereNotIn('id', $request->id ?? [])->delete();
-					foreach ($request->product_category as $key => $productCategory)
-					{  
-						$amount = $request->amount[$key] ?? 0;
-						$quantity = $request->quantity[$key] ?? 1;
-						 
-						$orderItemData = [
-							'order_id' => $order->id, 
-							'product_category' => $productCategory,
-							'product_name' => $request->product_name[$key],
-							'sku_number' => $request->sku_number[$key],
-							'hsn_number' => $request->hsn_number[$key],
-							'amount' => $amount, 
-							'ewaybillno' => null, 
-							'quantity' => $quantity,
-							'updated_at' => now(),
-							'dimensions' => json_encode([
-								'weight' => $request->weight[$key] ?? 0,
-								'length' => $request->length[$key] ?? 0,
-								'width' => $request->width[$key] ?? 0,
-								'height' => $request->height[$key] ?? 0,
-							]),
-						];
-						
-						// Accumulate totals
-						$height += $request->height[$key] ?? 0;
-						$width  += $request->width[$key] ?? 0;
-						$length += $request->length[$key] ?? 0;
-						$weight += $request->weight[$key] ?? 0; 
-						
-						// Check if order_item_id exists in the request
-						if (!empty($request->id[$key])) {
-							$orderItem = OrderItem::find($request->id[$key]);
-							if ($orderItem) {
-								$orderItemData['dimensions'] = json_decode($orderItemData['dimensions'], true);
-								$orderItem->update($orderItemData); // Update existing item
-							}
-							} else {
-							$orderItemData['created_at'] = now();
-							$orderItems[] = $orderItemData; // Add new item for bulk insert
-						}
-					}
-					 
-					$order->update([
-						'weight' => $weight,
-						'length' => $length,
-						'width'  => $width,
-						'height' => $height
-					]);
-					
-					// Bulk insert for new items if any
-					if (!empty($orderItems)) {
-						OrderItem::insert($orderItems);
-					} 
+				 
+				if($request->weight_order == 2)
+				{ 
+					$this->b2bUpdate($order, $request);
 				}
-				
+				else
+				{
+					$this->b2cUpdate($order, $request);
+				}
+				 
 				Helper::orderActivity($order->id, 'Order updated.');
 				
-				DB::commit(); // Commit Transaction
+				DB::commit(); 
 				return $this->successResponse($order, 'The order have been updated successfully.');  
 			} 
 			catch (\Exception $e) {
-				DB::rollback(); // Rollback in case of failure
-				return $this->errorResponse($order, 'failed to update order.please try again.'); 	 
-			}
-		} 
-		
-		public function orderShippingLableDownload($orderId)
-        {
-            $order = Order::with('shippingCompany')->find($orderId);
-			if(!$order->shippingCompany && !empty($order->awb_number))
-			{
-				return back()->with('error', 'Something went wrong');
-			}
-			
-			if ($order->shippingCompany->id == 2) {  
-				$response = $this->delhiveryService->shippingLableByLrNo($order->lr_no, $order->shippingCompany);
-				
-				if (!($response['success'] ?? false)) {
-					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
-					return back()->with('error', $errorMsg);
-				}
-				
-				if ((isset($response['response']['success']) && !$response['response']['success']))
-				{ 
-					return back()->with('error', $response['response']['error']['message'] ?? 'An error occurred.');
-				} 
-				if(!$response['response']['data'])
-				{
-					return back()->with('error', 'Something went wrong');
-				} 
-				$data = $response['response']['data'] ?? [];
-				
-				// Fetch each label image and convert to Base64
-				$labels = [];
-				foreach ($data as $url) {
-					$response = $this->delhiveryService->getLabelImage($url);
-					if(isset($response['response']['success']) && $response['response']['success'])
-					{
-						$labels[] = $response['response']['data'] ?? '';
-					}
-				}
-				return view('order.shipping-label', compact('labels', 'order'));
-			}  
-			return back()->with('error', 'Something went wrong');
-		}
-		
-		public function orderWayBillCopy($orderId)
-		{
-		    $order = Order::with('shippingCompany')->find($orderId);
-			if(!$order->shippingCompany && !empty($order->awb_number))
-			{
-				return back()->with('error', 'Something went wrong');
-			}
-			if ($order->shippingCompany->id == 2) {  
-				$response = $this->delhiveryService->waybillCopyByLrNo($order->lr_no, $order->shippingCompany);
-				
-				if (!($response['success'] ?? false)) {
-					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error']['message'] ?? 'An error occurred.');
-					return back()->with('error', $errorMsg);
-				}
-				
-				if ((isset($response['response']['success']) && !$response['response']['success']))
-				{ 
-					return back()->with('error', $response['response']['error']['message'] ?? 'An error occurred.');
-				} 
-				if(!$response['response'])
-				{
-					return back()->with('error', 'Something went wrong');
-				}
-				return \Response::make($response['response'], 200, [
-				'Content-Type' => 'application/pdf',
-				'Content-Disposition' => 'inline; filename="LR_Copy_'.$order->lr_no.'.pdf"'
-				]);
-			}
-			return back()->with('error', 'Something went wrong'); 
-		}
-		
-		public function downloadShippingLabel($id)
-        {
-            $order = Order::find($id);
-            $labelUrl = $order->label;
-            
-            // Download the file from the URL
-            $response = Http::get($labelUrl);
-            
-            // Define the path where you want to save the file
-            $filePath = 'public/labels/' . $id . '.pdf';
-            
-            // Save the file to the server
-            Storage::put($filePath, $response->body());
-            
-            // Generate a URL to access the saved file
-            $fileUrl = url(Storage::url($filePath));
-            
-            // Return the full URL for downloading the file
-            return $fileUrl;
-		}
-		
-		public function orderLableDownload($orderId)
-		{  
-			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
-			
-			$shipping = $order->shippingCompany ?? null;
-			$customer = $order->customer ?? null;
-			$customerAddr = $order->customerAddress ?? null;
-			$products =  $order->orderItems ?? null; 
-			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
-			 
-			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
-			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-			
-			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
-			 
-			$pdf = PDF::loadHtml($htmlView);  
-			return $pdf->download('order_label_' . $orderId . '.pdf'); 
-		}
-		  
-        public function alllabeldownload(Request $request)
-        { 
-			try {
-				$orderIds = $request->input('order_ids'); 
-				if (empty($orderIds) || !is_array($orderIds)) {
-					return back()->with('error', 'No orders selected');	 
-				}
-				
-				// Eager load related models in one go
-				$orders = Order::with([
-					'shippingCompany', 'customer', 'customerAddress',
-					'orderItems', 'warehouse', 'user'
-				])
-				->whereIn('id', $orderIds)->get();
-				 
-				if ($orders->isEmpty()) {
-					return back()->with('error', 'No valid orders found');	 
-				}
-				 
-				$htmlSections = []; 
-				foreach ($orders as $order)
-				{ 
-					$shipping       = $order->shippingCompany;
-					$customer       = $order->customer;
-					$customerAddr   = $order->customerAddress;
-					$products       = $order->orderItems;  
-					 
-					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
-					 
-					$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
-					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-					
-					// Generate HTML for label
-					$html = view('order.bulk-label', compact(
-					'shipping', 'order', 'customer', 'products',
-					'customerAddr', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'
-					))->render();
-					
-					// Optional: remove excessive whitespace (disable if layout breaks)
-					$htmlSections[] = trim(preg_replace('/\s+/', ' ', $html));  
-				}
-				
-				if (empty($htmlSections)) {
-					return back()->with('error', 'All labels are empty'); 
-				}
-				
-				$mergedHtml = implode('', $htmlSections); 
-				$pdf = PDF::loadHtml($mergedHtml);
-				return $pdf->download('labels.pdf');  
-			} 
-			catch (\Exception $e) 
-			{
-				return back()->with('error', 'PDF generation failed: ' . $e->getMessage());  
-			}
-		}  
-		
-		public function orderCancel($id)
-		{
-			DB::beginTransaction(); // Begin Transaction
-			
-			try {
-				// Update Order Status
-				$order = Order::findOrFail($id);
-				$order->update([
-					'status_courier' => 'cancelled',
-					'reason_cancel' => 'The client has cancelled this order before it was shipped.',
-					'order_cancel_date' => now(),
-				]);
-				
-				
-				// Insert Order Status Record
-				OrderStatus::create([
-					'order_id' => $id,
-					'order_status' => 'cancelled',
-					'created_at' => now(),
-					'updated_at' => now(),
-				]);
-				
-				// Log Order Activity
-				Helper::orderActivity($id, 'Order cancelled.');
-				
-				DB::commit(); // Commit Transaction
-				
-				return back()->with('success', 'The order has been successfully cancelled.');
-				} catch (\Exception $e) {
-				DB::rollback(); // Rollback Transaction on Failure
-				return back()->with('error', 'Failed to cancel the order: ' . $e->getMessage());
+				DB::rollback(); 
+				return $this->errorResponse('The failed to update order.please try again.');  
 			}
 		}
 		
-		public function orderCancelApi($orderId)
-		{
- 			DB::beginTransaction();
-			
-			try 
-			{
-				$order = Order::with(['user'])->findOrFail($orderId);
-				$user = $order->user;
-				
-				$shippingCompany = ShippingCompany::where('id', $order->shipping_company_id)
-				->where('status', 1)
-				->firstOrFail();
-				
-				if(!$shippingCompany)
-				{
-					return back()->with('error', 'Something went wrong.');
-				}
-				
-				$orderCancelledData = []; 
-				if ($shippingCompany->id == 1) {  
-					$response = $this->shipMozo->cancelShipment($order, $shippingCompany);  
-					if (!($response['success'] ?? false)) {
-						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['message'] ?? 'An error occurred.');
-						return back()->with('error', $errorMsg);
-					}
-					
-					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
-					{ 
-						return back()->with('error', $response['response']['message'] ?? 'An error occurred.');
-					} 
-					
-					$orderCancelledData = [
-						'status_courier' => 'cancelled',
-						'order_cancel_date' => now(),
-						'reason_cancel' => 'cancelled shipment by user',
-					]; 
-				} 
-				
-				if (!$orderCancelledData) {
-					throw new \Exception('Something went wrong while processing the cancellation.');
-				}
-				
-				$order->update($orderCancelledData);
-				
-				if ($user->role == "user") {
-					$walletRefund = $order->shipping_charge ?? 0;
-					$user->increment('wallet_amount', $walletRefund);
-					
-					Billing::create([
-						'user_id' => $order->user_id,
-						'billing_type' => "Order",
-						'billing_type_id' => $order->id,
-						'transaction_type' => 'credit',
-						'amount' => $walletRefund,
-						'note' => 'Order canceled with AWB number: ' . $order->awb_number,
-						'created_at' => now(),
-						'updated_at' => now(),
-					]);
-				}
-				
-				OrderStatus::create([
-					'order_id' => $order->id,
-					'order_status' => 'cancelled',
-					'created_at' => now(),
-					'updated_at' => now(),
-				]);
-				
-				Helper::orderActivity($order->id, 'Order canceled with AWB number: ' . $order->awb_number);
-				
-				DB::commit();
-				return back()->with('success', 'The order has been successfully cancelled.');
-				
-				} catch (\Exception $e) {
-				DB::rollBack(); 
-				return back()->with('error', $e->getMessage());
-			}
-		}
-		
-		public function orderTrackingHistory($orderId)
+		private function b2cUpdate($order, $request)
 		{ 
-			$order = Order::with('shippingCompany')->find($orderId);
-			$shippingCompany = $order->shippingCompany ?? [];
+			$orderItems = []; 
 			
-			if(!$shippingCompany) 
+			if (!empty($request->product_category)) 
 			{
-				return back()->with('error', 'Something went wrong.');
-			} 
-			
-			$trackingHistories = []; 
-			if(!empty($order->awb_number))
-			{  
-				if($shippingCompany->id == 1)
-				{ 
-					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany);  
-					if (!($trackingResponse['success'] ?? false)) {
-						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
-						return back()->with('error', $errorMsg); 
+				OrderItem::where('order_id', $order->id)->whereNotIn('id', $request->id ?? [])->delete();
+				foreach ($request->product_category as $key => $productCategory)
+				{  
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					 
+					$orderItemData = [
+						'order_id' => $order->id, 
+						'product_category' => $productCategory,
+						'product_name' => $request->product_name[$key],
+						'sku_number' => $request->sku_number[$key],
+						'hsn_number' => $request->hsn_number[$key],
+						'amount' => $amount, 
+						'ewaybillno' => null, 
+						'quantity' => $quantity,
+						'updated_at' => now() 
+					];
+					 
+					// Check if order_item_id exists in the request
+					if (!empty($request->id[$key])) 
+					{
+						$orderItem = OrderItem::find($request->id[$key]);
+						if ($orderItem) { 
+							$orderItem->update($orderItemData); // Update existing item
+						}
+					} else {
+						$orderItemData['created_at'] = now();
+						$orderItems[] = $orderItemData; // Add new item for bulk insert
 					}
-					
-					if ((isset($trackingResponse['response']['result']) && $trackingResponse['response']['result']) == 0)
-					{ 
-						return back()->with('error', $trackingResponse['response']['message'] ?? 'An error occurred.'); 
-					}
-					
-					$responseData = $trackingResponse['response']['data']['scan_detail'] ?? [];
-					$trackingHistories = $responseData; 
-				}  
+				} 
+				
+				// Bulk insert for new items if any
+				if (!empty($orderItems)) {
+					OrderItem::insert($orderItems);
+				} 
 			}
+			return;
+		}
+		
+		private function b2bUpdate($order, $request)
+		{
+			$totalAmount = 0;
+			$orderItems = [];
+			$height = $width = $length = $weight = 0;
 			
-			if(!$trackingHistories)
+			if (!empty($request->product_category)) 
 			{
-				return back()->with('error', 'The order tracking data not found.');
+				OrderItem::where('order_id', $order->id)->whereNotIn('id', $request->id ?? [])->delete();
+				foreach ($request->product_category as $key => $productCategory)
+				{  
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					 
+					$orderItemData = [
+						'order_id' => $order->id, 
+						'product_category' => $productCategory,
+						'product_name' => $request->product_name[$key],
+						'sku_number' => $request->sku_number[$key],
+						'hsn_number' => $request->hsn_number[$key],
+						'amount' => $amount, 
+						'ewaybillno' => null, 
+						'quantity' => $quantity,
+						'updated_at' => now(),
+						'dimensions' => json_encode([
+							'no_of_box' => $request->no_of_box[$key] ?? 0,
+							'weight' => $request->weight[$key] ?? 0,
+							'length' => $request->length[$key] ?? 0,
+							'width' => $request->width[$key] ?? 0,
+							'height' => $request->height[$key] ?? 0,
+						]),
+					];
+					
+					// Accumulate totals
+					$height += $request->height[$key] ?? 0;
+					$width  += $request->width[$key] ?? 0;
+					$length += $request->length[$key] ?? 0; 
+					
+					// Check if order_item_id exists in the request
+					if (!empty($request->id[$key])) {
+						$orderItem = OrderItem::find($request->id[$key]);
+						if ($orderItem) {
+							$orderItemData['dimensions'] = json_decode($orderItemData['dimensions'], true);
+							$orderItem->update($orderItemData); // Update existing item
+						}
+						} else {
+						$orderItemData['created_at'] = now();
+						$orderItems[] = $orderItemData; // Add new item for bulk insert
+					}
+				}
+				 
+				$order->update([ 
+					'length' => $length,
+					'width'  => $width,
+					'height' => $height
+				]);
+				
+				// Bulk insert for new items if any
+				if (!empty($orderItems)) {
+					OrderItem::insert($orderItems);
+				} 
 			}
-			
-			return view('order.tracking-history', compact('order', 'trackingHistories', 'shippingCompany'));
+			return;
 		}
 		
 		public function orderDetails($id)
@@ -737,9 +531,120 @@
 				} 
 			}
 			
-			return view('order.details', compact('order', 'orderActivities', 'trackingHistories'));
+			return $this->successResponse(compact('order', 'orderActivities', 'trackingHistories'), 'success'); 
 		}
-		 
+		
+		public function orderCancel($id)
+		{
+			DB::beginTransaction();
+			
+			try {
+				// Update Order Status
+				$order = Order::findOrFail($id);
+				$order->update([
+					'status_courier' => 'cancelled',
+					'reason_cancel' => 'The client has cancelled this order before it was shipped.',
+					'order_cancel_date' => now(),
+				]);
+				
+				
+				// Insert Order Status Record
+				OrderStatus::create([
+					'order_id' => $id,
+					'order_status' => 'cancelled',
+					'created_at' => now(),
+					'updated_at' => now(),
+				]);
+				
+				// Log Order Activity
+				Helper::orderActivity($id, 'Order cancelled.');
+				
+				DB::commit(); // Commit Transaction
+				
+				return $this->successResponse($order, 'The order has been successfully cancelled.');  
+			} catch (\Exception $e) {
+				DB::rollback();
+				return $this->errorResponse('Failed to cancel the order'); 
+			}
+		}
+		
+		public function orderCancelApi($orderId)
+		{
+ 			DB::beginTransaction();
+			
+			try 
+			{
+				$order = Order::with(['user'])->findOrFail($orderId);
+				$user = $order->user;
+			 
+				$shippingCompany = ShippingCompany::where('id', $order->shipping_company_id)
+				->where('status', 1)
+				->first();
+				
+				if(!$shippingCompany)
+				{
+					return $this->errorResponse('Shipment not found.');  
+				}
+				
+				$orderCancelledData = []; 
+				if ($shippingCompany->id == 1) {  
+					$response = $this->shipMozo->cancelShipment($order, $shippingCompany);  
+					if (!($response['success'] ?? false)) {
+						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['message'] ?? 'An error occurred.');
+						return $this->errorResponse($errorMsg);  
+					}
+					
+					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
+					{  
+						return $this->errorResponse($response['response']['message'] ?? 'An error occurred.');  
+					} 
+					
+					$orderCancelledData = [
+						'status_courier' => 'cancelled',
+						'order_cancel_date' => now(),
+						'reason_cancel' => 'cancelled shipment by user',
+					]; 
+				} 
+				
+				if (!$orderCancelledData) {
+					return $this->errorResponse('Something went wrong while processing the cancellation.');   
+				}
+				
+				$order->update($orderCancelledData);
+				
+				if ($user->role == "user") {
+					$walletRefund = $order->shipping_charge ?? 0;
+					$user->increment('wallet_amount', $walletRefund);
+					
+					Billing::create([
+						'user_id' => $order->user_id,
+						'billing_type' => "Order",
+						'billing_type_id' => $order->id,
+						'transaction_type' => 'credit',
+						'amount' => $walletRefund,
+						'note' => 'Order canceled with AWB number: ' . $order->awb_number,
+						'created_at' => now(),
+						'updated_at' => now(),
+					]);
+				}
+				
+				OrderStatus::create([
+					'order_id' => $order->id,
+					'order_status' => 'cancelled',
+					'created_at' => now(),
+					'updated_at' => now(),
+				]);
+				
+				Helper::orderActivity($order->id, 'Order canceled with AWB number: ' . $order->awb_number);
+				
+				DB::commit(); 
+				return $this->successResponse($order, 'The order has been successfully cancelled.');  
+			} catch (\Exception $e) {
+				DB::rollback();
+				return $this->errorResponse('Failed to cancel the order'); 
+			}
+		}
+		
 		public function orderShipCharge($orderId)
 		{
 			$user = Auth::user();
@@ -749,7 +654,7 @@
 			
 			$order = Order::with(['warehouse', 'customerAddress', 'orderItems'])->find($orderId);
 			if (!$order) {
-				return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
+				return $this->errorResponse('Order not found');  
 			}
 			  
 			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
@@ -816,25 +721,22 @@
 			 
 			$couriers = $couriers ? collect($couriers)->sortBy('total_charges') : collect();
 			 
-			$view = view('order.shipment_charges', [
+			return $this->successResponse([
 				'order' => $order,  
-				'couriers' => $couriers,
+				'couriers' => collect($couriers)->values(),
 				'total_courier' => count($couriers)
-			])->render();
-			
-			return response()->json(['status' => 'success', 'view' => $view]);
+			], 'success');   
 		}
 		
 		public function orderShipNow(Request $request)
-		{  
-			DB::beginTransaction(); // Start Transaction
+		{   
+			DB::beginTransaction();
 			try {
-				$requestData = collect(json_decode($request->data, true) ?? []); 
-				
+				$requestData = $request->all();  
 				$shippingCompany = ShippingCompany::findOrFail($requestData['shipping_company_id']);
 			 
 				if (!$shippingCompany) {
-					return response()->json(['status' => 'error', 'msg' => 'Invalid Shipping Company']);
+					return $this->errorResponse('Invalid Shipping Company');   
 				}
 				
 				$order = Order::with(['warehouse', 'customer', 'customerAddress', 'orderItems', 'user'])->findOrFail($requestData['order_id']);
@@ -844,17 +746,17 @@
 					
 				if ($user->role == "user") {
 					if ($walletAmount < 100) {
-						return response()->json(['status' => 'error', 'wallet' => 1, 'msg' => 'Minimum 100 Wallet Balance required']);
+						return $this->errorResponse('Minimum 100 Wallet Balance required');   
 					}
 					
 					if ($requestData['total_charges'] > $walletAmount) {
-						return response()->json(['status' => 'error', 'msg' => 'Insufficient wallet balance']);
+						return $this->errorResponse('Insufficient wallet balance');  
 					}
 				}
 				$courierWarehouse = $order->warehouse ?? null;	
 				if(!$courierWarehouse)
 				{
-					return response()->json(['status' => 'error', 'msg' => 'Pickup warehouse address empty.']);
+					return $this->errorResponse('Pickup warehouse address empty.');   
 				}
 				
 				$courierLogo = $requestData['shipping_company_logo'] ?? null;
@@ -883,29 +785,29 @@
 					 
 					if (!($response['success'] ?? false)) {
 						$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+						return $this->errorResponse($errorMsg);   
 					}
 					
 					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
 					{
-						return response()->json(['status' => 'error', 'msg' => $response['response']['message'] ?? 'An error occurred.']);
+						return $this->errorResponse($response['response']['message'] ?? 'An error occurred.');   
 					} 
 					
 					$orderId = $response['response']['data']['order_id'] ?? '';
 					if (!$orderId) {
 						$errorMsg = 'Somthing went wrong.';
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+						return $this->errorResponse($errorMsg);  
 					}
 					
 					$courierResponse = $this->shipMozo->assignCourier($orderId, $requestData['courier_id'] ?? null, $shippingCompany);  
 					if (!($courierResponse['success'] ?? false)) {
 						$errorMsg = $courierResponse['response']['errors'][0]['message'] ?? ($courierResponse['response']['error'] ?? 'An error occurred.');
-						return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+						return $this->errorResponse($errorMsg);   
 					}
 					
 					if ((isset($courierResponse['response']['result']) && $courierResponse['response']['result'] == 0))
 					{
-						return response()->json(['status' => 'error', 'msg' => $courierResponse['response']['message'] ?? 'An error occurred.']);
+						return $this->errorResponse($courierResponse['response']['message'] ?? 'An error occurred.');    
 					}   
 					$awbNumber = $courierResponse['response']['data']['awb_number'] ?? '';
 					
@@ -971,727 +873,131 @@
 					Mail::to($customer->email)->send(new \App\Mail\OrderShipped($order, $awb_number));
 				} */
 				
-				DB::commit(); // Commit Transaction
-				
-				$warehouse = $order->warehouse ?? null;  
-				if ($warehouse) {
-					$pickupAddress = "<img src='" . asset('assets/images/order-1/location.png') . "' style='margin-right: 10px;'>
-					<h5><b>Pick Up Address <br></b>{$warehouse->company_name}, {$warehouse->address}, 
-					{$warehouse->city}, {$warehouse->state}, {$warehouse->country}, {$warehouse->zip_code}</h5>";
-					} else {
-					$pickupAddress = "<h5><b>Pick Up Address Not Available</b></h5>";
-				}
-				
-				$msg = "<h5> <img src='" . asset('assets/images/order-1/green-teu.png') . "' style='margin-right: 5px;'>
-				Your package has been assigned to <b>{$order->courier_name}</b>."; 
-				if(!empty($awb_number))
-				{
-					$msg .= "The AWB number is <span>{$awb_number}</span></h5>";
-				}
-				
-				return response()->json([
-					'status' => 'success',
-					'msg' => $msg,
-					'pickup_address' => $pickupAddress,
-					'order_id' => $order->id,
-					'shipping_id' => $shippingCompany->id
-				]);
+				DB::commit(); 
+				  
+				return $this->successResponse($order, "Your package has been assigned to {$order->courier_name} and The AWB number is {$awb_number}");
 				
 			} 
 			catch (\Exception $e) 
 			{
 				DB::rollBack();  
-				return response()->json(['status' => 'error', 'msg' => 'Something went wrong!'. $e->getMessage()]);
+				return $this->errorResponse('Something went wrong!');
 			}
 		}
-		    
-		// Warehouse pickup 
-		public function orderWarehouseList()
-		{
-			$user = Auth::user();
-			$pickupWarehouses = CourierWarehouse::where('user_id', $user->id)
-			->where('warehouse_status', 1)
-			->get();
-			
-			$options = ['<option value="">Select Pickup Location</option>'];
-			
-			foreach ($pickupWarehouses as $pickupWarehouse) {
-				$jsonWarehouse = htmlspecialchars(json_encode($pickupWarehouse), ENT_QUOTES, 'UTF-8');
-				
-				$options[] = '<option value="' . $pickupWarehouse->id . '" data-warehouse=\'' . $jsonWarehouse . '\'>'
-				. $pickupWarehouse->warehouse_name . ' - (' . $pickupWarehouse->company_name . ')</option>';
-			}
-			
-			return response()->json([
-			'status' => 'success',
-			'output' => implode('', $options)
-			]);
-		}
 		
-		public function orderWarehouseCreate()
-		{
-			$view = view('order.modals.warehouse-create')->render();
-			return response()->json(['status'=> 'success', 'view'=> $view]);
-		}
-		
-		// Recipeint/Customer
-		public function orderCustomerList()
-		{
-			$user = Auth::user();
-			$customers = Customer::where('user_id', $user->id)
-			->where('status', 1)
-			->get();
-			
-			$options = ['<option value="">Select Recipeint/Customer</option>'];
-			
-			foreach ($customers as $customer) { 
-				$options[] = '<option value="' . $customer->id . '">'
-				. $customer->first_name.' '.$customer->last_name . ' - (' . $customer->mobile . ')</option>';
-			}
-			
-			return response()->json([
-			'status' => 'success',
-			'output' => implode('', $options)
-			]);
-		}
-		
-		public function orderCustomerAddressList($customerId)
-		{
-			$user = Auth::user();
-			$customerAddresses = CustomerAddress::where('customer_id', $customerId)->get();
-			
-			$options = ['<option value="">Select Customer Address</option>'];
-			
-			foreach ($customerAddresses as $customerAddress) { 
-				$options[] = '<option value="' . $customerAddress->id . '">'
-				. $customerAddress->address.' '.$customerAddress->city . ' '.$customerAddress->states . ' '.$customerAddress->country . ', ' . $customerAddress->zip_code . '</option>';
-			}
-			
-			return response()->json([
-			'status' => 'success',
-			'output' => implode('', $options)
-			]);
-		}
-		
-		public function orderCustomerCreate()
-		{
-			$view = view('order.modals.customer-create')->render();
-			return response()->json(['status'=> 'success', 'view'=> $view]);
-		}
-		
-		public function orderCustomerAddressCreate($customerId)
+		public function orderTrackingHistory($orderId)
 		{ 
-			$view = view('order.modals.customer-address-create', compact('customerId'))->render();
-			return response()->json(['status'=> 'success', 'view'=> $view]);
-		}
-		
-		public function orderCustomerAddressStore(Request $request)
-		{  
-			try {
-				DB::beginTransaction(); 
-				$customer = Customer::findOrFail($request->customer_id);  
-				
-				if ($request->has('address') && count($request->address) > 0) {
-					$addresses = [];
-					foreach ($request->address as $key => $addr) {
-						$addresses[] = [
-						'customer_id' => $customer->id,
-						'address' => $addr,
-						'country' => $request->country[$key],
-						'state' => $request->state[$key],
-						'city' => $request->city[$key],
-						'zip_code' => $request->zip_code[$key],
-						'status' => 1,
-						'created_at' => now(),
-						'updated_at' => now(),
-						];
-					}
-					CustomerAddress::insert($addresses);
-				}
-				$customerAddressId = optional($customer->latestCustomerAddress)->id ?? ''; 
-				DB::commit();
-				return response()->json(['status' => 'success', 'msg' => 'The customer address has been successfully added.', 'customer_id' => $customer->id, 'customer_address_id' => $customerAddressId]);
-				} catch (\Exception $e) {
-				DB::rollBack();
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
-			}
-		}
-		   
-		public function orderRemmitance()
-		{ 
-		    $shippingCompany = ShippingCompany::where('status', 1)->get();  
-		    return view('remmitance.index', compact('shippingCompany'));
-		}
-		
-		public function orderRemmitanceAjax(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
+			$order = Order::with('shippingCompany')->find($orderId);
+			$shippingCompany = $order->shippingCompany ?? [];
 			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			
-			if($order = 'action')  
+			if(!$shippingCompany) 
 			{
-				$order = 'id';
-			}
-			
-			// Get user role and id
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			// Create the initial query builder with necessary joins
-			$query = Order::with(['user',])
-			->where('orders.status_courier', 'delivered')
-			->where('orders.order_type', 'cod')
-			->where('orders.is_remmitance', '0');
-			
-			// Apply user-based filtering (admin check)
-			if ($role != "admin") {
-				$query->where('orders.user_id', $id);
+				return $this->errorResponse('Invalid courier!'); 
 			} 
 			
-			// Filter by date range if provided
-			if ($request->from_date && $request->to_date) {
-				$query->whereBetween('orders.delivery_date', [$request->from_date, $request->to_date]);
-				} elseif ($request->from_date) {
-				$query->whereDate('orders.delivery_date', '>=', $request->from_date);
-				} elseif ($request->to_date) {
-				$query->whereDate('orders.delivery_date', '<=', $request->to_date);
+			$trackingHistories = []; 
+			if(!empty($order->awb_number))
+			{  
+				if($shippingCompany->id == 1)
+				{ 
+					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany);   
+					if (!($trackingResponse['success'] ?? false)) {
+						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
+						return $this->errorResponse($errorMsg); 
+					}
+					
+					if ((isset($trackingResponse['response']['result']) && $trackingResponse['response']['result']) == 0)
+					{ 
+						return $this->errorResponse($trackingResponse['response']['message'] ?? 'An error occurred.');  
+					}
+					
+					$responseData = $trackingResponse['response']['data']['scan_detail'] ?? [];
+					$trackingHistories = $responseData; 
+				}  
 			}
 			
-			// Apply additional filter for shipping company
-			if ($request->shipping_company_id) {
-				$query->where('orders.shipping_company_id', $request->shipping_company_id);
+			if(!$trackingHistories)
+			{
+				return $this->errorResponse('The order tracking data not found.');  
 			}
-			
-			// Apply search filter if available
-			if (!empty($request->input('search'))) {
-				$search = $request->input('search');
-				$query->where(function ($query) use ($search) {
-					return $query->where('orders.created_at', 'LIKE', '%' . $search . '%')
-					->orWhereHas('user', function($q) use ($search){
-						$q->where('name', 'LIKE', '%' . $search . '%')
-						->orWhere('email', 'LIKE', '%' . $search . '%')
-						->orWhere('company_name', 'LIKE', '%' . $search . '%')
-						->orWhere('mobile', 'LIKE', '%' . $search . '%');
-					})  
-					->orWhere('orders.awb_number', 'LIKE', "%{$search}%")
-					->orWhere('orders.courier_name', 'LIKE', "%{$search}%")
-					->orWhere('orders.status_courier', 'LIKE', "%{$search}%")
-					->orWhere('orders.total_amount', 'LIKE', "%{$search}%")
-					->orWhere('orders.id', 'LIKE', "%{$search}%")
-					->orWhere('orders.order_prefix', 'LIKE', "%{$search}%");
-				});
-			}
-			
-			// Calculate total amount (total sum of the orders)
-			$totalAmountQuery = clone $query;
-			//$totalAmount = $totalAmountQuery->select(DB::raw('SUM(orders.total_amount) AS total_Amt'))->first();
-			
-			// Apply pagination and ordering
-			$values = $query
-			->offset($start)
-			->limit($limit)
-			->orderByDesc('id')
-			->get();
-			
-			// Calculate the total filtered records
-			$totalFiltered = $query->count();
-			
-			// Prepare the data for response
-			$data = [];
-			foreach ($values as $value) 
-			{ 
-				$status_courier = '<p class="prepaid">' . $value->status_courier . '</p>'; 
-				$data[] = [
-				'id' => '<input type="checkbox" class="order-checkbox" data-order_id="' . $value->id . '">',
-				'order_id' => '#'.$value->id,
-				'seller_details' => '<div class="main-cont1-2"><p>' . ( $value->user->name ?? '') . ' (' . ( $value->user->company_name ?? '') . ')</p><p>' . ( $value->user->email ?? '') . '</p><p>' . ( $value->user->mobile ?? '') . '</p></div>',
-				'amount' => $value->total_amount,
-				'delivery_date' => $value->delivery_date,
-				'shipment_details' => '<p>' . $value->courier_name . '</p><p>AWB No: <b>' . $value->awb_number . '</b></p>',
-				'status_courier' => $status_courier
-				];
-			}
-			
-			// Return response in JSON format
-			return response()->json([
-			'draw' => intval($draw),
-			'iTotalRecords' => $totalFiltered,
-			'iTotalDisplayRecords' => $totalFiltered,
-			'aaData' => $data,
-			'totAmt' => $totalAmount->total_Amt ?? 0,
-			]);
-		}
+			return $this->successResponse(compact('order', 'trackingHistories', 'shippingCompany'), 'success');  
+		}  
 		
-		public function orderRemmitanceStore(Request $request)
+		public function orderLableDownload($orderId)
 		{  
-			DB::beginTransaction();
-			try {  
-				// Convert orders_id string to an array and filter empty values
-				$orderIds = array_filter(explode(',', $request->input('orders_id')));
-				
-				// If no valid order IDs, return with error
-				if (empty($orderIds)) {
-					return redirect()->back()->with(['success' => false, 'message' => 'No valid orders selected']);
+			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
+			
+			$shipping = $order->shippingCompany ?? null;
+			$customer = $order->customer ?? null;
+			$customerAddr = $order->customerAddress ?? null;
+			$products =  $order->orderItems ?? null; 
+			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
+			 
+			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
+			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
+			
+			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
+			 
+			$pdf = PDF::loadHtml($htmlView);  
+			return $pdf->download('order_label_' . $orderId . '.pdf'); 
+		}
+		  
+        public function alllabeldownload(Request $request)
+        {  
+			try {
+				$orderIds = $request->input('order_ids'); 
+			 
+				if (empty($orderIds) || !is_array($orderIds)) { 
+					return $this->errorResponse('order ids required'); 
 				}
 				
-				Order::query()
-				->whereIn('id', $orderIds)
-				->update([
-				'remittance_reference_id' => $request->input('remittance_reference_id'),
-				'remittance_amount' => $request->input('remittance_amount'),
-				'remittance_date' => $request->input('remittance_date'),
-				'is_remmitance' => $request->input('is_remmitance') 
-				]);
-				
-				DB::commit(); 
-				return redirect()->back()->with(['success' => true, 'message' => 'Orders remmittance created successfully']);
-				
-				} catch (\Exception $e) {
-				DB::rollback();
-				return redirect()->back()->with(['success' => false, 'message' => 'Something went wrong. Please try again.']);
-			}
-		} 
-		
-		public function codVoucher()
-		{
-		    return view('remmitance.codvoucher');
-		}
-		
-		public function codVoucherAjax(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			// Get sorting and searching parameters
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			$status = $request->post('status');
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			// Fix column name for 'action' field
-			if ($order == 'action') {
-				$order = 'id';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			// Create the initial query with necessary joins and base conditions
-			$query = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select(
-			'cod_vouchers.user_id',
-			'u.name as user_name',
-			'u.company_name as seller_company',
-			'u.email as user_email',
-			'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as voucher_date'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.amount) as amounts'),
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'),
-			'cod_vouchers.voucher_no'
-			);
-			
-			// Admin check for user-based filtering
-			if ($role != "admin") {
-				$query->where('cod_vouchers.user_id', $id);
-			}
-			
-			// Apply search filters
-			if (!empty($request->input('search'))) {
-				$search = $request->input('search');
-				$query->where(function ($query) use ($search) {
-					return $query
-					->where('u.name', 'LIKE', '%' . $search . '%')
-					->orWhere('u.mobile', 'LIKE', '%' . $search . '%')
-					->orWhere('u.email', 'LIKE', '%' . $search . '%')
-					->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
-				});
-			}
-			
-			// Apply groupBy and pagination logic
-			$query->groupBy('cod_vouchers.user_id', 'u.name', 'u.company_name', 'u.email', 'u.mobile', 'cod_vouchers.voucher_no')
-			->orderBy('cod_vouchers.' . $order, $dir)
-			->offset($start)
-			->limit($limit);
-			
-			// Get the results
-			$values = $query->get();
-			
-			// Count total records and filtered records
-			$totalData = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->count();
-			
-			$totalFiltered = $values->count();
-			
-			// Prepare the data for response
-			$data = [];
-			if ($values->isNotEmpty()) {
-				$i = $start + 1;
-				foreach ($values as $value) {
-					// Process shipping companies
-					$shipping = explode(',', $value->shipping_company_ids);
-					$ship_comp = array_map(function ($shipping_comp) {
-						return DB::table('shipping_companies')->where('status', '1')->pluck('name')->first();
-					}, $shipping);
+				// Eager load related models in one go
+				$orders = Order::with([
+					'shippingCompany', 'customer', 'customerAddress',
+					'orderItems', 'warehouse', 'user'
+				])
+				->whereIn('id', $orderIds)->get();
+				 
+				if ($orders->isEmpty()) {
+					return $this->errorResponse('No valid orders found');  
+				}
+				 
+				$htmlSections = []; 
+				foreach ($orders as $order)
+				{ 
+					$shipping       = $order->shippingCompany;
+					$customer       = $order->customer;
+					$customerAddr   = $order->customerAddress;
+					$products       = $order->orderItems;  
+					 
+					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
+					 
+					$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 					
-					$mainData = [
-					'id' => $i,
-					'seller_details' => '<div class="main-cont1-2"><p>' . $value->user_name . ' (' . $value->seller_company . ') </p><p>' . $value->user_email . ' </p><p>' . $value->user_mobile . ' </p></div>',
-					'order_details' => '<div class="main-cont1-1"><div class="checkbox checkbox-purple">' . $value->order_ids . '</div>',
-					'amount' => $value->amounts,
-					'total_amount' => $value->total_amount,
-					'action' => '<div class="main-btn-1"><div class="mian-btn"><div class="btn-group"><a href="' . route("viewvoucher", $value->voucher_no) . '"><button class="btn btn-primary" type="button">View</button></a></div></div></div>'
-					];
+					// Generate HTML for label
+					$html = view('order.bulk-label', compact(
+					'shipping', 'order', 'customer', 'products',
+					'customerAddr', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'
+					))->render();
 					
-					$data[] = $mainData;
-					$i++;
-				}
-			}
-			
-			// Return the final response as JSON
-			return response()->json([
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
-			]);
-		}
-		
-		
-		public function generateVouchers(Request $request)
-        {
-            $date = $request->date;
-            $today = date('Y-m-d');
-			
-            try {
-                DB::beginTransaction();
-				
-                $orders = DB::table('orders')
-				->whereDate('order_date', '<', $date)
-				->where('status_courier', '=', 'Delivered')
-				->where('is_remmitance', '=', '1')
-				->where('is_payout', '=', '0')
-				->where('is_voucher', '=', '0')
-				->get();
-				$groupedOrders = $orders->groupBy('user_id');
-				
-				foreach ($groupedOrders as $userId => $userOrders) {
-				    $lastVoucher = DB::table('cod_vouchers')->orderBy('id', 'desc')->first();
-				    $voucherNumber = $lastVoucher ? (explode('-', $lastVoucher->voucher_no)[1] + 1) : 1;
-				    $voucherNo = "VN-" . sprintf('%04d', $voucherNumber);
-					
-				    foreach ($userOrders as $order) {
-						$voucherData = DB::table('cod_vouchers')->where('order_id', $order->id)->first();
-						
-						if (!isset($voucherData)) {
-							$voucherData = [
-							'voucher_no' => $voucherNo,
-							'order_id' => $order->id,
-							'user_id' => $order->user_id,
-							'shipping_company_id' => $order->shipping_company_id,
-							'amount' => $order->total_amount,
-							'voucher_status' => '0',
-							'voucher_date' => $today,
-							];
-							
-							DB::table('cod_vouchers')->insert($voucherData);
-							
-							Order::where('id', $order->id)->update([
-							'voucher_no' => $voucherNo,
-							'is_voucher' => '1',
-							]);
-						}
-					}
-				} 
-                DB::commit();
-				
-                return redirect()->back()->with(['success' => true, 'message' => 'Voucher generated successfully']);
-				} catch (\Exception $e) {
-                DB::rollBack();
-                return redirect()->back()->with(['error' => true, 'message' => $e->getMessage()]);
-			}
-		}
-		
-		public function viewvoucher($voucher_no)
-        {
-			$data['voucher_lists']= DB::table('cod_vouchers')
-			->select('cod_vouchers.*', 'shipping_companies.name as shipping_companies_name', 'orders.awb_number','order_items.product_name', 'order_items.product_discription', 'orders.order_date')
-			->join('orders', 'cod_vouchers.order_id', '=', 'orders.id')
-			->join('shipping_companies', 'shipping_companies.id', '=', 'cod_vouchers.shipping_company_id')
-			->join('order_items', 'cod_vouchers.order_id', '=', 'order_items.order_id')
-			->where('cod_vouchers.voucher_no', '=', $voucher_no)
-			->get();
-			
-            $data['voucher_data'] =DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->where('cod_vouchers.voucher_no', $voucher_no)
-			->select('cod_vouchers.user_id', 'u.name as user_name', 'u.company_name as seller_company', 'u.address as user_address','u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_id'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_id'),
-			DB::raw('GROUP_CONCAT(DISTINCT amount) AS amount'), 'cod_vouchers.voucher_no', 'cod_vouchers.voucher_date',
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'))
-			->groupBy('cod_vouchers.user_id', 'cod_vouchers.voucher_no', 'cod_vouchers.voucher_date', 'u.address','u.name', 'u.company_name', 'u.email', 'u.mobile','cod_vouchers.voucher_no')->first(); 
-			// ->groupBy('cod_vouchers.user_id','cod_vouchers.voucher_no')->get();
-            if ($data['voucher_lists']->isEmpty()) {
-                
-                return redirect()->back()->with(['error' => true, 'message' => 'Voucher not found']);
-			}
-			
-            return view('remmitance.voucher', compact('data'));
-		}
-		
-		public function codPayout()
-		{
-			$vendors = DB::table('cod_vouchers')
-			->join('users', 'users.id', '=', 'cod_vouchers.user_id')
-			->select('users.id', 'users.name')
-			->groupBy('users.id', 'users.name')
-			->get();
-		    return view('remmitance.codpayout', compact('vendors'));
-		}
-		
-		public function codPayoutajax(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			$status = $request->post('status');
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			if($order = 'action')  
-			{
-			    $order = 'id';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			$query = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date', 'u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'), 
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'));
-			if($role != "admin") 
-			{
-				$query->where('cod_vouchers.user_id',$id);
-			}
-			$query->groupBy('cod_vouchers.user_id');
-			
-			$totalData = $query->count();
-			
-			$totalFiltered = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date','u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			// DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as order_dates'),
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'));
-			if($role != "admin") 
-			{
-				$totalFiltered->where('cod_vouchers.user_id',$id);
-			}
-			$totalFiltered->groupBy('cod_vouchers.user_id');
-			
-			
-			
-            $values = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date','u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.id) as voucher_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as voucher_date'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.amount) as total_amount'),
-			DB::raw('SUM(cod_vouchers.amount) as voucher_total_amount'),
-			'cod_vouchers.voucher_no');
-			if($role != "admin") 
-			{
-				$values->where('cod_vouchers.user_id',$id);
-			}
-			//   echo $request->input('voucher_status'); die;
-			if($request->input('voucher_status') != '')
-			{
-			    
-				
-				$status = $request->input('voucher_status');
-				
-				$values = $values->where('cod_vouchers.voucher_status',$status);
-			}
-			if(!empty($request->input('user_id')))
-			{
-				$voucher_user_id = $request->input('user_id');
-				$values = $values->where('cod_vouchers.user_id',$voucher_user_id);
-			}
-			if ($request->fromdate != '' && $request->todate != '') {
-                $values->whereBetween('cod_vouchers.voucher_date', [$request->fromdate, $request->todate]);
-				} elseif ($request->fromdate) {
-                $values->whereDate('cod_vouchers.voucher_date', '>=', $request->fromdate);
-				} elseif ($request->todate) {
-                $values->whereDate('cod_vouchers.voucher_date', '<=', $request->todate);
-			}
-			if(!empty($request->input('search')))
-			{ 
-				$search = $request->input('search');
-				$values = $values->where(function ($query) use ($search) 
-				{
-					return $query->where('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
-				});
-				
-				$totalFiltered = $totalFiltered->where(function ($query) use ($search) {
-					return $query->where('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
-				});  
-			}
-			$clonedQuery = clone $values;
-			
-            $resultsCloned = $clonedQuery
-            ->select(DB::raw('SUM(cod_vouchers.amount) AS total_Amt'))
-            ->first();
-			$values->orderBy('cod_vouchers.' . $order, $dir)
-			->offset($start)
-			->limit($limit)
-			->groupBy('cod_vouchers.user_id','cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date', 'u.name', 'u.company_name', 'u.email', 'u.mobile','cod_vouchers.voucher_no');
-			$values = $values->get(); 
-			$totalFiltered = $totalFiltered->count();
-			
-			$data = array();
-			if(!empty($values))
-			{
-				$i = $start + 1; 
-				foreach ($values as $value)
-				{    
-					$shipping = explode(',',$value->shipping_company_ids);
-					$ship_comp =array();
-					foreach($shipping as $shipping_comp)
-					{
-					    $shippinng = DB::table('shipping_companies')->where('status','1')->pluck('name')->first();
-					    $ship_comp[] = $shippinng;
-					}
-					// 	echo "<pre>"; print_r($value); echo "</pre>"; die;
-					if($value->voucher_status === '0')
-					{
-						$voucher_status = '<span class="badge badge-warning">Unpaid</span>';
-					}else
-					{
-						$voucher_status = '<span class="badge badge-success">Paid</span>';
-					}
-					$mainData['id'] = $i;
-					$mainData['order_prefix_list'] = $value->order_prefix_list;
-					$mainData['seller_details'] = ' <div class="main-cont1-2"><p> '.$value->user_name.' ('.$value->seller_company .') </p><p> '.$value->user_email.'  </p><p> '.$value->user_mobile.' </p></div>';
-					$mainData['order_details'] = '<div class="main-cont1-1"><div class="checkbox checkbox-purple">'.$value->order_ids.'</div> '; 
-					$mainData['status'] = $voucher_status;
-					$mainData['amount'] = $value->voucher_total_amount;
-					$mainData['action'] = "";   
-					if($value->voucher_status == 0 && config('permission.cod_payout.add'))
-					{
-						$mainData['action'] .= '<div class="main-btn-1"> 
-						<div class="mian-btn"> 
-						<div class="btn-group">
-						<button class="btn btn-primary pay_now" data-voucher_no="'. $value->voucher_ids .'" data-order-id="'.$value->order_ids.'" data-user-id="'.$value->user_id.'" data-shipping_company_ids="'.$value->shipping_company_ids.'" data-amount="'.$value->total_amount.'" type="button"> Pay Now</button> 
-						
-						</div>
-						</div>
-						</div>';
-					}else
-				    {
-				        $mainData['action'] .= ' <div class="main-cont1-2"><b>Ref. No. :</b><p>'.$value->reference_no.'</p> <b>Payout Date :</b>'.$value->payout_date.'';
-					}
-					$data[] = $mainData;
-					$i++;
-				}
-			}
-			
-			$response = array(
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data,
-			"totAmt"=>$resultsCloned->total_Amt,
-				); 
-				
-				echo json_encode($response);
-				exit;
-		}
-		
-        public function codRemittance(Request $request)
-        {
-            
-            try {
-                $orderIds = explode(",", $request->order_id);
-                $voucherIds = explode(",", $request->voucher_no);
-				
-                $latestInvoice = DB::table('order_remittances')->orderBy('id', 'desc')->pluck('inv_no')->first();
-                $inv_number = $latestInvoice ? explode('-', $latestInvoice)[1] + 1 : 1;
-                $inv_no = "INVCODP-" . sprintf('%04d', $inv_number);
-				
-                $orderRemittanceData = [
-				'inv_no' => $inv_no,
-				'order_id' => $request->order_id,
-				'user_id' => $request->user_ids,
-				'shipping_company_id' => $request->shipping_company_id,
-				'reference_no' => $request->remittance_reference_id,
-				'amount' => $request->amount,
-				'date' => $request->remittance_date,
-                ];
-				
-                DB::beginTransaction();
-				
-                DB::table('order_remittances')->insert($orderRemittanceData);
-				
-                $voucherUpdateData = [
-				'voucher_status' => '1',
-				'reference_no' => $request->remittance_reference_id,
-				'payout_date' => $request->remittance_date
-                ];
-				
-                foreach ($voucherIds as $voucher_id) {
-                    DB::table('cod_vouchers')
-					->where('id', $voucher_id)
-					->update($voucherUpdateData);
+					// Optional: remove excessive whitespace (disable if layout breaks)
+					$htmlSections[] = trim(preg_replace('/\s+/', ' ', $html));  
 				}
 				
-                foreach ($orderIds as $order_id) {
-                    DB::table('orders')->where('id', $order_id)->update(['is_payout' => '1']);
+				if (empty($htmlSections)) {
+					return $this->errorResponse('All labels are empty');   
 				}
 				
-                DB::commit();
-				
-                return redirect()->back()->with('success', 'Cod Payout successfully.');
-				} catch (\Exception $e) {
-                DB::rollBack();
-                \Log::error($e->getMessage());
-                return redirect()->back()->with('error', 'An error occurred. Please try again.');
+				$mergedHtml = implode('', $htmlSections); 
+				$pdf = PDF::loadHtml($mergedHtml);
+				return $pdf->download('labels.pdf');  
+			} 
+			catch (\Exception $e) 
+			{
+				return $this->errorResponse('PDF generation failed');  
 			}
-		} 
+		}   
+		
+		
 	}

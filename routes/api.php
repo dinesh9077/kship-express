@@ -58,23 +58,15 @@
 			Route::post('/create', [OrderController::class,'orderStore']);  
 			Route::get('/edit/{id}', [OrderController::class,'orderEdit']);   
 			Route::post('/update/{id}', [OrderController::class,'orderUpdate']);  
-			Route::get('/cancel/{id}', [OrderController::class,'orderCancel']);
-			
-			Route::get('/bulk-create', [OrderController::class,'orderBulkCreate'])
-			->middleware('permission:bulk_order.add');
-			Route::post('/bulk-store', [OrderController::class, 'orderBulkStore']);
-			
-			Route::get('/shipment/charge/{orderId}', [OrderController::class, 'orderShipCharge']);   
+			Route::post('/cancel/{id}', [OrderController::class,'orderCancel']);
+			Route::post('/shipment-cancel/{id}', [OrderController::class,'orderCancelApi']); 
+			 
+			Route::post('/shipment/charge/{orderId}', [OrderController::class, 'orderShipCharge']);   
 			Route::post('/ship/now', [OrderController::class, 'orderShipNow']);
 			 
-			Route::get('/cancel-api/{id}', [OrderController::class,'orderCancelApi']); 
-			Route::get('/tracking-history/{id}', [OrderController::class,'orderTrackingHistory']);  
-			
-			Route::get('/shipping-lable/{orderId}', [OrderController::class, 'orderShippingLableDownload']);
-			Route::get('/waybill-copy/{orderId}', [OrderController::class, 'orderWayBillCopy']); 
-			
+			Route::post('/tracking-history/{id}', [OrderController::class,'orderTrackingHistory']);  
+			  
 			Route::get('/download-label/{id}', [OrderController::class, 'orderLableDownload']);
-			Route::get('/download/all-lable', [OrderController::class, 'alllabeldownload']);  
-			Route::post('/warehouse/add', [OrderController::class, 'orderwarehouseAdd']);  
+			Route::post('/download/all-lable', [OrderController::class, 'alllabeldownload']);   
 		});	
 	});	

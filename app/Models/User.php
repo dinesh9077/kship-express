@@ -96,4 +96,9 @@ class User extends Authenticatable
 	{
 		return $this->hasMany(RolePermission::class, 'user_id');
 	}
+	
+	public function orders()
+	{
+		return $this->hasMany(Order::class, 'user_id');
+	}
 }

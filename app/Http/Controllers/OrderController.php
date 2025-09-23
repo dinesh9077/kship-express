@@ -1123,11 +1123,11 @@
 				
 				$shippingCompany = ShippingCompany::where('id', $order->shipping_company_id)
 				->where('status', 1)
-				->firstOrFail();
+				->first();
 				
 				if(!$shippingCompany)
 				{
-					return back()->with('error', 'Something went wrong.');
+					return $this->errorResponse('Shipment not found.');  
 				}
 				
 				$orderCancelledData = []; 
@@ -1346,7 +1346,7 @@
 		}
 		
 		public function orderShipNow(Request $request)
-		{  
+		{   
 			DB::beginTransaction(); // Start Transaction
 			try {
 				$requestData = collect(json_decode($request->data, true) ?? []); 
