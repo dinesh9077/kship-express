@@ -61,12 +61,12 @@
 	</a>
 </li>
 
-<li>
+{{--<li>
 	<a href="{{ route('pickup.request.index') }}" class="{{ request()->is('pickup*') ? 'active' : '' }}">
 		<i class="mdi mdi-truck"></i>
 		<span> Pickup Request </span>
 	</a>
-</li>    
+</li>--}} 
   
 <li>
 	<a href="{{route('users.kyc.edit')}}" class="{{ request()->is('users/kyc/edit') ? 'active' : '' }}">

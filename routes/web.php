@@ -102,11 +102,11 @@
 	
 	//User
 	Route::group(['prefix'=>'users'], function(){ 
-		Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('users')->middleware('permission:franchise_partner.view');  
+		Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('users')->middleware('permission:clients.view');  
 		Route::post('/ajax', [App\Http\Controllers\UserController::class, 'ajaxUser'])->name('users.ajax');  
-		Route::get('/create', [App\Http\Controllers\UserController::class, 'createUser'])->name('users.create')->middleware('permission:franchise_partner.add');  
+		Route::get('/create', [App\Http\Controllers\UserController::class, 'createUser'])->name('users.create')->middleware('permission:clients.add');  
 		Route::post('/store', [App\Http\Controllers\UserController::class, 'storeUser'])->name('users.store');  
-		Route::get('/edit/{id}', [App\Http\Controllers\UserController::class, 'editUser'])->middleware('permission:franchise_partner.edit');
+		Route::get('/edit/{id}', [App\Http\Controllers\UserController::class, 'editUser'])->middleware('permission:clients.edit');
 		Route::post('/update/{id}', [App\Http\Controllers\UserController::class, 'updateUser'])->name('users.update');  
 		Route::get('/delete/{id}', [App\Http\Controllers\UserController::class, 'deleteUser']);  
 		
@@ -120,9 +120,9 @@
 		Route::post('/kyc/bank/update', [App\Http\Controllers\UserController::class, 'kycUserBankUpdate'])->name('users.bank.update');  
 		
 		//KYC ADMIN
-		Route::get('/kyc/request', [App\Http\Controllers\UserController::class, 'kycUserRequest'])->name('users.kyc.request')->middleware('permission:franchise_partner_kyc_request.view'); 
+		Route::get('/kyc/request', [App\Http\Controllers\UserController::class, 'kycUserRequest'])->name('users.kyc.request')->middleware('permission:client_kyc_request.view'); 
 		Route::post('/kyc/request-ajax', [App\Http\Controllers\UserController::class, 'kycUserRequestAjax'])->name('users.kyc-request.ajax');  
-		Route::get('/kyc/verified/{id}', [App\Http\Controllers\UserController::class, 'kycUserRequestVerified'])->middleware('permission:franchise_partner_kyc_request.edit');   
+		Route::get('/kyc/verified/{id}', [App\Http\Controllers\UserController::class, 'kycUserRequestVerified'])->middleware('permission:client_kyc_request.edit');   
 		Route::post('/kyc/verified', [App\Http\Controllers\UserController::class, 'kycUserVerified'])->name('users.kyc.verified');  
 		Route::post('/kyc/rejected', [App\Http\Controllers\UserController::class, 'kycUserRejected'])->name('users.kyc.rejected');  
 	});

@@ -104,14 +104,14 @@
 							</a>
 						</li>
 					@endif
-					@if(config('permission.pickup_request.view'))
+					{{-- @if(config('permission.pickup_request.view'))
 						<li>
 							<a href="{{ route('pickup.request.index') }}" class="{{ request()->is('pickup*') ? 'active' : '' }}">
 								<i class="mdi mdi-truck"></i>
 								<span> Pickup Request </span>
 							</a>
 						</li> 
-					@endif
+					@endif --}}
 					
 					@if(config('permission.remittance.view') || config('permission.cod_voucher.view') || config('permission.cod_payout.view'))
 						<li>
@@ -160,18 +160,19 @@
 						</ul>
 					</li> --}}
 					 
-					@if(config('permission.franchise_partner.view') || config('permission.franchise_partner_kyc_request.view'))
+					@if(config('permission.clients.view') || config('permission.client_kyc_request.view'))
 						<li>
 							<a href="javascript: void(0);">
 								<i class="mdi mdi-account-multiple"></i>
-								<span> Franchise Partner </span>
+								<span> Clients/Partner </span>
 								<span class="menu-arrow"></span>
 							</a>
 							<ul class="nav-second-level" aria-expanded="false">  
-								@if(config('permission.franchise_partner.view'))
-									<li><a href="{{ route('users') }}"> Partners </a></li>   
+								@if(config('permission.clients.view'))
+									<li><a href="{{ route('users') }}?kyc_status=0">Pending Clients </a></li>    
+									<li><a href="{{ route('users') }}?kyc_status=1">Approve Clients </a></li>   
 								@endif 
-								@if(config('permission.franchise_partner_kyc_request.view'))
+								@if(config('permission.client_kyc_request.view'))
 									<li><a href="{{ route('users.kyc.request') }}">KYC Request </a></li>  
 								@endif 
 							</ul>

@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
-@section('title',config('setting.company_name').' - Franchise Partner')
-@section('header_title','Franchise Partner')
+@section('title',config('setting.company_name').' - Client/Partner')
+@section('header_title','Client/Partner')
 @section('content') 
  
 <div class="content-page">
@@ -10,9 +10,9 @@
         <div class="container-fluid">
             <div class="main-create-order">
                 <div class="main-disolay-felx">
-					@if(config('permission.franchise_partner.add'))
+					@if(config('permission.clients.add'))
 						<div class="main-btn0main-1">
-							<a href="{{ route('users.create') }}"> <button class="btn-main-1"> Create Franchise Partner </button> </a>
+							<a href="{{ route('users.create') }}"> <button class="btn-main-1"> Create Client </button> </a>
 						</div>
 					@endif
 				</div> 
@@ -119,6 +119,7 @@
 @push('js') 
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>  
 <script> 
+	const kycStatus = @json($kycStatus);
 	var dataTable = $('#client-datatable').DataTable({
 		processing:true,
 		"language": {
@@ -139,7 +140,8 @@
 			"type": "POST",
 			"data": function (d) {
 				d._token   = "{{csrf_token()}}";
-				d.search   = $('input[type="search"]').val(); 
+				d.search = $('input[name="search"]').val(); 
+				d.kyc_status   = kycStatus; 
 			}
 		},
 		"columns": [

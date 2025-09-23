@@ -26,7 +26,8 @@
 				Notification::whereId($_GET['notify_id'])->update(['read_at'=>1]);
 			}
 			$user_id = (isset($_GET['task_id']))?$_GET['task_id']:''; 
-			return view('users.index',compact('user_id'));
+			$kycStatus = request('kyc_status', 0);
+			return view('users.index', compact('user_id', 'kycStatus'));
 		}
 		
 		public function ajaxUser(Request $request)
@@ -40,18 +41,21 @@
 			$columnName_arr = $request->get('columns');
 			$order_arr = $request->get('order');
 			$search_arr = $request->get('search'); 
+			$kycStatus = $request->get('kyc_status'); 
 			
 			$columnIndex = $columnIndex_arr[0]['column']; // Column index
 			$order = $columnName_arr[$columnIndex]['data']; // Column name
 			$dir = $order_arr[0]['dir']; // asc or desc
 			
+			$user = Auth::user(); 
+			$role = $user->role;
+			$id = $user->id;
+			
 			// Base query for users
 			$query = User::with('createdBy:id,name') 
-				->where('role', 'user');
-				 
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
- 
+				->where('role', 'user')
+				->where('kyc_status', $kycStatus);
+			 
 			// Count total records for pagination
 			$totalData = $query->count();
 
@@ -114,15 +118,15 @@
 		private function generateUserActions($value, $role, $id)
 		{
 			$actionButtons = '';  
-			if(config('permission.franchise_partner.add'))
+			if(config('permission.clients.add'))
 			{
 				$actionButtons .= '<a href="javascript:;" class="btn btn-icon waves-effect waves-light action-icon mr-1" data-toggle="tooltip" title="Recharge mannualy" data-id="'.$value->id.'" data-amount="'.$value->wallet_amount.'" onclick="rechargeUser(this, event)"> <i class="mdi mdi-refresh"></i> </a>';
 			}
-			if(config('permission.franchise_partner.edit'))
+			if(config('permission.clients.edit'))
 			{
 				$actionButtons .=  '<a href="'.url('users/edit', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon mr-1" data-toggle="tooltip" title="Update User"> <i class="mdi mdi-pencil"></i> </a>';
 			}
-			if(config('permission.franchise_partner.delete'))
+			if(config('permission.clients.delete'))
 			{
 				$actionButtons .= '<a href="'.url('users/delete', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Delete User" onClick="deleteRecord(this,event);"> <i class="mdi mdi-trash-can-outline"></i> </a>'; 
 			}
