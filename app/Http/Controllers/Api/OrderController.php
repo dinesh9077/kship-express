@@ -182,9 +182,10 @@
 				$data = $request->except($exclude); 
 				
 				// Check if order prefix already exists 
-				if (Order::where('order_prefix', $request->order_prefix)->exists()) {
+				/* if (Order::where('order_prefix', $request->order_prefix)->exists()) {
 					return $this->errorResponse('The order number already exists.'); 
-				}
+				} */
+				
 				// Create Customer
 				$customer = Customer::create([
 					'user_id'    => $user_id,
@@ -211,6 +212,7 @@
 				}
 					
 				$data['user_id'] = $user_id;
+				$data['order_prefix'] = Order::generateOrderNumber($user_id);
 				$data['status_courier'] = 'New';
 				$data['customer_id'] = $customer->id;
 				$data['customer_address_id'] = $customerAddress->id ?? null;
@@ -390,6 +392,7 @@
 				}
 	 
 				$data['user_id'] = $user_id;
+				$data['order_prefix'] = Order::generateOrderNumber($user_id);
 				$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 				$data['weight'] = $request->total_weight; 
 				$data['total_amount'] = $request->invoice_amount; 
