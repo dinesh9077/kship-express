@@ -79,85 +79,103 @@
 		<div id="wrapper"> 
 			@include('layouts.backend.partial.header') 
 			@include('layouts.backend.partial.leftside-bar') 
-			<div class="modal fade recharge" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+			<div class="modal fade" id="rechargeWalletModal" tabindex="-1" role="dialog" aria-labelledby="rechargeWalletLabel" aria-hidden="true">
 				<div class="modal-dialog modal-lg model-width-1">
 					<div class="modal-content">
-						<div class="modal-header head-00re pb-0" style="border: none;">
-							<h5 class="modal-title" id="exampleModalLabel"> Recharge Your Wallet </h5>
+						
+						{{-- Header --}}
+						<div class="modal-header head-00re pb-0 border-0">
+							<h5 class="modal-title" id="rechargeWalletLabel">Recharge Your Wallet</h5>
 							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
 							</button>
 						</div>
-						<form method="post" action="{{ route('recharge.wallet.amount') }}" enctype="multipart/form-data" id="paymentForm">
+
+						{{-- Form --}}
+						<form method="POST" action="{{ route('recharge.wallet.amount') }}" enctype="multipart/form-data" id="paymentForm">
 							@csrf
+
 							<div class="modal-body pt-0">
+								
+								{{-- Current Wallet --}}
 								<div class="main-01">
-									<h5>Current Wallet Amount <span>{{ config('setting.currency') }}{{ Helper::decimal_number(Auth::user()->wallet_amount) }}</span></h5>
+									<h5>
+										Current Wallet Amount: 
+										<span>{{ config('setting.currency') }}{{ Helper::decimal_number(Auth::user()->wallet_amount) }}</span>
+									</h5>
 								</div>
+
 								<div class="man-01rech">
-									<h5> Transaction Type </h5>
-									<div class="from-group rech-re-form">
-										<select name="transaction_type" id="transaction_type" required>
+									{{-- Transaction Type --}}
+									<h5>Transaction Type</h5>
+									<div class="form-group rech-re-form">
+										<select name="transaction_type" id="transaction_type" class="form-control" required>
 											<option value="Online">Online</option>
 										</select>
 									</div>
-									<h5> Enter Amount </h5>
-									<div class="from-group rech-re-form">
+
+									{{-- Amount Input --}}
+									<h5>Enter Amount</h5>
+									<div class="form-group rech-re-form position-relative">
 										<span class="position-absolute custom-rupee-position">{{ config('setting.currency') }}</span>
-										<input type="number" placeholder="200" value="200" name="amount" id="recharge_amount" required>
-										<p class="mt-1"> Min value:{{ config('setting.currency') }}200 </p>
+										<input type="number" name="amount" id="recharge_amount" value="200" min="200" placeholder="200" class="form-control" required>
+										<small class="form-text text-muted">Min value: {{ config('setting.currency') }}200</small>
 									</div>
-									<h6> Or Select From Below </h6>
+
+									{{-- Quick Amount Buttons --}}
+									<h6>Or Select From Below</h6>
 									<div class="main-21-33">
-										<button type="button" class="re-btn active" onclick="setRechargeAmount(this, 200)">{{ config('setting.currency') }}200</button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 500)">{{ config('setting.currency') }}500</button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 1000)">{{ config('setting.currency') }}1000</button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 2500)">{{ config('setting.currency') }}2500</button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 5000)">{{ config('setting.currency') }}5000</button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 10000)">{{ config('setting.currency') }}10000</button>
+										@foreach([200, 500, 1000, 2500, 5000, 10000] as $preset)
+											<button type="button" 
+													class="re-btn {{ $preset == 200 ? 'active' : '' }}" 
+													onclick="setRechargeAmount(this, {{ $preset }})">
+												{{ config('setting.currency') }}{{ $preset }}
+											</button>
+										@endforeach
 									</div>
-									<div class="offline_param" style="display: none;">
-										<h5> Payment Receipt </h5>
-										<div class="from-group rech-re-form">
-											<input type="file" name="payment_receipt[]" id="payment_receipt" multiple>
+
+									{{-- Offline Params --}}
+									<div class="offline_param d-none">
+										<h5>Payment Receipt</h5>
+										<div class="form-group rech-re-form">
+											<input type="file" name="payment_receipt[]" id="payment_receipt" multiple class="form-control-file">
 										</div>
-										<h5> Note </h5>
-										<div class="from-group rech-re-form">
-											<textarea name="note" id="note"></textarea>
+
+										<h5>Note</h5>
+										<div class="form-group rech-re-form">
+											<textarea name="note" id="note" class="form-control"></textarea>
 										</div>
 									</div>
 								</div>
-								<input type="hidden" id="user_id" value="{{ Auth::id() }}">							
-						
+
+								<input type="hidden" id="user_id" value="{{ Auth::id() }}">
+
+								{{-- Amount Summary --}}
 								<div class="class-main-count">
 									<div class="main-justify-space">
-										<div class="left-rech">
-											<h5> Recharge Amount </h5>
-										</div>
-						
-										<div class="right-rech">
-											<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
-										</div>
+										<h5>Recharge Amount</h5>
+										<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
 									</div>
-						
+
 									<div class="main-justify-space">
-										<div class="left-rech main-recha">
-											<h5> Payable Amount </h5>
-										</div>
-						
-										<div class="right-rech main-recha">
-											<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
-										</div>
+										<h5>Payable Amount</h5>
+										<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
 									</div>
 								</div>
+
 							</div>
-							<div class="modal-footer" style="justify-content: center;">
-								<button type="submit" class="btn btn-primary btn-main-1" id="payButton"> Continue to Payment </button>
+
+							{{-- Footer --}}
+							<div class="modal-footer justify-content-center">
+								<button type="submit" class="btn btn-primary btn-main-1" id="payButton">
+									Continue to Payment
+								</button>
 							</div>
-						</form>					
+						</form>
 					</div>
 				</div>
 			</div>
+ 
 			
 			@yield('content') 
 			

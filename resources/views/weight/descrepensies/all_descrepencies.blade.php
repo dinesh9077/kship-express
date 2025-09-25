@@ -214,17 +214,17 @@
 					<div class="row">
 						<br>
 						<div class="form-group col-md-6">
-							<label> Chargeable Weight </label>
+							<label> Chargeable Weight <span class="text-danger">*</span></label>
 							<input type="text" class="form-control" name="chargeable_weight" id="chargeable_weight" placeholder="Chargeable Weight" required>
 						</div>
 					 
 						<div class="form-group col-md-6">
-							<label> Excess Weight </label>
+							<label> Excess Weight <span class="text-danger">*</span></label>
 							<input type="text" class="form-control" name="excess_weight" id="excess_weight" placeholder="Excess Weight" required>
 						</div>
 					 
 						<div class="form-group col-md-6">
-							<label> Excess Charge </label>
+							<label> Excess Charge <span class="text-danger">*</span></label>
 							<input type="text" class="form-control" name="excess_charge" id="excess_charge" placeholder="Excess Charge" required>
 						</div>
 						<div class="form-group col-md-6">

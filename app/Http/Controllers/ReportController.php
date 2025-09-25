@@ -422,9 +422,7 @@
 			$currentBalance = $totalBalance;
 
 			foreach ($paginated as $key => $value) {
-				$orderitems = OrderItem::where('order_id', $value->billing_type_id)->get();
-				$product_details = $orderitems->map(fn($item) => "<p>{$item->product_name} Amount: {$item->amount} QTY: {$item->quantity}</p>")->implode(' | ');
-
+				  
 				$billingTypeHtml = $value->billing_type === 'Order'
 					? '<div class="main-cont1-1">
 							<div class="checkbox checkbox-purple">Order Id: 
@@ -477,7 +475,7 @@
 			$columnIndex_arr = $request->post('order');
 			$columnName_arr = $request->post('columns');
 			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
+			$search = $request->post('search') ?? $request->post('search.value') ?? '';
 
 			$columnIndex = $columnIndex_arr[0]['column'];
 			$order = $columnName_arr[$columnIndex]['data'] ?? 'created_at';
@@ -507,8 +505,7 @@
 			$totalData = $query->count();
 
 			// Apply search filter
-			if (!empty($search_arr['value'])) {
-				$search = $search_arr['value'];
+			if (!empty($search)) { 
 				$query->where(function ($q) use ($search) {
 					$q->whereHas('user', function ($sub) use ($search) {
 						$sub->where('name', 'LIKE', "%{$search}%")
@@ -566,9 +563,9 @@
 				'date' => \Carbon\Carbon::parse($invoiceDetail->invoice_date)->format('d M Y'),
 				'period' => \Carbon\Carbon::parse($invoiceDetail->month_start)->format('d') . ' to ' . \Carbon\Carbon::parse($invoiceDetail->month_end)->format('d M Y'),
 				'from' => [
-					'name' => 'SHYAM ENTERPRISES',
-					'address' => '4824 A PAIKI 3RD FLOOR OFFICE 310 BEGUMPURA RING ROAD SURAT GUJARAT 395003',
-					'gst' => '24AFKFS0901F1ZC',
+					'name' => 'KSHIP EXPRESS',
+					'address' => 'RING ROAD SURAT GUJARAT 395003',
+					'gst' => '24AFKFS090154',
 				],
 				'to' => [
 					'name' => $user->company_name ?? '',

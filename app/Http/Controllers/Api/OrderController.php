@@ -8,7 +8,7 @@
 	use App\Models\{
 		Order, OrderItem, Vendor, VendorAddress, OrderActivity, OrderStatus, Billing, Packaging, 
 		WeightFreeze, Customer, User, CustomerAddress, PincodeService, ShippingCompany, 
-		CourierWarehouse, ProductCategory
+		CourierWarehouse, ProductCategory, CodVoucher
 	};
 	use App\Exports\PendingStarOrderExport;
 	use Maatwebsite\Excel\Facades\Excel;
@@ -19,7 +19,9 @@
 	use App\Imports\BulkOrder;
 	use App\Traits\ApiResponse;   
 	use Helper; 
-	use DNS1D;
+	use DNS1D; 
+	use App\Exports\CodRemittanceExport;
+	use PhpOffice\PhpSpreadsheet\Shared\Date;
 	
 	class OrderController extends Controller
 	{
@@ -1049,5 +1051,411 @@
 			}
 		}   
 		
+		public function orderBulkStore(Request $request)
+		{  
+			$user = Auth::user();
+			DB::beginTransaction(); // Begin Transaction
+
+			try {  
+				// Import the Excel file
+				$bulkOrder = new BulkOrder();
+				Excel::import($bulkOrder, $request->file('bulk_excel'));
+
+				// Check if rows exist after removing the header
+				if (empty($bulkOrder->rows)) {
+					return $this->errorResponse('No valid data found in the Excel file.'); 
+				}
+			 
+				foreach ($bulkOrder->rows as $row) 
+				{ 
+					$dateValue = $row[0] ?? null;
+					$orderDate = null;
+
+					if ($dateValue) {
+						if (is_numeric($dateValue)) {
+							// Excel serial number → Carbon date
+							$orderDate = Date::excelToDateTimeObject($dateValue)->format('Y-m-d');
+						} else {
+							// If already string (like 2025-09-24)
+							$orderDate = \Carbon\Carbon::parse($dateValue)->format('Y-m-d');
+						}
+					}
+					  
+					if($request->type_of_package == 1)
+					{
+						$this->b2cBulkStore($request, $user, $row, $orderDate);
+					}
+					else
+					{
+						$this->b2bBulkStore($request, $user, $row, $orderDate);
+					}  
+				}
+
+				DB::commit(); 
+				return $this->successResponse([], 'The order has been successfully added.');  
+			} 
+			catch (\Exception $e) {
+				DB::rollback(); 
+				return $this->errorResponse('Excel upload failed. Ensure the file is valid and contains the required data.'); 
+			}
+		}
 		
+		private function b2cBulkStore($request, $user, $row, $orderDate)
+		{
+			// Create Customer
+			$customer = Customer::create([
+				'user_id'    => $user->id,
+				'first_name' => $row[4] ?? '',
+				'last_name'  => $row[5] ?? '',
+				'email'      => $row[6] ?? null,
+				'gst_number' => $row[7] ?? null,
+				'mobile'     => $row[8] ?? null,
+				'status'     => 1,
+			]);
+			
+			// Create Customer Address if available
+			$customerAddress = null;
+			if ($row[9] ?? '') {
+				$customerAddress = CustomerAddress::create([
+					'customer_id' => $customer->id,
+					'address'     => $row[9],
+					'zip_code'    =>$row[10],
+					'city'        => $row[11],
+					'state'       => $row[12],
+					'country'     => $row[13],
+					'status'      => 1,
+				]);
+			}
+					
+			// Assuming the column order matches the Excel data structure
+			$data = [
+				'order_prefix' => Order::generateOrderNumber($user->id),
+				'order_date' => $orderDate,
+				'shipping_mode' => $row[1] ? strtolower($row[1]) : 'surface', 
+				'order_type' => $row[2] ?? 'cod', 
+				'cod_amount' => $row[3] ?? 0,
+				'warehouse_id' => $request->warehouse_id,
+				'customer_id' => $customer->id ?? null,
+				'customer_address_id' => $customerAddress->id ?? null,
+				'invoice_no' => $row[20] ?? null,
+				'invoice_amount' => $row[21] ?? 0,
+				'ewaybillno' => $row[22] ?? 0,
+				'dimension_type' => 'cm',
+				'total_amount' => $row[21] ?? 0,  
+				'user_id' => $user->id,
+				'status_courier' => 'New',
+				'weight_order' => 1, 
+				'weight' => $row[23] ?? 0,
+				'length' => $row[24] ?? 0,
+				'Width' => $row[25] ?? 0,
+				'height' => $row[26] ?? 0,
+				'status' => 1,
+				'created_at' => now(),
+				'updated_at' => now()
+			]; 
+	 
+			$order = Order::create($data);
+
+			// Extract and explode values
+			$productCategory = $row[14] ? explode(',', $row[14]) : null;
+			$productName = $row[15] ? explode(',', $row[15]) : null;
+			$productSku = $row[16] ? explode(',', $row[16]) : null;
+			$productHsn = $row[17] ? explode(',', $row[17]) : null;
+			$productAmount = $row[18] ? explode(',', $row[18]) : null;
+			$productQuantity = $row[19] ? explode(',', $row[19]) : null;
+		 
+
+			$orderItems = [];
+			$totalAmount = 0; // Initialize total amount
+
+			if ($productCategory) {
+				foreach ($productCategory as $key => $productCat) { 
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCat,
+						'product_name' => $productName[$key] ?? 0,
+						'sku_number' => $productSku[$key] ?? 0,
+						'hsn_number' => $productHsn[$key] ?? 0,
+						'amount' => $productAmount[$key] ?? 0, 
+						'ewaybillno' => null, 
+						'quantity' => $productQuantity[$key] ?? 0, 
+						'created_at' => now(),
+						'updated_at' => now() 
+					];
+				} 
+			}
+
+			// Bulk Insert Order Items
+			OrderItem::insert($orderItems); 
+
+			// Insert Order Status
+			OrderStatus::insert([
+				'order_id' => $order->id, 
+				'order_status' => 'New', 
+				'created_at' => now(), 
+				'updated_at' => now()
+			]);
+
+			Helper::orderActivity($order->id, 'Order created.');
+		}
+		
+		private function b2bBulkStore($request, $user, $row, $orderDate)
+		{
+			// Create Customer
+			$customer = Customer::create([
+				'user_id'    => $user->id,
+				'first_name' => $row[4] ?? '',
+				'last_name'  => $row[5] ?? '',
+				'email'      => $row[6] ?? null,
+				'gst_number' => $row[7] ?? null,
+				'mobile'     => $row[8] ?? null,
+				'status'     => 1,
+			]);
+			
+			// Create Customer Address if available
+			$customerAddress = null;
+			if ($row[9] ?? '') {
+				$customerAddress = CustomerAddress::create([
+					'customer_id' => $customer->id,
+					'address'     => $row[9],
+					'zip_code'    =>$row[10],
+					'city'        => $row[11],
+					'state'       => $row[12],
+					'country'     => $row[13],
+					'status'      => 1,
+				]);
+			}
+					
+			// Assuming the column order matches the Excel data structure
+			$data = [
+				'order_prefix' => Order::generateOrderNumber($user->id),
+				'order_date' => $orderDate,
+				'shipping_mode' => $row[1] ? strtolower($row[1]) : 'surface', 
+				'order_type' => $row[2] ?? 'cod', 
+				'cod_amount' => $row[3] ?? 0,
+				'warehouse_id' => $request->warehouse_id,
+				'customer_id' => $customer->id ?? null,
+				'customer_address_id' => $customerAddress->id ?? null,
+				'invoice_no' => $row[20] ?? null,
+				'invoice_amount' => $row[21] ?? 0,
+				'ewaybillno' => $row[22] ?? 0,
+				'dimension_type' => 'cm',
+				'total_amount' => $row[21] ?? 0,  
+				'user_id' => $user->id,
+				'status_courier' => 'New', 
+				'weight_order' => 2, 
+				'status' => 1,
+				'created_at' => now(),
+				'updated_at' => now()
+			]; 
+	 
+			$order = Order::create($data);
+
+			// Extract and explode values
+			$productCategory = $row[14] ? explode(',', $row[14]) : null;
+			$productName = $row[15] ? explode(',', $row[15]) : null;
+			$productSku = $row[16] ? explode(',', $row[16]) : null;
+			$productHsn = $row[17] ? explode(',', $row[17]) : null;
+			$productAmount = $row[18] ? explode(',', $row[18]) : null;
+			$productQuantity = $row[19] ? explode(',', $row[19]) : null;
+			
+			$noOfBox = $row[23] ? explode(',', $row[23]) : null;
+			$weightBox = $row[24] ? explode(',', $row[24]) : null;
+			$lengthBox = $row[25] ? explode(',', $row[25]) : null;
+			$widthBox = $row[26] ? explode(',', $row[26]) : null;
+			$heightBox = $row[27] ? explode(',', $row[27]) : null;
+			$weight = $row[28] ?? 0;
+		  
+			$orderItems = [];
+			$height = $width = $length = 0;
+			
+			if (!empty($productCategory)) 
+			{
+				foreach ($productCategory as $key => $productCat) { 
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					  
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCat,
+						'product_name' => $productName[$key] ?? null,
+						'sku_number' => $productSku[$key] ?? null,
+						'hsn_number' => $productHsn[$key] ?? null,
+						'amount' => $productAmount[$key] ?? 0, 
+						'ewaybillno' => null,
+						'quantity' => $productQuantity[$key] ?? 0,  
+						'created_at' => now(),
+						'updated_at' => now(),
+						'dimensions' => json_encode([
+							'no_of_box' => $noOfBox[$key] ?? 0,
+							'weight' => $weightBox[$key] ?? 0,
+							'length' => $lengthBox[$key] ?? 0,
+							'width' => $widthBox[$key] ?? 0,
+							'height' => $heightBox[$key] ?? 0,
+						]),
+					];
+					
+					// Accumulate totals
+					$length += $lengthBox[$key] ?? 0; 
+					$width  += $widthBox[$key] ?? 0;
+					$height += $heightBox[$key] ?? 0;
+				}
+				
+				OrderItem::insert($orderItems);  
+			}
+			  
+			$order->update([ 
+				'weight' => $weight,
+				'length' => $length,
+				'width'  => $width,
+				'height' => $height
+			]);	
+		}
+		
+		public function codRemittance(Request $request)
+		{ 
+			$start = $request->post("offset", 0);
+			$limit = $request->post("limit", 10); 
+			$search = $request->input('search'); 
+
+			$user = Auth::user();
+			$role = $user->role;
+			$userId = $user->id;
+
+			// Base query
+			$baseQuery = Order::with(['user']) 
+				->where('orders.status_courier', 'delivered')
+				->where('orders.is_remmitance', '0')
+				->where('orders.order_type', 'cod');
+
+			// Filters
+			if ($role !== "admin") {
+				$baseQuery->where('orders.user_id', $userId);
+			}
+
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$baseQuery->whereBetween('orders.delivery_date', [$request->fromdate, $request->todate]);
+			} elseif ($request->filled('fromdate')) {
+				$baseQuery->whereDate('orders.delivery_date', '>=', $request->fromdate);
+			} elseif ($request->filled('todate')) {
+				$baseQuery->whereDate('orders.delivery_date', '<=', $request->todate);
+			}
+
+			if ($request->filled('shipping_company_id')) {
+				$baseQuery->where('orders.shipping_company_id', $request->shipping_company_id);
+			}
+
+			// Search filter
+			if (!empty($search)) {
+				$baseQuery->where(function ($query) use ($search) {
+					$query->where('orders.created_at', 'like', "%{$search}%")
+						->orWhere('orders.awb_number', 'like', "%{$search}%")
+						->orWhere('orders.courier_name', 'like', "%{$search}%")
+						->orWhere('orders.status_courier', 'like', "%{$search}%")
+						->orWhere('orders.id', 'like', "%{$search}%") 
+						->orWhere('orders.order_prefix', 'like', "%{$search}%")
+						->orWhereHas('user', function($q) use ($search){
+							$q->where('name', 'like', "%{$search}%")
+							  ->orWhere('email', 'like', "%{$search}%")
+							  ->orWhere('mobile', 'like', "%{$search}%")
+							  ->orWhere('company_name', 'like', "%{$search}%");
+						});
+				});
+			}
+    
+			$orders = $baseQuery
+			->orderByDesc('id')
+			->offset($start)
+			->limit($limit)
+			->get();
+			
+			return $this->successResponse($orders, 'list fetched successfully.');
+		}
+		
+		public function downloadRemittanceExcel($id)
+		{ 
+			try
+			{
+				$codVoucher = CodVoucher::with(['codVoucherOrders'])->findOrFail($id); 
+				return Excel::download(new CodRemittanceExport($codVoucher), $codVoucher->voucher_no.'.xlsx');
+			}
+			catch(\Exception $e)
+			{
+				return $this->errorResponse('failed to download excel.');
+			}
+		}
+		
+		public function codPayout(Request $request)
+		{   
+			$start = $request->get("offset");
+			$length = $request->get("limit");
+			$searchValue = $request->input("search");
+			
+			$user = auth()->user();
+			$role = $user->role;
+			$userId = $user->id;
+			
+			$query = CodVoucher::with(['user', 'codVoucherOrders']);
+			
+			// Filters
+			if ($role !== "admin") { 
+				$query->where('user_id', $userId);
+			}
+			
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$query->whereBetween('voucher_date', [$request->fromdate, $request->todate]);
+				} elseif ($request->filled('fromdate')) {
+				$query->whereDate('voucher_date', '>=', $request->fromdate);
+				} elseif ($request->filled('todate')) {
+				$query->whereDate('voucher_date', '<=', $request->todate);
+			}
+			
+			if ($request->filled('user_id')) { 
+				$query->where('user_id', $request->user_id);
+			}
+			
+			if ($request->filled('voucher_status')) {
+				$query->where('voucher_status', $request->voucher_status);
+			}
+			
+			if (!empty($searchValue)) {
+				$query->where(function ($q) use ($searchValue) {
+					$q->where('voucher_no', 'like', "%$searchValue%")
+					->orWhereHas('user', function ($uq) use ($searchValue) {
+						$uq->where('name', 'like', "%$searchValue%")
+						->orWhere('email', 'like', "%$searchValue%")
+						->orWhere('mobile', 'like', "%$searchValue%")
+						->orWhere('company_name', 'like', "%$searchValue%");
+					});
+				});
+			}
+			 
+			
+			$vouchers = $query->offset($start)
+			->limit($length)
+			->orderBy('id', 'desc')
+			->get();
+			
+			return $this->successResponse($vouchers, 'list fetched successfully.'); 
+		}
+		
+		public function storePayout(Request $request)
+        { 
+            try { 
+                DB::beginTransaction();
+				
+				$data = $request->except('id', '_token');
+				$data['voucher_status'] = 1;
+				
+				$codPayout = CodVoucher::findOrFail($request->id);
+				$codPayout->update($data);
+                DB::commit();
+				return $this->successResponse($codPayout, 'Cod Payout successfully.'); 
+			} 
+			catch (\Exception $e)
+			{
+				DB::rollBack(); 
+				return $this->errorResponse('An error occurred. Please try again.'); 
+			}
+		} 
 	}

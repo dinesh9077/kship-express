@@ -26,6 +26,9 @@ class UserWallet extends Model
 	protected $casts = [
 		'payable_response' => 'array',
 	];
+	protected $hidden = [
+		'payable_response',
+	];
 	
 	public function user()
 	{

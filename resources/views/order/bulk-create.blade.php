@@ -49,7 +49,7 @@
 							<div class="row">
 								<div class="col-lg-12"> 
 									<div class="main-vender">
-										<h5> Pickup Location </h5>
+										<h5> Pickup Location <span class="text-danger">*</span></h5>
 									</div>
 									<div class="row">
 										<div class="from-group col-6"> 
@@ -71,13 +71,13 @@
 					<div class="main-rowx-1">
                         <div class="main-order-001">
                             <div class="main-vender">
-                                <h5> Upload Excel </h5>
+                                <h5> Upload Excel <a href="{{ url('assets/b2c_sample.xlsx') }}">(B2C Sample Format)</a> <a href="{{ url('assets/b2b_sample.xlsx') }}">(B2B Sample Format)</a></h5>
                             </div>
                             <div class="row"> 
 								 
 								<div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
-                                        <label for="packaging-type"> Type Of Package</label>
+                                        <label for="packaging-type"> Type Of Package <span class="text-danger">*</span></label>
                                         <select name="type_of_package" class="control-form select2" id="type_of_package" style="border-radius: 5px 0px 0px 5px" required>
 											<option value="1">B2C</option> 
 											<option value="2">B2B</option> 
@@ -86,7 +86,7 @@
                                 </div> 
                                 <div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
-                                        <label for="packaging-type"> Upload Excel  <a href="{{ url('assets/b2c_sample.xlsx') }}">(B2C Sample Format)</a> <a href="{{ url('assets/b2b_sample.xlsx') }}">(B2B Sample Format)</a></label>
+                                        <label for="packaging-type"> Upload Excel <span class="text-danger">*</span></label>
                                         <input type="file" class="form-control" id="bulk_excel" name="bulk_excel" accept=".xlsx,.xls" required> 
                                     </div>
                                 </div>  

@@ -6,6 +6,10 @@
 	use App\Http\Controllers\Api\CommonController;
 	use App\Http\Controllers\Api\WarehouseController;
 	use App\Http\Controllers\Api\OrderController;
+	use App\Http\Controllers\Api\UserKycController;
+	use App\Http\Controllers\Api\WeightController;
+	use App\Http\Controllers\Api\TicketController;
+	use App\Http\Controllers\Api\ReportController; 
 	
 	/*
 		|--------------------------------------------------------------------------
@@ -68,5 +72,58 @@
 			  
 			Route::get('/download-label/{id}', [OrderController::class, 'orderLableDownload']);
 			Route::post('/download/all-lable', [OrderController::class, 'alllabeldownload']);   
+			
+			Route::post('/bulk-store', [OrderController::class, 'orderBulkStore']);
 		});	
+		
+		Route::group(['prefix'=>'user-kyc'], function()
+		{
+			Route::post('/pancard/update', [UserKycController::class, 'kycUserPancardUpdate']);
+			Route::post('/aadhar/update', [UserKycController::class, 'kycUserAadharUpdate']);  
+			Route::post('/gst/update', [UserKycController::class, 'kycUserGSTUpdate']);
+			Route::post('/bank/update', [UserKycController::class, 'kycUserBankUpdate']);  
+		});
+		
+		// Remmitance Reports
+		Route::group(['prefix'=> 'cod-remmitance'], function () { 
+			Route::post('/list', [OrderController::class, 'codRemittance']);  
+			Route::get('/download-excel/{id}', [OrderController::class, 'downloadRemittanceExcel']); 
+		}); 
+		
+		Route::group(['prefix'=> 'cod-payout'], function () {
+			Route::post('/list',[OrderController::class, 'codPayout']); 
+			Route::post('/store',[OrderController::class, 'storePayout']); 
+		});
+		
+		//Weight Management
+		Route::group(['prefix'=>'weight'], function()
+		{  
+			Route::post('/descripencies/list', [WeightController::class, 'index']);
+			Route::get('/descripencies/remark/{id}', [WeightController::class, 'weightRemark']);
+			Route::post('/descripencies/remark/store', [WeightController::class, 'remarkStore']);  
+			Route::post('/descripencies/accepted/{id}', [WeightController::class, 'weightAccepted']); 
+		});  
+		
+		//Ticket
+		Route::group(['prefix'=>'ticket'], function()
+		{
+			Route::post('/list', [TicketController::class, 'index']); 
+			Route::post('/store', [TicketController::class, 'ticketStore']);
+			Route::get('/view-ticket/{id}', [TicketController::class, 'ticketView']);
+			Route::post('/remark/store', [TicketController::class, 'remarkStore']); 
+		});
+		
+		Route::prefix('report')->name('report.')->group(function ()
+		{   
+			Route::post('/order/list', [ReportController::class, 'reportOrderList']);
+			Route::post('/export-orders', [ReportController::class, 'reportOrderExport']);
+ 
+			Route::post('/passbook/list', [ReportController::class, 'passbookReportList']); 
+			 
+			Route::post('billing-invoice/list', [ReportController::class, 'billingInvoiceList']);
+			Route::get('billing-invoice/pdf/{id}', [ReportController::class, 'billingInvoicePdf']);
+			Route::get('billing-invoice/excel/{id}', [ReportController::class, 'billingInvoiceExcel']);
+			 
+			Route::post('/recharge/list', [ReportController::class, 'rechargeList']);
+		});
 	});	

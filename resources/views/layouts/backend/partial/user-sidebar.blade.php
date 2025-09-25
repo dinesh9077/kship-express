@@ -5,19 +5,19 @@
 	</a>
 </li>
 
-<li>
+<!--<li>
     <a href="{{ route('order') }}?weight_order=1" class="{{ request()->is(['order', 'order/create', 'order/edit*', 'order/details*', 'order/clone*', 'order/label*', 'order/tracking-history*', 'order/shipping-label*']) ? 'active' : '' }}">
         <i class="mdi mdi-package-variant-closed"></i>
         <span> Order </span>
     </a>
-</li>
+</li>-->
 
 <li class="{{ request()->is('order*') && request('weight_order') ? 'mm-active' : '' }}">
-	<!--<a href="javascript: void(0);" class="{{ request()->is('order*') && request('weight_order') ? 'active' : '' }}">
+	<a href="javascript: void(0);" class="{{ request()->is('order*') && request('weight_order') ? 'active' : '' }}">
 		<i class="mdi mdi-package-variant-closed"></i>
 		<span> Order </span>
 		<span class="menu-arrow"></span>
-	</a>-->
+	</a>
 	<ul class="nav-second-level {{ request()->is('order*') && request('weight_order') ? 'mm-collapse mm-show' : '' }}" aria-expanded="false">  
 		<li class="{{ request()->is('order*') && request('weight_order') == 1 ? 'mm-active' : '' }}">
 			<a class="{{ request()->is('order*') && request('weight_order') == 1 ? 'active' : '' }}" 
