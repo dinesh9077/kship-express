@@ -36,7 +36,7 @@
 			
 			$order_arr = $request->get('order');
 			$column_arr = $request->get('columns');
-			$search_arr = $request->get('search');
+			$search = $request->get('search') ?? $request->get('search.value') ?? '';
 			
 			$columnIndex = $order_arr[0]['column']; 
 			$orderColumn = $column_arr[$columnIndex]['data']; 
@@ -52,20 +52,26 @@
 			$userId = $user->id;
 			
 			// Base Query
-			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
+			$query = Customer::with('customerOrder:id,customer_id,order_prefix', 'latestCustomerAddress')->select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
 			->when($role === "user", fn($q) => $q->where('user_id', $userId));
 			
 			$totalData = $query->count();
 			
 			// Apply search filter
-			if (!empty($search_arr['value'])) {
-				$search = $search_arr['value'];
+			if (!empty($search)) { 
 				$query->where(function ($q) use ($search) {
 					$q->where('first_name', 'LIKE', "%{$search}%")
 					->orWhere('last_name', 'LIKE', "%{$search}%")
+					->orWhere('gst_number', 'LIKE', "%{$search}%")
 					->orWhere('mobile', 'LIKE', "%{$search}%")
-					->orWhere('email', 'LIKE', "%{$search}%")
-					->orWhere('status', 'LIKE', "%{$search}%")
+					->orWhere('email', 'LIKE', "%{$search}%") 
+					->orWhereHas('latestCustomerAddress',function($q) use ($search){
+						$q->where('mobile', 'LIKE', "%{$search}%")
+						->orWhere('zip_code', 'LIKE', "%{$search}%")
+						->orWhere('city', 'LIKE', "%{$search}%")
+						->orWhere('state', 'LIKE', "%{$search}%")
+						->orWhere('country', 'LIKE', "%{$search}%");
+					})
 					->orWhere('created_at', 'LIKE', "%{$search}%");
 				});
 			}
@@ -82,8 +88,8 @@
 			$data = [];
 			foreach ($customers as $index => $customer) {
 				$actionButtons = '';
-
-				if (config('permission.client.edit')) {
+					
+				/* if (config('permission.client.edit')) {
 					$actionButtons .= '<a href="' . url('customer/edit', $customer->id) . '" 
 						class="btn btn-icon waves-effect waves-light action-icon mr-1">
 						<i class="mdi mdi-pencil"></i>
@@ -97,19 +103,27 @@
 						onClick="deleteRecord(this, event);"> 
 						<i class="mdi mdi-trash-can-outline"></i> 
 					</a>';
-				}
-
+				} */
+				 
+				$customerAddress = $customer->latestCustomerAddress ?? null; 
+				$customer_address = $customerAddress 
+				? implode(' ', array_filter([
+					trim($customerAddress->address ?? ''),
+					trim($customerAddress->city ?? ''),
+					trim($customerAddress->state ?? ''),
+					trim($customerAddress->zip_code ?? '')
+				])) . (isset($customerAddress->country) ? ', ' . trim($customerAddress->country) : '')
+				: '';
+			 
 				$data[] = [
 					'id' => $start + $index + 1,
+					'order_no' => '#'.$customer->customerOrder->order_prefix ?? 'N/A',
 					'customer_name' => $customer->customer_name,
 					'mobile' => $customer->mobile,
-					'email' => $customer->email,
-					'status' => $customer->status == 1
-						? '<span class="badge badge-success">Active</span>'
-						: '<span class="badge badge-danger">In-Active</span>',
-					'created_by' => $customer->user->name ?? 'N/A',
+					'email' => $customer->email,  
+					'address' => $customer_address,  
 					'created_at' => date('d M Y', strtotime($customer->created_at)),
-					'action' => $actionButtons
+					//'action' => $actionButtons
 				];
 			}
  

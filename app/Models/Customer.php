@@ -34,6 +34,11 @@ class Customer extends Model
         return $this->hasMany(CustomerAddress::class, 'customer_id');
     }
 	
+	public function customerOrder()
+    {
+        return $this->hasOne(order::class, 'customer_id');
+    }
+	
 	public function latestCustomerAddress()
 	{
 		return $this->hasOne(CustomerAddress::class, 'customer_id')->orderByDesc('created_at');

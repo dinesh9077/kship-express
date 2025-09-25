@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
-@section('title',config('setting.company_name').' - Client')
-@section('header_title','Client')
+@section('title',config('setting.company_name').' - Recipeint/Customer')
+@section('header_title','Recipeint/Customer')
 @section('content') 
 <div class="content-page">
     <div class="content">
@@ -10,26 +10,25 @@
             <div class="main-order-page-1">
             <div class="main-order-001">
                     <div class="main-create-order">
-                        <div class="main-disolay-felx" style="margin-top: 0 !important;">
+						{{-- <div class="main-disolay-felx" style="margin-top: 0 !important;">
 							@if(config('permission.client.add'))	
 								<div class="main-btn0main-1">
 									<a href="{{ route('customer.add') }}"> <button class="btn-main-1"> Create Client </button> </a>
 								</div>
 							@endif
-        				</div>
+        				</div> --}}
         				
                         <div class="main-data-teble-1 table-responsive">
                             <table id="customer-datatable" class="" style="width:100%">
                                 <thead>
                                     <tr>
                                         <th> SR.No </th>
+                                        <th> Order No </th>
                                         <th> Client Name </th>
                                         <th> Mobile </th>
-                                        <th> Email </th>
-                                        <th> status </th>
-                                        <th> Created By </th>
-                                        <th> Created At </th>
-                                        <th> Action </th>
+                                        <th> Email </th> 
+                                        <th> Address </th>  
+                                        <th> Created At </th> 
         							</tr>
         						</thead> 
         					</table>
@@ -70,14 +69,13 @@
 			}
 		},
 		"columns": [
-		{ "data": "id" }, 
-		{ "data": "customer_name" }, 
-		{ "data": "mobile" }, 
-		{ "data": "email" }, 
-		{ "data": "status" }, 
-		{ "data": "created_by"},
-		{ "data": "created_at" },   
-		{ "data": "action" }
+			{ "data": "id" }, 
+			{ "data": "order_no" },
+			{ "data": "customer_name" }, 
+			{ "data": "mobile" }, 
+			{ "data": "email" }, 
+			{ "data": "address" },  
+			{ "data": "created_at" },   
 		]
 	}); 
 </script>
