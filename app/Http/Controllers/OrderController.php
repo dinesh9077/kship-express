@@ -19,6 +19,7 @@
 	use Helper; 
 	use DNS1D;
 	use App\Exports\CodRemittanceExport;
+	use PhpOffice\PhpSpreadsheet\Shared\Date;
 	
 	class OrderController extends Controller
 	{
@@ -601,127 +602,7 @@
 			return;
 		}
 		
-		public function orderBulkCreate()
-		{
-			$user = Auth::user();  
-			return view('order.bulk-create', compact('user'));
-		}
-		
-		public function orderBulkStore(Request $request)
-		{  
-			$user = Auth::user();
-			DB::beginTransaction(); // Begin Transaction
-
-			try {  
-				// Import the Excel file
-				$bulkOrder = new BulkOrder();
-				Excel::import($bulkOrder, $request->file('bulk_excel'));
-
-				// Check if rows exist after removing the header
-				if (empty($bulkOrder->rows)) {
-					return response()->json(['status' => 'error', 'msg' => 'No valid data found in the Excel file.']);
-				}
-				 
-				foreach ($bulkOrder->rows as $row) {
-					// Assuming the column order matches the Excel data structure
-					$data = [
-						'order_prefix' => Order::generateOrderNumber($user->id),
-						'shipping_mode' => $row[0] ? strtolower($row[0]) : null,
-						'order_date' => now()->toDateString(),
-						'freight_mode' => $row[1] ?? null, 
-						'order_type' => $row[9] ?? 'prepaid', 
-						'cod_amount' => $row[10] ?? 0,
-						'warehouse_id' => $request->warehouse_id,
-						'customer_id' => $request->customer_id,
-						'customer_address_id' => $request->customer_address_id,
-						'invoice_no' => $row[11] ?? null,
-						'invoice_amount' => $row[12] ?? 0,
-						'ewaybillno' => $row[13] ?? 0,
-						'dimension_type' => 'cm',
-						'total_amount' => 0,  
-						'user_id' => $user->id,
-						'status_courier' => 'new',
-						'status' => 1,
-						'created_at' => now(),
-						'updated_at' => now()
-					]; 
-			
-					// Insert Order and get ID 
-					$order = Order::create($data);
-
-					// Handle invoice documents
-					$invoiceDocPaths = []; 
-					if ($request->hasFile('invoice_document')) {
-						foreach ($request->file('invoice_document') as $image) { 
-							$filename = time() . '_' . $image->getClientOriginalName(); 
-							$path = $image->storeAs('public/orders/' . $order->id, $filename);  
-							$invoiceDocPaths[] = $filename;
-						}
-					} 
-					$order->update(['invoice_document' => $invoiceDocPaths]);
-
-					// Extract and explode values
-					$productDiscriptions = $row[2] ? explode(',', $row[2]) : null;
-					$productAmount = $row[3] ? explode(',', $row[3]) : null;
-					$boxCounts = $row[4] ? explode(',', $row[4]) : null;
-					$boxLength = $row[5] ? explode(',', $row[5]) : null;
-					$boxWidth = $row[6] ? explode(',', $row[6]) : null;
-					$boxHeight = $row[7] ? explode(',', $row[7]) : null;
-					$boxWeight = $row[8] ? explode(',', $row[8]) : null;
-
-					$orderItems = [];
-					$totalAmount = 0; // Initialize total amount
-
-					if ($productDiscriptions) {
-						foreach ($productDiscriptions as $key => $productDiscription) {
-							$amount = $productAmount[$key] ?? 0;
-							$totalAmount += $amount; // Calculate total amount
-
-							$orderItems[] = [
-								'order_id' => $order->id, 
-								'product_discription' => $productDiscription,
-								'amount' => $amount, 
-								'ewaybillno' => null, 
-								'quantity' => $boxCounts[$key] ?? 0, 
-								'created_at' => now(),
-								'updated_at' => now(),
-								'dimensions' => json_encode([
-									'weight' => $boxWeight[$key] ?? 0,
-									'length' => $boxLength[$key] ?? 0,
-									'width' => $boxWidth[$key] ?? 0,
-									'height' => $boxHeight[$key] ?? 0,
-								]),
-							];
-						} 
-					}
-
-					// Bulk Insert Order Items
-					OrderItem::insert($orderItems); 
-
-					// Update Order Total Amount
-					$order->update(['total_amount' => $totalAmount]);
-
-					// Insert Order Status
-					OrderStatus::insert([
-						'order_id' => $order->id, 
-						'order_status' => 'New', 
-						'created_at' => now(), 
-						'updated_at' => now()
-					]);
-
-					Helper::orderActivity($order->id, 'Order created.');
-				}
-
-				DB::commit(); // Commit Transaction
-				return response()->json(['status' => 'success', 'msg' => 'The order has been successfully added.']);
-			} 
-			catch (\Exception $e) {
-				DB::rollback(); // Rollback in case of failure
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
-			}
-		}
- 
- 
+		 
 		public function orderEdit($id)
 		{ 
 			$user = Auth::user();
@@ -1705,7 +1586,275 @@
 				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
 			}
 		} 
+		
+		//Bulk Order
+		public function orderBulkCreate()
+		{
+			$user = Auth::user();  
+			return view('order.bulk-create', compact('user'));
+		}
+		
+		public function orderBulkStore(Request $request)
+		{  
+			$user = Auth::user();
+			DB::beginTransaction(); // Begin Transaction
+
+			try {  
+				// Import the Excel file
+				$bulkOrder = new BulkOrder();
+				Excel::import($bulkOrder, $request->file('bulk_excel'));
+
+				// Check if rows exist after removing the header
+				if (empty($bulkOrder->rows)) {
+					return response()->json(['status' => 'error', 'msg' => 'No valid data found in the Excel file.']);
+				}
+			 
+				foreach ($bulkOrder->rows as $row) 
+				{ 
+					$dateValue = $row[0] ?? null;
+					$orderDate = null;
+
+					if ($dateValue) {
+						if (is_numeric($dateValue)) {
+							// Excel serial number → Carbon date
+							$orderDate = Date::excelToDateTimeObject($dateValue)->format('Y-m-d');
+						} else {
+							// If already string (like 2025-09-24)
+							$orderDate = \Carbon\Carbon::parse($dateValue)->format('Y-m-d');
+						}
+					}
+					  
+					if($request->type_of_package == 1)
+					{
+						$this->b2cBulkStore($request, $user, $row, $orderDate);
+					}
+					else
+					{
+						$this->b2bBulkStore($request, $user, $row, $orderDate);
+					}  
+				}
+
+				DB::commit(); // Commit Transaction
+				return response()->json(['status' => 'success', 'msg' => 'The order has been successfully added.', 'type_of_package' => $request->type_of_package]);
+			} 
+			catch (\Exception $e) {
+				DB::rollback(); // Rollback in case of failure
+				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
+			}
+		}
+		
+		private function b2cBulkStore($request, $user, $row, $orderDate)
+		{
+			// Create Customer
+			$customer = Customer::create([
+				'user_id'    => $user->id,
+				'first_name' => $row[4] ?? '',
+				'last_name'  => $row[5] ?? '',
+				'email'      => $row[6] ?? null,
+				'gst_number' => $row[7] ?? null,
+				'mobile'     => $row[8] ?? null,
+				'status'     => 1,
+			]);
+			
+			// Create Customer Address if available
+			$customerAddress = null;
+			if ($row[9] ?? '') {
+				$customerAddress = CustomerAddress::create([
+					'customer_id' => $customer->id,
+					'address'     => $row[9],
+					'zip_code'    =>$row[10],
+					'city'        => $row[11],
+					'state'       => $row[12],
+					'country'     => $row[13],
+					'status'      => 1,
+				]);
+			}
+					
+			// Assuming the column order matches the Excel data structure
+			$data = [
+				'order_prefix' => Order::generateOrderNumber($user->id),
+				'order_date' => $orderDate,
+				'shipping_mode' => $row[1] ? strtolower($row[1]) : 'surface', 
+				'order_type' => $row[2] ?? 'cod', 
+				'cod_amount' => $row[3] ?? 0,
+				'warehouse_id' => $request->warehouse_id,
+				'customer_id' => $customer->id ?? null,
+				'customer_address_id' => $customerAddress->id ?? null,
+				'invoice_no' => $row[20] ?? null,
+				'invoice_amount' => $row[21] ?? 0,
+				'ewaybillno' => $row[22] ?? 0,
+				'dimension_type' => 'cm',
+				'total_amount' => $row[21] ?? 0,  
+				'user_id' => $user->id,
+				'status_courier' => 'New',
+				'weight_order' => 1, 
+				'weight' => $row[23] ?? 0,
+				'length' => $row[24] ?? 0,
+				'Width' => $row[25] ?? 0,
+				'height' => $row[26] ?? 0,
+				'status' => 1,
+				'created_at' => now(),
+				'updated_at' => now()
+			]; 
+	 
+			$order = Order::create($data);
+
+			// Extract and explode values
+			$productCategory = $row[14] ? explode(',', $row[14]) : null;
+			$productName = $row[15] ? explode(',', $row[15]) : null;
+			$productSku = $row[16] ? explode(',', $row[16]) : null;
+			$productHsn = $row[17] ? explode(',', $row[17]) : null;
+			$productAmount = $row[18] ? explode(',', $row[18]) : null;
+			$productQuantity = $row[19] ? explode(',', $row[19]) : null;
 		 
+
+			$orderItems = [];
+			$totalAmount = 0; // Initialize total amount
+
+			if ($productCategory) {
+				foreach ($productCategory as $key => $productCat) { 
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCat,
+						'product_name' => $productName[$key] ?? 0,
+						'sku_number' => $productSku[$key] ?? 0,
+						'hsn_number' => $productHsn[$key] ?? 0,
+						'amount' => $productAmount[$key] ?? 0, 
+						'ewaybillno' => null, 
+						'quantity' => $productQuantity[$key] ?? 0, 
+						'created_at' => now(),
+						'updated_at' => now() 
+					];
+				} 
+			}
+
+			// Bulk Insert Order Items
+			OrderItem::insert($orderItems); 
+
+			// Insert Order Status
+			OrderStatus::insert([
+				'order_id' => $order->id, 
+				'order_status' => 'New', 
+				'created_at' => now(), 
+				'updated_at' => now()
+			]);
+
+			Helper::orderActivity($order->id, 'Order created.');
+		}
+		
+		private function b2bBulkStore($request, $user, $row, $orderDate)
+		{
+			// Create Customer
+			$customer = Customer::create([
+				'user_id'    => $user->id,
+				'first_name' => $row[4] ?? '',
+				'last_name'  => $row[5] ?? '',
+				'email'      => $row[6] ?? null,
+				'gst_number' => $row[7] ?? null,
+				'mobile'     => $row[8] ?? null,
+				'status'     => 1,
+			]);
+			
+			// Create Customer Address if available
+			$customerAddress = null;
+			if ($row[9] ?? '') {
+				$customerAddress = CustomerAddress::create([
+					'customer_id' => $customer->id,
+					'address'     => $row[9],
+					'zip_code'    =>$row[10],
+					'city'        => $row[11],
+					'state'       => $row[12],
+					'country'     => $row[13],
+					'status'      => 1,
+				]);
+			}
+					
+			// Assuming the column order matches the Excel data structure
+			$data = [
+				'order_prefix' => Order::generateOrderNumber($user->id),
+				'order_date' => $orderDate,
+				'shipping_mode' => $row[1] ? strtolower($row[1]) : 'surface', 
+				'order_type' => $row[2] ?? 'cod', 
+				'cod_amount' => $row[3] ?? 0,
+				'warehouse_id' => $request->warehouse_id,
+				'customer_id' => $customer->id ?? null,
+				'customer_address_id' => $customerAddress->id ?? null,
+				'invoice_no' => $row[20] ?? null,
+				'invoice_amount' => $row[21] ?? 0,
+				'ewaybillno' => $row[22] ?? 0,
+				'dimension_type' => 'cm',
+				'total_amount' => $row[21] ?? 0,  
+				'user_id' => $user->id,
+				'status_courier' => 'New', 
+				'weight_order' => 2, 
+				'status' => 1,
+				'created_at' => now(),
+				'updated_at' => now()
+			]; 
+	 
+			$order = Order::create($data);
+
+			// Extract and explode values
+			$productCategory = $row[14] ? explode(',', $row[14]) : null;
+			$productName = $row[15] ? explode(',', $row[15]) : null;
+			$productSku = $row[16] ? explode(',', $row[16]) : null;
+			$productHsn = $row[17] ? explode(',', $row[17]) : null;
+			$productAmount = $row[18] ? explode(',', $row[18]) : null;
+			$productQuantity = $row[19] ? explode(',', $row[19]) : null;
+			
+			$noOfBox = $row[23] ? explode(',', $row[23]) : null;
+			$weightBox = $row[24] ? explode(',', $row[24]) : null;
+			$lengthBox = $row[25] ? explode(',', $row[25]) : null;
+			$widthBox = $row[26] ? explode(',', $row[26]) : null;
+			$heightBox = $row[27] ? explode(',', $row[27]) : null;
+			$weight = $row[28] ?? 0;
+		  
+			$orderItems = [];
+			$height = $width = $length = 0;
+			
+			if (!empty($productCategory)) 
+			{
+				foreach ($productCategory as $key => $productCat) { 
+					$amount = $request->amount[$key] ?? 0;
+					$quantity = $request->quantity[$key] ?? 1;
+					  
+					$orderItems[] = [
+						'order_id' => $order->id, 
+						'product_category' => $productCat,
+						'product_name' => $productName[$key] ?? null,
+						'sku_number' => $productSku[$key] ?? null,
+						'hsn_number' => $productHsn[$key] ?? null,
+						'amount' => $productAmount[$key] ?? 0, 
+						'ewaybillno' => null,
+						'quantity' => $productQuantity[$key] ?? 0,  
+						'created_at' => now(),
+						'updated_at' => now(),
+						'dimensions' => json_encode([
+							'no_of_box' => $noOfBox[$key] ?? 0,
+							'weight' => $weightBox[$key] ?? 0,
+							'length' => $lengthBox[$key] ?? 0,
+							'width' => $widthBox[$key] ?? 0,
+							'height' => $heightBox[$key] ?? 0,
+						]),
+					];
+					
+					// Accumulate totals
+					$length += $lengthBox[$key] ?? 0; 
+					$width  += $widthBox[$key] ?? 0;
+					$height += $heightBox[$key] ?? 0;
+				}
+				
+				OrderItem::insert($orderItems);  
+			}
+			  
+			$order->update([ 
+				'weight' => $weight,
+				'length' => $length,
+				'width'  => $width,
+				'height' => $height
+			]);	
+		}
+		
 		public function codRemittance()
 		{   
 		    //$shippingCompanies = ShippingCompany::whereStatus(1)->get();  

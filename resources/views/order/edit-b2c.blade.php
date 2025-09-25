@@ -456,7 +456,7 @@
 	}
     
 	// Customer/Destination Details
-    customerDetailsList() 
+    //customerDetailsList() 
     function customerDetailsList() 
 	{ 
 		$orderForm.find('#customer_id').prop('disabled', true);

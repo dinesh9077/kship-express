@@ -3,7 +3,7 @@
 @import url('https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css');
 
 :root {
-    --primary-color: #fd5523;
+    --primary-color: #6147b6;
     --secondary-color: #062e39;
     --default-radius: 5px;
     --input-radius: 5px;
@@ -3946,7 +3946,7 @@ h3.timeline-title {
 #sidebar-menu > ul > li > a:active, #sidebar-menu > ul > li > a:focus, #sidebar-menu > ul > li > a:hover {
     color: #000;
     text-decoration: none;
-    background: #fd552336;
+    background: #d1c9ec;
     border-radius: var(--default-radius);
 }
 

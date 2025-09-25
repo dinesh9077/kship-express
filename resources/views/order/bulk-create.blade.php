@@ -61,61 +61,33 @@
 											<br>
 											<div id="warehouse_lable">  
 											</div> 
-										</div> 
+										</div>  
 									</div> 
 								</div>
 							</div>
                         </div>
                     </div>
-					
-                    <div class="main-rowx-1">
-                        <div class="main-order-001">
-							<div class="row">
-								<div class="col-lg-12">
-									<div class="main-vender">
-										<h5> Recipeint/Customer Information </h5>
-									</div>
-									<div class="row">
-										<div class="from-group col-6"> 
-											<label for="order-id"> Recipeint/Customer </label>
-											<div class="main-rox-input">
-												<select name="customer_id" class="control-form select2" id="customer_id" style="border-radius: 5px 0px 0px 5px" onchange="customerAddresList(this)" required>
-													<option value="">Select Recipeint/Customer</option>
-												</select>
-												<button type="button" class="btn btn-primary btn-main-1 d-001" onclick="createCustomer(this, event)"> + </button>
-											</div>
-										</div> 
-										<div class="from-group col-6">
-											<label for="order-id"> Customer Address </label>
-											<div class="main-rox-input">
-												<select name="customer_address_id" class="control-form select2" id="customer_address_id" style="border-radius: 5px 0px 0px 5px" required>
-													<option>Select Customer Address</option>
-												</select>
-												<button type="button" class="btn-main-1 d-001" disabled data-toggle="tooltip" data-placement="right" title="Kindly select a customer before adding an address." onclick="createCustomerAddress(this, event)"> + </button>
-											</div>
-											<div id="warehouse_lable"></div> 
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-                    </div> 
+					 
 					<div class="main-rowx-1">
                         <div class="main-order-001">
                             <div class="main-vender">
-                                <h5> Upload Excel With Invoice Documents </h5>
+                                <h5> Upload Excel </h5>
                             </div>
                             <div class="row"> 
-                                <div class="col-lg-6 col-sm-6 col-md-6">
-                                    <div class="from-group my-2">
-                                        <label for="packaging-type"> Upload Excel  <a href="{{ url('assets/sample_order.xlsx') }}">(Sample Format)</a></label>
-                                        <input type="file" class="form-control" id="bulk_excel" name="bulk_excel" required> 
-                                    </div>
-                                </div>  
+								 
 								<div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
-                                        <label for="packaging-type"> Invoice Documents </label>
-                                        <input type="file" class="form-control" id="invoice_document" name="invoice_document[]" multiple required> 
+                                        <label for="packaging-type"> Type Of Package</label>
+                                        <select name="type_of_package" class="control-form select2" id="type_of_package" style="border-radius: 5px 0px 0px 5px" required>
+											<option value="1">B2C</option> 
+											<option value="2">B2B</option> 
+										</select> 
+                                    </div>
+                                </div> 
+                                <div class="col-lg-6 col-sm-6 col-md-6">
+                                    <div class="from-group my-2">
+                                        <label for="packaging-type"> Upload Excel  <a href="{{ url('assets/b2c_sample.xlsx') }}">(B2C Sample Format)</a> <a href="{{ url('assets/b2b_sample.xlsx') }}">(B2B Sample Format)</a></label>
+                                        <input type="file" class="form-control" id="bulk_excel" name="bulk_excel" accept=".xlsx,.xls" required> 
                                     </div>
                                 </div>  
                             </div> 
@@ -167,101 +139,6 @@
 
 		$('#warehouse_lable').html(addressLabel);
 	}
-	  
-	// Customer/Destination Details
-    customerDetailsList() 
-    function customerDetailsList() 
-	{ 
-		$orderForm.find('#customer_id').prop('disabled', true);
-		
-		let $customerAddressElement = $orderForm.find('#customer_address_id'); 
-		let $addAddressButton = $customerAddressElement.siblings('button');
-		$addAddressButton.prop('disabled', true)
-			.attr('data-original-title', 'Kindly select a customer before adding an address.') 
-			.tooltip();  
-		$customerAddressElement.html('<option>Select Customer Address</option>').prop('disabled', true);
-		
-        $.get("{{ route('order.customer.list') }}", function(res) {
-            $orderForm.find('#customer_id').html(res.output);
-			$orderForm.find('#customer_id').prop('disabled', false);
-        }, 'Json');
-    }
-	
-	function customerAddresList(obj, isCustomerAddressId = null)
-	{
-		const customerId = $orderForm.find('#customer_id').val();  
-		let $customerAddressElement = $orderForm.find('#customer_address_id');
-		let $addAddressButton = $customerAddressElement.siblings('button');
-
-		if (!customerId) { 
-			$addAddressButton.prop('disabled', true)
-				.attr('data-original-title', 'Kindly select a customer before adding an address.') 
-				.tooltip(); 
-				   
-			$customerAddressElement.html('<option>Select Customer Address</option>')
-				.prop('disabled', true);
-			return; 
-		}
- 
-		$addAddressButton.prop('disabled', false).attr('data-original-title', '');
- 
-		$customerAddressElement.prop('disabled', true);
- 
-		$.ajax({
-			url: `{{ url('order/customer/address-list') }}/${customerId}`,
-			type: "GET",
-			dataType: "json",
-			success: function (res) {
-				$customerAddressElement.html(res.output).prop('disabled', false);
-				if(isCustomerAddressId)
-				{
-					setTimeout(function(){ 
-						$('#orderForm #customer_address_id').val(isCustomerAddressId).trigger('change');
-					}, 1000);
-				}
-			},
-			error: function () {
-				console.error("Error fetching customer addresses.");
-				$customerAddressElement.html('<option>Error loading addresses</option>').prop('disabled', false);
-			}
-		});
-	}
-	
-	function createCustomer(obj, event)
-	{
-		event.preventDefault();
-		if (!modalOpen)
-		{
-			modalOpen = true;
-			closemodal(); 
-			$.get("{{ route('order.customer.create') }}", function(res)
-			{ 
-				$('body').find('#modal-view-render').html(res.view);
-				$('#createCustomerModal').modal('show');  
-			});
-		} 
-	}
-	
-	function createCustomerAddress(obj, event)
-	{
-		event.preventDefault();
-		const customerId = $orderForm.find('#customer_id').val();  
-		if (!customerId) {
-			toastrMsg('warning', 'recipient/customer selection required.');
-			return;
-		}
-		
-		if (!modalOpen)
-		{
-			modalOpen = true;
-			closemodal(); 
-			$.get(`{{ url('order/customer-address/create') }}/${customerId}`, function(res)
-			{ 
-				$('body').find('#modal-view-render').html(res.view);
-				$('#createCustomerAddressModal').modal('show');  
-			});
-		} 
-	}
 	    
     $orderForm.submit(function (event) {
 		event.preventDefault();
@@ -287,8 +164,9 @@
 				toastrMsg(res.status, res.msg); // Show notification
 
 				if (res.status === "success") {
+					const weightOrder = res.type_of_package ?? 1;
 					setTimeout(function () {
-						window.location.href = "{{ route('order') }}"; 
+						window.location.href = `{{ route('order') }}?weight_order=${weightOrder}`; 
 					}, 1000);
 				}
 			},
