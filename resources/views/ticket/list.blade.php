@@ -2,43 +2,37 @@
 @section('title',config('setting.company_name').' - Ticket')
 @section('header_title','Ticket')
 @section('content') 
-<style>
-    #ticket-datatable_wrapper tbody tr td:nth-child(6) {
-    	white-space: break-spaces;
-    }
-</style>
 <div class="content-page">
     <div class="content">
 		
         <!-- Start Content-->
         <div class="container-fluid">
-            <div class="main-order-page-1">                    
-                <div class="main-order-001">  
-                    <div class="main-create-order">
-            <!--            <div class="main-disolay-felx">-->
-            <!--                <div class="main-btn0main-1">  -->
-        				<!--	</div>-->
-        				<!--</div>-->
-        				
-                        <div class="main-data-teble-1 table-responsive">
-                            <table id="ticket-datatable" class="" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th> SR.No </th> 
-                                        <th> Ticket No</th>
-                                        <th> AWB Number </th>
-                                        <th> Name </th>
-                                        <th> Mobile </th> 
-                                        <th> Description </th>
-                                        <th> status </th>
-                                        <th> Created At </th>
-                                        <th> Action </th>
-        							</tr>
-        						</thead> 
-        					</table>
-        				</div>
-        			</div>
-    			</div>
+			<div class="main-order-page-1">
+                <div class="main-order-001">
+            <div class="main-create-order">
+                <!-- <div class="main-disolay-felx">
+                    <div class="main-btn0main-1">  
+					</div>
+				</div> -->
+				
+                <div class="main-data-teble-1 table-responsive">
+                    <table id="ticket-datatable" class="ticket-table" class="" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th> SR.No </th> 
+                                <th> Ticket No</th>
+                                <th> AWB Number </th>
+                                <th> Name </th>
+                                <th> Mobile </th>  
+                                <th> status </th>
+                                <th> Created At </th>
+                                <th> Action </th>
+							</tr>
+						</thead> 
+					</table>
+				</div>
+			</div>
+			</div>
 			</div>
 		</div>
 	</div>
@@ -79,8 +73,7 @@
 		{ "data": "ticket_no" }, 
 		{ "data": "awb_number" }, 
 		{ "data": "contact_name" }, 
-		{ "data": "contact_phone" },  
-		{ "data": "description" },  
+		{ "data": "contact_phone" },   
 		{ "data": "status" }, 
 		{ "data": "created_at" },   
 		{ "data": "action" }

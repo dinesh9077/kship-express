@@ -26,10 +26,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     { 
-		$schedule->command('lowbalance:check')->dailyAt('10:00');
+		$schedule->command('billing:generate')->monthlyOn(1, '01:00');
+		$schedule->command('weight:accept-discrepancies')->everyMinute()->withoutOverlapping();
+		//$schedule->command('lowbalance:check')->dailyAt('10:00');
 		$schedule->command('kyc:pending-check')->dailyAt('11:00'); 
+		$schedule->command('cod:generate-remittance')->dailyAt('01:00');
 		$schedule->command('update:awb-number-shipmozo')->everyTwoMinutes(); 
-		$schedule->command('shipment:update-status')->everyTenMinutes(); 
+		$schedule->command('shipment:update-status')->everyTenMinutes();
+		$schedule->command('order:apply-rto-charge')
+         ->everyTwoHours()
+         ->withoutOverlapping();
     }
 
     /**

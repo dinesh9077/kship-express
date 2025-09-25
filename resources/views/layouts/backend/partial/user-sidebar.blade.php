@@ -47,6 +47,13 @@
 	</a>
 </li>
 
+<!--<li>
+	<a href="{{ route('ndr.order') }}" >
+		<i class="mdi mdi-alert-circle-outline"></i>
+		<span> NDR Order</span>
+	</a>
+</li>-->
+						
 <li>
 	<a href="{{route('customer')}}" class="{{ request()->is('customer*') ? 'active' : '' }}">
 		<i class="mdi mdi-account"></i>
@@ -74,14 +81,22 @@
 		<span> KYC Update </span>
 	</a>
 </li>
-
-<li>
-	<a href="{{route('recharge.list')}}" class="{{ request()->is('recharge*') ? 'active' : '' }}">
-		<i class="mdi mdi-history"></i>
-		<span> Recharge History </span>
-	</a>
-</li>
  
+<li>
+	<a href="javascript: void(0);">
+		<i class="mdi mdi-cash-multiple"></i>
+		<span> Remittance Management </span>
+		<span class="menu-arrow"></span>
+	</a>
+	<ul class="nav-second-level" aria-expanded="false">
+		@if(config('permission.remittance.view'))
+			<li><a href="{{ route('cod-remmitance') }}"> Cod Remittance </a></li>  
+		@endif 
+		@if(config('permission.cod_payout.view'))
+			<li><a href="{{ route('cod-payout') }}"> COD Payout </a></li> 
+		@endif
+	</ul>
+</li> 
 <li>
 	<a href="{{ route('weight.descripencies') }}" class="{{ request()->is('descripencies*') ? 'active' : '' }}">
 		<i class="mdi mdi-scale-balance"></i>
@@ -89,40 +104,39 @@
 	</a>
 </li> 
 
-<li>
-	<a href="{{ route('ticket') }}">
+<li class="{{ request()->is('ticket*') ? 'mm-active' : '' }}">
+	<a href="{{ route('ticket') }}" class="{{ request()->is('ticket*') ? 'active' : '' }}">
 		<i class="mdi mdi-ticket"></i>
-		<span> Ticket </span>
+		<span> Ticket Request</span>
 	</a>
-</li>
- 
- 
+</li> 
+
 <li> 
 	<a href="javascript: void(0);">
 		<i class="mdi mdi-file-chart"></i>
 		<span> Report </span>
 		<span class="menu-arrow"></span>
 	</a>
-	<ul class="nav-second-level" aria-expanded="false">
+	<ul class="nav-second-level" aria-expanded="false"> 
 		<li>
-			<a href="{{route('report.order')}}" class="{{ request()->is('report.order') ? 'active' : '' }}"> 
+			<a href="{{ route('report.order') }}" class="{{ request()->is('report.order') ? 'active' : '' }}"> 
 				<span>Order Report</span>
 			</a>
-		</li>
+		</li>  
 		<li>
 			<a href="{{route('report.passbook')}}" class="{{ request()->is('passbook*') ? 'active' : '' }}"> 
 				<span> Passbook </span>
 			</a>
-		</li>
-		{{--<li>
-			<a href="{{route('daily_wallet')}}" class="{{ request()->is('daily_wallet*') ? 'active' : '' }}"> 
-				<span> Passbook </span>
-			</a>
-		</li>
+		</li>  
 		<li>
-			<a href="{{route('invoice_report')}}" class="{{ request()->is('invoice_report*') ? 'active' : '' }}"> 
-				<span> Invoice </span>
+			<a href="{{route('recharge.list')}}" class="{{ request()->is('recharge.list') ? 'active' : '' }}"> 
+				<span> Recharge History </span>
 			</a>
-		</li>--}}
+		</li> 
+		<li>
+			<a href="{{ route('report.billing-invoice') }}" class="{{ request()->is('report.billing-invoice') ? 'active' : '' }}"> 
+				<span> Billing Invoice Report</span>
+			</a>
+		</li> 
 	</ul>
  </li>

@@ -88,6 +88,14 @@
 							</a>
 						</li>
 					@endif
+					{{--@if(config('permission.ndr.view'))
+						<li>
+							<a href="{{ route('ndr.order') }}" >
+								<i class="mdi mdi-alert-circle-outline"></i>
+								<span> NDR Order</span>
+							</a>
+						</li>
+					@endif--}}
 					@if(config('permission.client.view'))
 						<li>
 							<a href="{{route('customer')}}" class="{{ request()->is('customer*') ? 'active' : '' }}">
@@ -113,7 +121,7 @@
 						</li> 
 					@endif --}}
 					
-					@if(config('permission.remittance.view') || config('permission.cod_voucher.view') || config('permission.cod_payout.view'))
+					@if(config('permission.remittance.view') || config('permission.cod_payout.view'))
 						<li>
 							<a href="javascript: void(0);">
 								<i class="mdi mdi-cash-multiple"></i>
@@ -122,69 +130,54 @@
 							</a>
 							<ul class="nav-second-level" aria-expanded="false">
 								@if(config('permission.remittance.view'))
-									<li><a href="{{ route('order.remmitance') }}"> Remittance </a></li>  
-								@endif
-								@if(config('permission.cod_voucher.view'))
-									<li><a href="{{ route('order.codvoucher') }}"> Cod Vochers </a></li>
-								@endif
+									<li><a href="{{ route('cod-remmitance') }}"> Cod Remittance </a></li>  
+								@endif 
 								@if(config('permission.cod_payout.view'))
-									<li><a href="{{ route('order.codpayout') }}"> Cod Payout </a></li> 
+									<li><a href="{{ route('cod-payout') }}"> COD Payout </a></li> 
 								@endif
 							</ul>
 						</li>
 					@endif	
 					
 					@if(config('permission.weight_descripencies.view'))
-						<li>
-							<a href="{{ route('weight.admin.descripencies') }}" class="{{ request()->is('descripencies*') ? 'active' : '' }}">
+						<li class="{{ request()->is('weight/descripencies*') ? 'mm-active' : '' }}">
+							<a href="{{ route('weight.admin.descripencies') }}" class="{{ request()->is('weight/descripencies*') ? 'active' : '' }}">
 								<i class="mdi mdi-scale-balance"></i>
 								<span> Weight Discrepancies </span>
 							</a>
 						</li> 
 					@endif		
-						
-					{{--<li>
-						<a href="javascript: void(0);">
-							<i class="fe-briefcase"></i>
-							<span> Weight Management </span>
-							<span class="menu-arrow"></span>
-						</a>
-						<ul class="nav-second-level" aria-expanded="false">
-							@if(Auth::user()->role == "admin")
-								<li><a href="{{ route('weight.admin.descripencies') }}"> Weight Discrepancies </a></li>  
-								<li><a href="{{ route('weight.admin.freeze')}}"> Weight Freeze </a></li>
-							@else
-								<li><a href="{{ route('weight.descripencies') }}"> Weight Discrepancies </a></li>  
-								<li><a href="{{ route('weight.freeze')}}"> Weight Freeze </a></li>
-							@endif
-						</ul>
-					</li> --}}
-					 
+					  
 					@if(config('permission.clients.view') || config('permission.client_kyc_request.view'))
-						<li>
-							<a href="javascript: void(0);">
+						<li class="{{ request()->is('users*') ? 'mm-active' : '' }}">
+							<a href="javascript:void(0);" class="{{ request()->is('users*') ? 'active' : '' }}">
 								<i class="mdi mdi-account-multiple"></i>
-								<span> Clients/Partner </span>
+								<span> Clients </span>
 								<span class="menu-arrow"></span>
 							</a>
-							<ul class="nav-second-level" aria-expanded="false">  
+							<ul class="nav-second-level {{ request()->is('users*') ? 'mm-collapse mm-show' : '' }}" aria-expanded="false">  
 								@if(config('permission.clients.view'))
-									<li><a href="{{ route('users') }}?kyc_status=0">Pending Clients </a></li>    
-									<li><a href="{{ route('users') }}?kyc_status=1">Approve Clients </a></li>   
+									<li class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '0' ? 'mm-active' : '' }}">
+										<a href="{{ route('users') }}?kyc_status=0" class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '0' ? 'active' : '' }}">
+											Pending Clients
+										</a>
+									</li>    
+									<li class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '1' ? 'mm-active' : '' }}">
+										<a href="{{ route('users') }}?kyc_status=1" class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '1' ? 'active' : '' }}">
+											Approve Clients
+										</a>
+									</li>   
 								@endif 
 								@if(config('permission.client_kyc_request.view'))
-									<li><a href="{{ route('users.kyc.request') }}">KYC Request </a></li>  
+									<li class="{{ request()->is('users/kyc*') ? 'mm-active' : '' }}">
+										<a href="{{ route('users.kyc.request') }}" class="{{ request()->is('users/kyc*') ? 'active' : '' }}">
+											KYC Request
+										</a>
+									</li>  
 								@endif 
 							</ul>
 						</li>
 					@endif 
-					
-					{{-- <li>
-							<a href="{{route('newuser')}}" class="{{ request()->is('newuser*') ? 'active' : '' }}">
-								<i class="fe-box"></i>
-								<span> New Client </span>
-							</a>
-					</li> --}}
 					 
 					@if(config('permission.roles.view') || config('permission.staff.view'))    
 						<li>
@@ -205,29 +198,14 @@
 					@endif	
 					
 					@if(config('permission.ticket_request.view'))
-					<li>
-						<a href="{{ route('ticket.admin') }}">
-							<i class="mdi mdi-ticket-confirmation"></i>
-							<span> Ticket Request</span>
-						</a>
-					</li>
+						<li class="{{ request()->is('ticket*') ? 'mm-active' : '' }}">
+							<a href="{{ route('ticket.admin') }}" class="{{ request()->is('ticket*') ? 'active' : '' }}">
+								<i class="mdi mdi-ticket-confirmation"></i>
+								<span> Ticket Request</span>
+							</a>
+						</li>
 					@endif	
-					 
-					{{-- <li>
-							<a href="{{route('service.index')}}" class="{{ request()->is('service*') ? 'active' : '' }}">
-								<i class="fe-box"></i>
-								<span> Import Shipping Charges </span>
-							</a>
-					</li> --}} 
-					
-				   
-					{{--<li >
-							<a href="{{route('pickup')}}"  class="{{ request()->is('pickup*') ? 'active' : '' }}">
-								<i class="mdi mdi-checkbox-multiple-marked"></i>
-								<span>Pickup Report </span>
-							</a>
-					</li>--}} 
-				   
+					   
 					@if(config('permission.order_report.view') || config('permission.recharge_history.view') || config('permission.income_report.view') || config('permission.payment_report.view') || config('permission.passbook_report.view'))  
 						<li> 
 							<a href="javascript: void(0);">
@@ -249,18 +227,7 @@
 										<span> Passbook </span>
 									</a>
 								</li> 
-								@endif
-								{{--<li>
-									<a href="{{route('invoice_report')}}" class="{{ request()->is('invoice_report*') ? 'active' : '' }}"> 
-										<span> Invoice </span>
-									</a>
-								</li>
-							 
-								<li>
-									<a href="{{route('daily_recharge')}}" class="{{ request()->is('daily_recharge*') ? 'active' : '' }}"> 
-										<span> Recharge Report </span>
-									</a>
-								</li>--}}
+								@endif 
 								@if(config('permission.recharge_history.view'))
 								<li>
 									<a href="{{route('recharge.list.history')}}" class="{{ request()->is('recharge.list.history') ? 'active' : '' }}"> 
@@ -268,20 +235,20 @@
 									</a>
 								</li>
 								@endif
-								@if(config('permission.income_report.view'))
+								@if(config('permission.shipping_charge.view'))
+									<li>
+										<a href="{{ route('report.shipping-charge') }}" class="{{ request()->is('report.shipping-charge') ? 'active' : '' }}"> 
+											<span> Shipping Charge Report</span>
+										</a>
+									</li>
+								@endif 
+								@if(config('permission.billing_invoice.view'))
 								<li>
-									<a href="{{ route('report.income') }}" class="{{ request()->is('report.income') ? 'active' : '' }}"> 
-										<span> Income Report</span>
+									<a href="{{ route('report.billing-invoice') }}" class="{{ request()->is('report.billing-invoice') ? 'active' : '' }}"> 
+										<span> Billing Invoice Report</span>
 									</a>
 								</li>
 								@endif
-								@if(config('permission.payment_report.view'))
-								<li>
-									<a href="{{ route('report.payment') }}" class="{{ request()->is('report.payment') ? 'active' : '' }}"> 
-										<span> Payments Report</span>
-									</a>
-								</li>
-								@endif 
 							</ul>
 						</li>
 					@endif

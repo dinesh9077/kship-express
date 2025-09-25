@@ -1,11 +1,10 @@
 @extends('layouts.backend.app')
-@section('title',config('setting.company_name').' - Client/Partner')
-@section('header_title','Client/Partner')
+@section('title',config('setting.company_name').' - Client')
+@section('header_title','Client')
 @section('content') 
  
 <div class="content-page">
-    <div class="content">
-		
+    <div class="content"> 
         <!-- Start Content-->
         <div class="container-fluid">
             <div class="main-create-order">

@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
-@section('title',config('setting.company_name').' - Franchise Partner Kyc Request')
-@section('header_title','Franchise Partner Kyc Request')
+@section('title',config('setting.company_name').' - Client Kyc Request')
+@section('header_title','Client Kyc Request')
 @section('content') 
   
 <div class="content-page">

@@ -72,8 +72,24 @@
 												<option value="₹">INDIA - INR - ₹</option>
 											</select>
 										</div>
-									</div> 
+									</div>  
 								</div>  
+								<hr> 
+								<div class="row">
+									<div class="col-lg-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="first-name"> Delivery + Day </label>
+											<input type="number" name="delivery_day" value="{{ config('setting.delivery_day') }}" placeholder="Delivery + Day" >
+										</div>
+									</div>   
+								 
+									<div class="col-lg-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="first-name">Payout Days (Comma Saperate) </label>
+											<input type="text" name="payout_days" value="{{ config('setting.payout_days') }}" placeholder="Payout Days (Comma Saperate)" >
+										</div>
+									</div>   
+								</div>
 							</div>
 						</div> 
 						@if(config('permission.general_setting.edit'))

@@ -40,7 +40,9 @@ class LowBalanceCheck extends Command
                       ->orWhereDate('sms_date', '<', $today->format('Y-m-d'));
             })
             ->get(['id', 'name', 'email', 'mobile', 'sms_date']);
-
+		if(!$users){
+			return;
+		}
         foreach ($users as $user) {
             try {
                 DB::beginTransaction();

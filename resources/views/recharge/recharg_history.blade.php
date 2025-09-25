@@ -2,43 +2,118 @@
 @section('title',config('setting.company_name').' - Recharge History')
 @section('header_title','Recharge History')
 @section('content') 
+<style>
+	.tooltip .tooltiptext 
+	{ 
+	text-align: left !important; 
+	padding: 5px 0 5px 5px !important;
+	}	
+	td p {
+	margin-bottom: 0;
+    }
+	.page-heading-main {
+	display: flex;
+	align-items: center;
+	justify-content: end;
+	margin-bottom: 20px;
+	gap: 15px;
+	flex-wrap: wrap;
+	}
+	
+	.left-head-deta {
+	display: flex;
+	align-items: end;
+	gap: 15px;
+	}
+	.custom-entry {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	}
+	.right-head-deta {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	}
+	
+	.table-custom-serch .input-main {
+	min-width: 100px;
+	}
+	.table-custom-serch .input-main { 
+	border: none;
+	border-radius: 3px;
+	padding: 7px;
+	margin-left: 3px;
+	font-weight: 400;
+	font-size: 14px;
+	color: #000;
+	background-color: #25252547;
+	
+	} 
+	.custom-entry p {
+	margin: 0;
+	font-size: 14px;
+	color: #0A1629;
+	font-weight: 500;
+	}
+</style>
 <div class="content-page">
     <div class="content">
 		
         <!-- Start Content-->
         <div class="container-fluid">
-            <div class="main-order-page-1">                    
-                <div class="main-order-001">  
-                    <div class="main-create-order">
-            <!--            <div class="main-disolay-felx">-->
-            <!--                <div class="main-btn0main-1">  </div>-->
-        				<!--</div>-->
-        				
-                        <div class="main-data-teble-1 table-responsive">
-                            <table id="recharge-datatable" class="" style="width:100%">
-                                <thead>
-                                    <tr>
-                                        <th> SR.No </th>
-                                        <th> User Name</th> 
-                                        <th> Transaction Type </th>
-                                        <th> Amount </th>
-                                        <th> Reciept </th>
-                                        <th> Note </th>
-                                        <th> Payment status </th>
-                                        <th> Created At </th>
-                                        <th> Action </th>
-        							</tr>
-        						</thead> 
-        					</table>
-        				</div>
-        			</div>
-    			</div>
+			<div class="main-order-page-1">
+                <div class="main-order-001">
+					<div class="main-create-order"> 
+						<div class="main-data-teble-1 table-responsive">
+							<div class="page-heading-main justify-content-between align-items-end  mb-0">
+								<div class="left-head-deta">
+									<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+									<a href="javascript:;" class="btn btn-warning" id="pdfExport"> PDF</a>
+									<div class="custom-entry">
+										<p>Show</p>
+										<select id="page_length">
+											<option value="10">10</option>
+											<option value="25" selected>25</option>
+											<option value="50">50</option>
+											<option value="100">100</option>
+											<option value="500">500</option>
+											<option value="1000">1000</option>
+											<option value="2000">2000</option>
+											<option value="200000000">All</option>
+										</select>
+										<p>entries</p>
+									</div>
+								</div>
+								<div class="right-head-deta">
+									<div class="table-custom-serch">
+										<input class="input-main" type="search" id="search_table"  placeholder="Search">
+									</div> 
+								</div>
+							</div> 
+							<table id="recharge-datatable" class="" style="width:100%">
+								<thead>
+									<tr>
+										<th> SR.No </th>
+										<th> User Name</th> 
+										<th> Transaction Type </th>
+										<th> Amount </th>
+										<th> Reciept </th>
+										<th> Note </th>
+										<th> Payment status </th>
+										<th> Created At </th>
+										<th> Action </th>
+									</tr>
+								</thead> 
+							</table>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 </div>
-
-
+ 
 <div class="modal fade apprevod_request" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-lg model-width-1">
 		<div class="modal-content">
@@ -77,22 +152,51 @@
 	</div>
 </div>	
 @endsection
-@push('js') 
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> 
+@push('js')  
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>  
+
+<!-- DataTables Buttons Extension -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+
+<!-- JSZip for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- pdfmake for PDF export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+<!-- Buttons HTML5 export -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+
+<!-- Buttons print option (optional) -->
+<script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
 <script> 
 	var dataTable = $('#recharge-datatable').DataTable({
 		processing:true,
+		dom: 'Bfrtip', 
+		buttons: [
+		{
+			extend: 'excelHtml5',
+			className: 'd-none',
+			text: 'excel',
+			exportOptions: {  modifier: {  page: 'current' }  }
+			},{
+			extend: 'pdfHtml5',
+			className: 'd-none',
+			text: 'excel',
+			exportOptions: {  modifier: {  page: 'current' }  }
+		}],
 		"language": {
 			'loadingRecords': '&nbsp;',
 			'processing': 'Loading...'
 		},
 		serverSide:true,
-		bLengthChange: true,
-		searching: true,
+		bLengthChange: false,
+		searching: false,
 		bFilter: true,
 		bInfo: true,
-		iDisplayLength: 25, 
-    	lengthMenu: [ [10, 25, 50, 100, 200, 500, 1000000], [10, 25, 50, 100, 200, 500, 'All'] ], // ðŸ”¥ options shown in dropdown
+		iDisplayLength: 25,
 		order: [[0, 'desc'] ],
 		bAutoWidth: false,			 
 		"ajax":{
@@ -117,7 +221,7 @@
 		{ "data": "action" }
 		]
 	}); 
-	 
+	
 	dataTable.columns(8).visible(false);
 	dataTable.columns(4).visible(false); 
 	function approvedRequest(obj)
@@ -137,7 +241,28 @@
 		$('#id').val(id)
 		$('.apprevod_request').modal('show');
 	}
-	 
+	
+	$("#excelExport").on("click", function() {
+		$(".buttons-excel").trigger("click");
+	});
+	
+	$("#pdfExport").on("click", function() {
+		$(".buttons-pdf").trigger("click");
+	});
+	
+	$('#page_length').change(function(){
+		dataTable.page.len($(this).val()).draw();
+	})
+	
+	var debounceTimer; 
+	$('#search_table').keyup(function() {
+		clearTimeout(debounceTimer);
+		debounceTimer = setTimeout(function() {
+			dataTable.draw(); 
+		}, 400); // Adjust the debounce delay (in milliseconds) as per your preference
+	}); 
+	
+	
 	$('#status').change(function(){
 		var status = $(this).val();
 		$('.rejected_param').hide();

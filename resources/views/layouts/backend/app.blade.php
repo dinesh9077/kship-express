@@ -77,11 +77,9 @@
 	<body> 
 		<!-- Begin page -->
 		<div id="wrapper"> 
-			@include('layouts.backend.partial.header')
-			
-			@include('layouts.backend.partial.leftside-bar')
-			
-			<div class="modal fade recharge" id="rechargeWalletModal" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
+			@include('layouts.backend.partial.header') 
+			@include('layouts.backend.partial.leftside-bar') 
+			<div class="modal fade recharge" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
 				<div class="modal-dialog modal-lg model-width-1">
 					<div class="modal-content">
 						<div class="modal-header head-00re pb-0" style="border: none;">
@@ -94,73 +92,72 @@
 							@csrf
 							<div class="modal-body pt-0">
 								<div class="main-01">
-									<h5>Current Wallet Amount <span> {{config('setting.currency')}}{{Helper::decimal_number(Auth::user()->wallet_amount)}} </span></h5>
+									<h5>Current Wallet Amount <span>{{ config('setting.currency') }}{{ Helper::decimal_number(Auth::user()->wallet_amount) }}</span></h5>
 								</div>
 								<div class="man-01rech">
 									<h5> Transaction Type </h5>
-									<div class="from-group rech-re-form"> 
-										<select name="transaction_type" id="transaction_type" required> 
-											<option value="Online">Online</option> 
+									<div class="from-group rech-re-form">
+										<select name="transaction_type" id="transaction_type" required>
+											<option value="Online">Online</option>
 										</select>
 									</div>
 									<h5> Enter Amount </h5>
 									<div class="from-group rech-re-form">
-										<span class="position-absolute custom-rupee-position"> {{config('setting.currency')}}</span>
-										<input type="number" placeholder="200" value="200" name="amount" id="recharge_amount" required min="200"> 
-										<p class="mt-1"> Min value:{{config('setting.currency')}}200 </p>
+										<span class="position-absolute custom-rupee-position">{{ config('setting.currency') }}</span>
+										<input type="number" placeholder="200" value="200" name="amount" id="recharge_amount" required>
+										<p class="mt-1"> Min value:{{ config('setting.currency') }}200 </p>
 									</div>
 									<h6> Or Select From Below </h6>
 									<div class="main-21-33">
-										<button type="button" class="re-btn active" onclick="setRechargeAmount(this,200)"> {{config('setting.currency')}}200 </button>
-										<button type="button" class="re-btn" onclick="setRechargeAmount(this,500)"> {{config('setting.currency')}}500 </button>
-										<button type="button" class="re-btn"  onclick="setRechargeAmount(this,1000)"> {{config('setting.currency')}}1000 </button>
-										<button type="button" class="re-btn"  onclick="setRechargeAmount(this,2500)"> {{config('setting.currency')}}2500 </button>
-										<button type="button" class="re-btn"  onclick="setRechargeAmount(this,5000)"> {{config('setting.currency')}}5000 </button>
-										<button type="button" class="re-btn"  onclick="setRechargeAmount(this,10000)"> {{config('setting.currency')}}10000 </button>
+										<button type="button" class="re-btn active" onclick="setRechargeAmount(this, 200)">{{ config('setting.currency') }}200</button>
+										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 500)">{{ config('setting.currency') }}500</button>
+										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 1000)">{{ config('setting.currency') }}1000</button>
+										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 2500)">{{ config('setting.currency') }}2500</button>
+										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 5000)">{{ config('setting.currency') }}5000</button>
+										<button type="button" class="re-btn" onclick="setRechargeAmount(this, 10000)">{{ config('setting.currency') }}10000</button>
 									</div>
-									<div class="offline_param" style="display:none;">
+									<div class="offline_param" style="display: none;">
 										<h5> Payment Receipt </h5>
-										<div class="from-group rech-re-form"> 
-											<input type="file" name="payment_receipt[]" id="payment_receipt" multiple> 
+										<div class="from-group rech-re-form">
+											<input type="file" name="payment_receipt[]" id="payment_receipt" multiple>
 										</div>
 										<h5> Note </h5>
-										<div class="from-group rech-re-form"> 
+										<div class="from-group rech-re-form">
 											<textarea name="note" id="note"></textarea>
 										</div>
 									</div>
 								</div>
-								<input type="hidden" id="user_id" value="{{ Auth::id() }}">		
-							  
+								<input type="hidden" id="user_id" value="{{ Auth::id() }}">							
+						
 								<div class="class-main-count">
 									<div class="main-justify-space">
 										<div class="left-rech">
 											<h5> Recharge Amount </h5>
 										</div>
-										
+						
 										<div class="right-rech">
-											<h5> {{ config('setting.currency') }}<span class="payableamount">200</span> </h5>
+											<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
 										</div>
 									</div>
-									
+						
 									<div class="main-justify-space">
 										<div class="left-rech main-recha">
 											<h5> Payable Amount </h5>
 										</div>
-										
+						
 										<div class="right-rech main-recha">
-											<h5> {{ config('setting.currency') }}<span class="payableamount">200</span> </h5>
+											<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
 										</div>
 									</div>
-									
 								</div>
 							</div>
-							<div class="modal-footer" style="justify-content: center;"> 
-								<button type="button" class="btn btn-primary btn-main-1" id="payButton"> Continue to Payment </button>
+							<div class="modal-footer" style="justify-content: center;">
+								<button type="submit" class="btn btn-primary btn-main-1" id="payButton"> Continue to Payment </button>
 							</div>
-						</form>
+						</form>					
 					</div>
 				</div>
-			</div>	
+			</div>
 			
 			@yield('content') 
 			
@@ -198,8 +195,7 @@
 			<hr class="mt-0">
 			<h5 class="pl-3">Basic Settings</h5>
 			<hr class="mb-0" />
-			
-			
+			 
 			<div class="p-3">
 				<div class="custom-control custom-checkbox mb-2">
 					<input type="checkbox" class="custom-control-input" id="customCheck1" checked>
@@ -521,7 +517,7 @@
 		notifyMsg();
 		function notifyMsg()
 		{
-			$.get("{{route('notification')}}", function(res){
+			$.get("{{ route('notification') }}", function(res){
 				$('.notifycount').html(res.count)
 				$('.notifymsg').html(res.view)
 			},'Json');
@@ -589,7 +585,7 @@
 				var amount = $('#recharge_amount').val(); 
 				var transaction_type = $('#transaction_type').val();
 				var options = {
-					"key": "rzp_live_kmwVBY7h35GqKE", 
+					"key": "rzp_test_kmwVBY7h35GqKE", 
 					"amount": (amount * 100), 
 					"currency": "INR",
 					"name": "Xpressfly",
@@ -598,7 +594,7 @@
 					"handler": function (response)
 					{  
 						var payable_response = response;
-						var dataURL = "{{ route('recharge.razorpay.wallet') }}";
+						var dataURL = "{{ route('recharge.wallet.razorpay') }}";
 						var user_id = $('#user_id').val();
 						$.ajax({
 							url: dataURL,

@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
 @section('title',config('setting.company_name').' - Edit Franchise Partner')
-@section('header_title','Edit Franchise Partner')
+@section('header_title','Edit Client')
 @section('content')
 <style>
 	button.btn-light-2 {
@@ -70,22 +70,7 @@
 											<option value="Other" {{ $user->gender == 'Other' ? 'selected' : ''  }}> Other</option>
 										</select>
 									</div>
-								</div>
-								<div class="col-lg-3 col-sm-6">
-									<div class="from-group">
-										<label for="first-name"> Shipping Charge Type </label>
-										<select autocomplete="off" name="charge_type" id="status">
-											<option value="1" {{ $user->charge_type == 1 ? 'selected' : ''  }}> Fixed </option>
-											<option value="2" {{ $user->charge_type == 2 ? 'selected' : ''  }}> Percentage </option>
-										</select>
-									</div>
-								</div>
-								<div class="col-lg-3 col-sm-6">
-									<div class="from-group">
-										<label for="first-name"> Shipping Charge </label>
-										<input type="text" autocomplete="off" name="charge" id="charge" placeholder="Shipping Charge" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));"  value="{{ $user->charge }}">
-									</div>
-								</div>
+								</div> 
 								<div class="col-lg-3 col-sm-6">
 									<div class="from-group">
 										<label for="first-name"> Status </label>

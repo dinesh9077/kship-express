@@ -10,16 +10,17 @@ class CodVoucher extends Model
     use HasFactory;
 	
 	protected $fillable = [
-        'voucher_no',
-        'user_id',
-        'order_id',
-        'shipping_company_id',
-        'amount',
-        'voucher_date',
-        'voucher_status',
-        'reference_no',
-        'payout_date',
-        'created_at',
-        'updated_at'
+        'id', 'voucher_no',	'user_id', 'remarks', 'amount',	'voucher_date', 'voucher_status', 'reference_no', 'payout_date', 'created_at', 'updated_at'
     ];
+	 
+	public function user()
+	{
+		return $this->belongsTo(User::class, 'user_id');
+	}
+	 
+	
+	public function codVoucherOrders()
+	{
+		return $this->hasMany(Order::class, 'cod_voucher_id');
+	}
 }

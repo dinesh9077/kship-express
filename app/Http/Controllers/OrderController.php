@@ -7,7 +7,7 @@
 	use App\Models\{
 		Order, OrderItem, Vendor, VendorAddress, OrderActivity, OrderStatus, Billing, Packaging, 
 		WeightFreeze, Customer, User, CustomerAddress, PincodeService, ShippingCompany, 
-		CourierWarehouse, ProductCategory
+		CourierWarehouse, ProductCategory, CodVoucher
 	};
 	use App\Exports\PendingStarOrderExport;
 	use Maatwebsite\Excel\Facades\Excel;
@@ -18,6 +18,7 @@
 	use App\Imports\BulkOrder;
 	use Helper; 
 	use DNS1D;
+	use App\Exports\CodRemittanceExport;
 	
 	class OrderController extends Controller
 	{
@@ -77,7 +78,7 @@
 				'customerAddress:id,address',
 				'warehouse:id,warehouse_name,contact_name,contact_number,company_name',
 				'user:id,name,company_name,email,mobile',
-				'orderItems:id,order_id,product_category,product_name,sku_number,hsn_number,amount,quantity',
+				'orderItems:id,order_id,product_category,product_name,sku_number,hsn_number,amount,quantity,dimensions',
 			])
 			->select('id', 'order_prefix', 'user_id', 'customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
 			->when($role === "user", fn($q) => $q->where('orders.user_id', $id));
@@ -207,19 +208,11 @@
 						<div class='main-cont1-2'> 
 							<p>" . optional($order->customer)->first_name . " " . optional($order->customer)->last_name . "</p> 
 							<p>" . optional($order->customer)->mobile . "</p> 
-							<span style='padding-left:0'> 
-								<a href='javascript:;'> 
-									<div class='tooltip' 
-										 data-toggle='tooltip' 
-										 data-placement='top' 
-										 title='" . optional($order->customerAddress)->address . "'> 
-										 View Address 
-									</div> 
-								</a> 
-							</span> 
+							 <div class='tooltip'>View Address<span class='tooltiptext'><b>" . optional($order->customer)->first_name . " " . optional($order->customer)->last_name . 
+							"</b><br><b>Address</b>: " . optional($order->customerAddress)->address . "</span></div>
 						</div>
 					",
- 
+					  
 					// Shipment details
 					'shipment_details' => $this->orderShipmentDetailHtml($order, $status, $weightOrder),
 
@@ -264,9 +257,17 @@
 		
 		function orderShipmentDetailHtml($order, $status, $weightOrder)
 		{
-			$productDetails = $order->orderItems
-			->map(fn($item) => "<p>{$item->product_description} Amount: {$item->amount} No Of Box: {$item->quantity}</p>")
-			->implode(' | ');
+			// Prepare order items JSON
+			$items = $order->orderItems->map(fn($item) => [
+				'product_category' => $item->product_category,
+				'product_name' => $item->product_name,
+				'sku_number' => $item->sku_number,
+				'hsn_number' => $item->hsn_number,
+				'amount' => $item->amount,
+				'quantity' => $item->quantity,
+			]);
+
+			$jsonItems = htmlspecialchars($items->toJson(), ENT_QUOTES, 'UTF-8'); // safely encode JSON
 			
 			$output = '';
 			
@@ -284,11 +285,9 @@
 				</div>"; 
 			} 
 			$output .= "<span style='padding-left:0'> 
-			<a href='javascript:;'> 
-			<div class='tooltip' data-toggle='tooltip' data-placement='top' title='" . strip_tags($productDetails) . "'> 
-			View Products 
-			</div>
-			</a> 
+					<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}'>
+						View Products
+					</a>
 			</span>
 			</div>";
 			
@@ -299,8 +298,7 @@
 		{
 			if (!$order) {
 				return '';
-			}
-
+			} 
 			$length = (float) $order->length;
 			$width  = (float) $order->width;
 			$height = (float) $order->height;
@@ -308,14 +306,38 @@
 
 			// Avoid division by zero → standard divisor 5000
 			$volumetricWt = ($length * $width * $height) / 5000;
+			
+			if($order->weight_order == 2)
+			{ 
+				$totalBox = $order->orderItems->sum(function ($item) {
+					return $item->dimensions['no_of_box'] ?? 0;
+				});
+				
+				$totalVolumetric = 0; 
+				foreach ($order->orderItems as $box) {
+					$volume = $box->dimensions['length'] * $box->dimensions['width'] * $box->dimensions['height'];
+					$volumetricWeight = ($volume / 5000) *  ($box->dimensions['no_of_box'] ?? 0);
+					$totalVolumetric += $volumetricWeight;
+				}
 
-			return "
-				<div class='main-cont1-2'>
-					<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
-					<p>{$length} x {$width} x {$height} (cm)</p>
-					<p>Volumetric wt.: " . number_format($volumetricWt, 2) . " Kg</p>
-				</div>
-			";
+				return "
+					<div class='main-cont1-2'>
+						<p>{$totalBox} Boxe(s) - (B2B)</p>
+						<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
+						<p>Volumetric wt.: " . number_format($totalVolumetric, 2) . " Kg</p>
+					</div>
+				";
+			}
+			else
+			{
+				return "
+					<div class='main-cont1-2'>
+						<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
+						<p>{$length} x {$width} x {$height} (cm)</p>
+						<p>Volumetric wt.: " . number_format($volumetricWt, 2) . " Kg</p>
+					</div>
+				";
+			}
 		}
  
 		function orderAction($order, $status, $weightOrder)
@@ -1635,583 +1657,252 @@
 				DB::rollBack();
 				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
 			}
-		}
-		   
-		public function orderRemmitance()
-		{ 
-		    $shippingCompany = ShippingCompany::where('status', 1)->get();  
-		    return view('remmitance.index', compact('shippingCompany'));
-		}
-		
-		public function orderRemmitanceAjax(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			
-			if($order = 'action')  
-			{
-				$order = 'id';
-			}
-			
-			// Get user role and id
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			// Create the initial query builder with necessary joins
-			$query = Order::with(['user',])
-			->where('orders.status_courier', 'delivered')
-			->where('orders.order_type', 'cod')
-			->where('orders.is_remmitance', '0');
-			
-			// Apply user-based filtering (admin check)
-			if ($role != "admin") {
-				$query->where('orders.user_id', $id);
-			} 
-			
-			// Filter by date range if provided
-			if ($request->from_date && $request->to_date) {
-				$query->whereBetween('orders.delivery_date', [$request->from_date, $request->to_date]);
-				} elseif ($request->from_date) {
-				$query->whereDate('orders.delivery_date', '>=', $request->from_date);
-				} elseif ($request->to_date) {
-				$query->whereDate('orders.delivery_date', '<=', $request->to_date);
-			}
-			
-			// Apply additional filter for shipping company
-			if ($request->shipping_company_id) {
-				$query->where('orders.shipping_company_id', $request->shipping_company_id);
-			}
-			
-			// Apply search filter if available
-			if (!empty($request->input('search'))) {
-				$search = $request->input('search');
-				$query->where(function ($query) use ($search) {
-					return $query->where('orders.created_at', 'LIKE', '%' . $search . '%')
-					->orWhereHas('user', function($q) use ($search){
-						$q->where('name', 'LIKE', '%' . $search . '%')
-						->orWhere('email', 'LIKE', '%' . $search . '%')
-						->orWhere('company_name', 'LIKE', '%' . $search . '%')
-						->orWhere('mobile', 'LIKE', '%' . $search . '%');
-					})  
-					->orWhere('orders.awb_number', 'LIKE', "%{$search}%")
-					->orWhere('orders.courier_name', 'LIKE', "%{$search}%")
-					->orWhere('orders.status_courier', 'LIKE', "%{$search}%")
-					->orWhere('orders.total_amount', 'LIKE', "%{$search}%")
-					->orWhere('orders.id', 'LIKE', "%{$search}%")
-					->orWhere('orders.order_prefix', 'LIKE', "%{$search}%");
-				});
-			}
-			
-			// Calculate total amount (total sum of the orders)
-			$totalAmountQuery = clone $query;
-			//$totalAmount = $totalAmountQuery->select(DB::raw('SUM(orders.total_amount) AS total_Amt'))->first();
-			
-			// Apply pagination and ordering
-			$values = $query
-			->offset($start)
-			->limit($limit)
-			->orderByDesc('id')
-			->get();
-			
-			// Calculate the total filtered records
-			$totalFiltered = $query->count();
-			
-			// Prepare the data for response
-			$data = [];
-			foreach ($values as $value) 
-			{ 
-				$status_courier = '<p class="prepaid">' . $value->status_courier . '</p>'; 
-				$data[] = [
-				'id' => '<input type="checkbox" class="order-checkbox" data-order_id="' . $value->id . '">',
-				'order_id' => '#'.$value->id,
-				'seller_details' => '<div class="main-cont1-2"><p>' . ( $value->user->name ?? '') . ' (' . ( $value->user->company_name ?? '') . ')</p><p>' . ( $value->user->email ?? '') . '</p><p>' . ( $value->user->mobile ?? '') . '</p></div>',
-				'amount' => $value->total_amount,
-				'delivery_date' => $value->delivery_date,
-				'shipment_details' => '<p>' . $value->courier_name . '</p><p>AWB No: <b>' . $value->awb_number . '</b></p>',
-				'status_courier' => $status_courier
-				];
-			}
-			
-			// Return response in JSON format
-			return response()->json([
-			'draw' => intval($draw),
-			'iTotalRecords' => $totalFiltered,
-			'iTotalDisplayRecords' => $totalFiltered,
-			'aaData' => $data,
-			'totAmt' => $totalAmount->total_Amt ?? 0,
-			]);
-		}
-		
-		public function orderRemmitanceStore(Request $request)
-		{  
-			DB::beginTransaction();
-			try {  
-				// Convert orders_id string to an array and filter empty values
-				$orderIds = array_filter(explode(',', $request->input('orders_id')));
-				
-				// If no valid order IDs, return with error
-				if (empty($orderIds)) {
-					return redirect()->back()->with(['success' => false, 'message' => 'No valid orders selected']);
-				}
-				
-				Order::query()
-				->whereIn('id', $orderIds)
-				->update([
-				'remittance_reference_id' => $request->input('remittance_reference_id'),
-				'remittance_amount' => $request->input('remittance_amount'),
-				'remittance_date' => $request->input('remittance_date'),
-				'is_remmitance' => $request->input('is_remmitance') 
-				]);
-				
-				DB::commit(); 
-				return redirect()->back()->with(['success' => true, 'message' => 'Orders remmittance created successfully']);
-				
-				} catch (\Exception $e) {
-				DB::rollback();
-				return redirect()->back()->with(['success' => false, 'message' => 'Something went wrong. Please try again.']);
-			}
 		} 
-		
-		public function codVoucher()
-		{
-		    return view('remmitance.codvoucher');
+		 
+		public function codRemittance()
+		{   
+		    //$shippingCompanies = ShippingCompany::whereStatus(1)->get();  
+		    return view('remmitance.index');
 		}
 		
-		public function codVoucherAjax(Request $request)
-		{
+		public function remmitanceAjax(Request $request)
+		{ 
 			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			// Get sorting and searching parameters
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
+			$start = $request->post("start", 0);
+			$limit = $request->post("length", 10);
+
+			// Handle ordering safely
+			$order = $request->post('order', []);
+			$columns = $request->post('columns', []);
+
+			$orderColumnIndex = $order[0]['column'] ?? 0;
+			$orderColumnName = $columns[$orderColumnIndex]['data'] ?? 'id';
+			$orderDir = $order[0]['dir'] ?? 'asc';
+
+			$orderColumnName = $orderColumnName === 'action' ? 'id' : $orderColumnName;
+
+			$search = $request->input('search'); // DataTables sends `search[value]`
 			$status = $request->post('status');
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			// Fix column name for 'action' field
-			if ($order == 'action') {
-				$order = 'id';
+
+			$user = Auth::user();
+			$role = $user->role;
+			$userId = $user->id;
+
+			// Base query
+			$baseQuery = Order::with(['user']) 
+				->where('orders.status_courier', 'delivered')
+				->where('orders.is_remmitance', '0')
+				->where('orders.order_type', 'cod');
+
+			// Filters
+			if ($role !== "admin") {
+				$baseQuery->where('orders.user_id', $userId);
 			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			// Create the initial query with necessary joins and base conditions
-			$query = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select(
-			'cod_vouchers.user_id',
-			'u.name as user_name',
-			'u.company_name as seller_company',
-			'u.email as user_email',
-			'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as voucher_date'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.amount) as amounts'),
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'),
-			'cod_vouchers.voucher_no'
-			);
-			
-			// Admin check for user-based filtering
-			if ($role != "admin") {
-				$query->where('cod_vouchers.user_id', $id);
+
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$baseQuery->whereBetween('orders.delivery_date', [$request->fromdate, $request->todate]);
+			} elseif ($request->filled('fromdate')) {
+				$baseQuery->whereDate('orders.delivery_date', '>=', $request->fromdate);
+			} elseif ($request->filled('todate')) {
+				$baseQuery->whereDate('orders.delivery_date', '<=', $request->todate);
 			}
-			
-			// Apply search filters
-			if (!empty($request->input('search'))) {
-				$search = $request->input('search');
-				$query->where(function ($query) use ($search) {
-					return $query
-					->where('u.name', 'LIKE', '%' . $search . '%')
-					->orWhere('u.mobile', 'LIKE', '%' . $search . '%')
-					->orWhere('u.email', 'LIKE', '%' . $search . '%')
-					->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
+
+			if ($request->filled('shipping_company_id')) {
+				$baseQuery->where('orders.shipping_company_id', $request->shipping_company_id);
+			}
+
+			// Search filter
+			if (!empty($search)) {
+				$baseQuery->where(function ($query) use ($search) {
+					$query->where('orders.created_at', 'like', "%{$search}%")
+						->orWhere('orders.awb_number', 'like', "%{$search}%")
+						->orWhere('orders.courier_name', 'like', "%{$search}%")
+						->orWhere('orders.status_courier', 'like', "%{$search}%")
+						->orWhere('orders.id', 'like', "%{$search}%") 
+						->orWhere('orders.order_prefix', 'like', "%{$search}%")
+						->orWhereHas('user', function($q) use ($search){
+							$q->where('name', 'like', "%{$search}%")
+							  ->orWhere('email', 'like', "%{$search}%")
+							  ->orWhere('mobile', 'like', "%{$search}%")
+							  ->orWhere('company_name', 'like', "%{$search}%");
+						});
 				});
 			}
-			
-			// Apply groupBy and pagination logic
-			$query->groupBy('cod_vouchers.user_id', 'u.name', 'u.company_name', 'u.email', 'u.mobile', 'cod_vouchers.voucher_no')
-			->orderBy('cod_vouchers.' . $order, $dir)
-			->offset($start)
-			->limit($limit);
-			
-			// Get the results
-			$values = $query->get();
-			
-			// Count total records and filtered records
-			$totalData = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->count();
-			
-			$totalFiltered = $values->count();
-			
-			// Prepare the data for response
+
+			// Count for DataTables
+			$totalData = $baseQuery->count();
+
+			// Get total amount
+			$resultsCloned = (clone $baseQuery)->select(DB::raw('SUM(orders.total_amount) as total_Amt'))->first();
+
+			// Pagination + Sorting
+			$orders = $baseQuery
+				->orderBy($orderColumnName, $orderDir) // 👈 Apply ordering
+				->offset($start)
+				->limit($limit)
+				->get();
+
+			// Prepare output
 			$data = [];
-			if ($values->isNotEmpty()) {
-				$i = $start + 1;
-				foreach ($values as $value) {
-					// Process shipping companies
-					$shipping = explode(',', $value->shipping_company_ids);
-					$ship_comp = array_map(function ($shipping_comp) {
-						return DB::table('shipping_companies')->where('status', '1')->pluck('name')->first();
-					}, $shipping);
-					
-					$mainData = [
-					'id' => $i,
-					'seller_details' => '<div class="main-cont1-2"><p>' . $value->user_name . ' (' . $value->seller_company . ') </p><p>' . $value->user_email . ' </p><p>' . $value->user_mobile . ' </p></div>',
-					'order_details' => '<div class="main-cont1-1"><div class="checkbox checkbox-purple">' . $value->order_ids . '</div>',
-					'amount' => $value->amounts,
-					'total_amount' => $value->total_amount,
-					'action' => '<div class="main-btn-1"><div class="mian-btn"><div class="btn-group"><a href="' . route("viewvoucher", $value->voucher_no) . '"><button class="btn btn-primary" type="button">View</button></a></div></div></div>'
-					];
-					
-					$data[] = $mainData;
-					$i++;
-				}
+			$i = $start + 1;
+			foreach ($orders as $order) {
+				$userName = $order->user->name ?? 'N/A';
+				$sellerCompany = $order->user->company_name ?? 'N/A';
+				$userEmail = $order->user->email ?? 'N/A';
+				$userMobile = $order->user->mobile ?? 'N/A';
+
+				$data[] = [
+					'id' =>  $i,
+					'order_id' => $order->id.' <br>#'.$order->order_prefix,
+					'seller_details' => "<div class='main-cont1-2'><p>{$userName} ({$sellerCompany})</p><p>{$userEmail}</p><p>{$userMobile}</p></div>",
+					'amount' => $order->cod_amount,
+					'delivery_date' => $order->delivery_date,
+					'shipment_details' => "<p>{$order->courier_name}</p><p>AWB No: <b>{$order->awb_number}</b></p>",
+					'status_courier' => "<p class='prepaid'>{$order->status_courier}</p>",
+				];
+				$i++;
 			}
-			
-			// Return the final response as JSON
+
 			return response()->json([
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
+				"draw" => intval($draw),
+				"iTotalRecords" => $totalData,
+				"iTotalDisplayRecords" => $totalData,
+				"aaData" => $data,
+				"totAmt" => $resultsCloned->total_Amt ?? 0,
 			]);
 		}
+
 		
-		
-		public function generateVouchers(Request $request)
-        {
-            $date = $request->date;
-            $today = date('Y-m-d');
-			
-            try {
-                DB::beginTransaction();
-				
-                $orders = DB::table('orders')
-				->whereDate('order_date', '<', $date)
-				->where('status_courier', '=', 'Delivered')
-				->where('is_remmitance', '=', '1')
-				->where('is_payout', '=', '0')
-				->where('is_voucher', '=', '0')
-				->get();
-				$groupedOrders = $orders->groupBy('user_id');
-				
-				foreach ($groupedOrders as $userId => $userOrders) {
-				    $lastVoucher = DB::table('cod_vouchers')->orderBy('id', 'desc')->first();
-				    $voucherNumber = $lastVoucher ? (explode('-', $lastVoucher->voucher_no)[1] + 1) : 1;
-				    $voucherNo = "VN-" . sprintf('%04d', $voucherNumber);
-					
-				    foreach ($userOrders as $order) {
-						$voucherData = DB::table('cod_vouchers')->where('order_id', $order->id)->first();
-						
-						if (!isset($voucherData)) {
-							$voucherData = [
-							'voucher_no' => $voucherNo,
-							'order_id' => $order->id,
-							'user_id' => $order->user_id,
-							'shipping_company_id' => $order->shipping_company_id,
-							'amount' => $order->total_amount,
-							'voucher_status' => '0',
-							'voucher_date' => $today,
-							];
-							
-							DB::table('cod_vouchers')->insert($voucherData);
-							
-							Order::where('id', $order->id)->update([
-							'voucher_no' => $voucherNo,
-							'is_voucher' => '1',
-							]);
-						}
-					}
-				} 
-                DB::commit();
-				
-                return redirect()->back()->with(['success' => true, 'message' => 'Voucher generated successfully']);
-				} catch (\Exception $e) {
-                DB::rollBack();
-                return redirect()->back()->with(['error' => true, 'message' => $e->getMessage()]);
-			}
-		}
-		
-		public function viewvoucher($voucher_no)
-        {
-			$data['voucher_lists']= DB::table('cod_vouchers')
-			->select('cod_vouchers.*', 'shipping_companies.name as shipping_companies_name', 'orders.awb_number','order_items.product_name', 'order_items.product_discription', 'orders.order_date')
-			->join('orders', 'cod_vouchers.order_id', '=', 'orders.id')
-			->join('shipping_companies', 'shipping_companies.id', '=', 'cod_vouchers.shipping_company_id')
-			->join('order_items', 'cod_vouchers.order_id', '=', 'order_items.order_id')
-			->where('cod_vouchers.voucher_no', '=', $voucher_no)
-			->get();
-			
-            $data['voucher_data'] =DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->where('cod_vouchers.voucher_no', $voucher_no)
-			->select('cod_vouchers.user_id', 'u.name as user_name', 'u.company_name as seller_company', 'u.address as user_address','u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_id'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_id'),
-			DB::raw('GROUP_CONCAT(DISTINCT amount) AS amount'), 'cod_vouchers.voucher_no', 'cod_vouchers.voucher_date',
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'))
-			->groupBy('cod_vouchers.user_id', 'cod_vouchers.voucher_no', 'cod_vouchers.voucher_date', 'u.address','u.name', 'u.company_name', 'u.email', 'u.mobile','cod_vouchers.voucher_no')->first(); 
-			// ->groupBy('cod_vouchers.user_id','cod_vouchers.voucher_no')->get();
-            if ($data['voucher_lists']->isEmpty()) {
-                
-                return redirect()->back()->with(['error' => true, 'message' => 'Voucher not found']);
-			}
-			
-            return view('remmitance.voucher', compact('data'));
+		public function downloadRemittanceExcel($id)
+		{ 
+			$codVoucher = CodVoucher::with(['codVoucherOrders'])->find($id); 
+			return Excel::download(new CodRemittanceExport($codVoucher), $codVoucher->voucher_no.'.xlsx');
 		}
 		
 		public function codPayout()
-		{
-			$vendors = DB::table('cod_vouchers')
-			->join('users', 'users.id', '=', 'cod_vouchers.user_id')
-			->select('users.id', 'users.name')
-			->groupBy('users.id', 'users.name')
+		{ 
+			$users = CodVoucher::select(DB::raw('MAX(id) as id'), 'user_id')
+			->groupBy('user_id')
+			->with('user')
 			->get();
-		    return view('remmitance.codpayout', compact('vendors'));
+		 
+		    return view('remmitance.cod-payout', compact('users'));
 		}
 		
-		public function codPayoutajax(Request $request)
+		public function codPayoutAjax(Request $request)
 		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
+			$draw = $request->get('draw');
+			$start = $request->get("start");
+			$length = $request->get("length");
+			$searchValue = $request->input("search");
 			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			$status = $request->post('status');
+			$user = auth()->user();
+			$role = $user->role;
+			$userId = $user->id;
 			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
+			$query = CodVoucher::with(['user', 'codVoucherOrders']);
 			
-			if($order = 'action')  
-			{
-			    $order = 'id';
+			// Filters
+			if ($role !== "admin") { 
+				$query->where('user_id', $userId);
 			}
 			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			$query = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date', 'u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'), 
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'));
-			if($role != "admin") 
-			{
-				$query->where('cod_vouchers.user_id',$id);
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$query->whereBetween('voucher_date', [$request->fromdate, $request->todate]);
+				} elseif ($request->filled('fromdate')) {
+				$query->whereDate('voucher_date', '>=', $request->fromdate);
+				} elseif ($request->filled('todate')) {
+				$query->whereDate('voucher_date', '<=', $request->todate);
 			}
-			$query->groupBy('cod_vouchers.user_id');
 			
-			$totalData = $query->count();
+			if ($request->filled('user_id')) { 
+				$query->where('user_id', $request->user_id);
+			}
 			
-			$totalFiltered = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date','u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			// DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as order_dates'),
-			DB::raw('SUM(cod_vouchers.amount) as total_amount'));
-			if($role != "admin") 
-			{
-				$totalFiltered->where('cod_vouchers.user_id',$id);
+			if ($request->filled('voucher_status')) {
+				$query->where('voucher_status', $request->voucher_status);
 			}
-			$totalFiltered->groupBy('cod_vouchers.user_id');
 			
-			
-			
-            $values = DB::table('cod_vouchers')
-			->join('users as u', 'u.id', '=', 'cod_vouchers.user_id')
-			->leftJoin('orders as o', 'o.id', '=', 'cod_vouchers.order_id')
-			->select('cod_vouchers.user_id', 'cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date','u.name as user_name', 'u.company_name as seller_company', 'u.email as user_email', 'u.mobile as user_mobile',
-			DB::raw('GROUP_CONCAT(cod_vouchers.order_id) as order_ids'),
-			DB::raw('GROUP_CONCAT(o.order_prefix) as order_prefix_list'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.shipping_company_id) as shipping_company_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.id) as voucher_ids'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.voucher_date) as voucher_date'),
-			DB::raw('GROUP_CONCAT(cod_vouchers.amount) as total_amount'),
-			DB::raw('SUM(cod_vouchers.amount) as voucher_total_amount'),
-			'cod_vouchers.voucher_no');
-			if($role != "admin") 
-			{
-				$values->where('cod_vouchers.user_id',$id);
-			}
-			//   echo $request->input('voucher_status'); die;
-			if($request->input('voucher_status') != '')
-			{
-			    
-				
-				$status = $request->input('voucher_status');
-				
-				$values = $values->where('cod_vouchers.voucher_status',$status);
-			}
-			if(!empty($request->input('user_id')))
-			{
-				$voucher_user_id = $request->input('user_id');
-				$values = $values->where('cod_vouchers.user_id',$voucher_user_id);
-			}
-			if ($request->fromdate != '' && $request->todate != '') {
-                $values->whereBetween('cod_vouchers.voucher_date', [$request->fromdate, $request->todate]);
-				} elseif ($request->fromdate) {
-                $values->whereDate('cod_vouchers.voucher_date', '>=', $request->fromdate);
-				} elseif ($request->todate) {
-                $values->whereDate('cod_vouchers.voucher_date', '<=', $request->todate);
-			}
-			if(!empty($request->input('search')))
-			{ 
-				$search = $request->input('search');
-				$values = $values->where(function ($query) use ($search) 
-				{
-					return $query->where('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
+			if (!empty($searchValue)) {
+				$query->where(function ($q) use ($searchValue) {
+					$q->where('voucher_no', 'like', "%$searchValue%")
+					->orWhereHas('user', function ($uq) use ($searchValue) {
+						$uq->where('name', 'like', "%$searchValue%")
+						->orWhere('email', 'like', "%$searchValue%")
+						->orWhere('mobile', 'like', "%$searchValue%")
+						->orWhere('company_name', 'like', "%$searchValue%");
+					});
 				});
-				
-				$totalFiltered = $totalFiltered->where(function ($query) use ($search) {
-					return $query->where('u.name', 'LIKE', '%' . $search . '%')->orWhere('u.mobile', 'LIKE', '%' . $search . '%')->orWhere('u.email', 'LIKE', '%' . $search . '%')->orWhere('u.company_name', 'LIKE', '%' . $search . '%');
-				});  
 			}
-			$clonedQuery = clone $values;
 			
-            $resultsCloned = $clonedQuery
-            ->select(DB::raw('SUM(cod_vouchers.amount) AS total_Amt'))
-            ->first();
-			$values->orderBy('cod_vouchers.' . $order, $dir)
-			->offset($start)
-			->limit($limit)
-			->groupBy('cod_vouchers.user_id','cod_vouchers.voucher_status','cod_vouchers.reference_no','cod_vouchers.payout_date', 'u.name', 'u.company_name', 'u.email', 'u.mobile','cod_vouchers.voucher_no');
-			$values = $values->get(); 
-			$totalFiltered = $totalFiltered->count();
+			$total = $query->count();
 			
-			$data = array();
-			if(!empty($values))
-			{
-				$i = $start + 1; 
-				foreach ($values as $value)
-				{    
-					$shipping = explode(',',$value->shipping_company_ids);
-					$ship_comp =array();
-					foreach($shipping as $shipping_comp)
-					{
-					    $shippinng = DB::table('shipping_companies')->where('status','1')->pluck('name')->first();
-					    $ship_comp[] = $shippinng;
-					}
-					// 	echo "<pre>"; print_r($value); echo "</pre>"; die;
-					if($value->voucher_status === '0')
-					{
-						$voucher_status = '<span class="badge badge-warning">Unpaid</span>';
-					}else
-					{
-						$voucher_status = '<span class="badge badge-success">Paid</span>';
-					}
-					$mainData['id'] = $i;
-					$mainData['order_prefix_list'] = $value->order_prefix_list;
-					$mainData['seller_details'] = ' <div class="main-cont1-2"><p> '.$value->user_name.' ('.$value->seller_company .') </p><p> '.$value->user_email.'  </p><p> '.$value->user_mobile.' </p></div>';
-					$mainData['order_details'] = '<div class="main-cont1-1"><div class="checkbox checkbox-purple">'.$value->order_ids.'</div> '; 
-					$mainData['status'] = $voucher_status;
-					$mainData['amount'] = $value->voucher_total_amount;
-					$mainData['action'] = "";   
-					if($value->voucher_status == 0 && config('permission.cod_payout.add'))
-					{
-						$mainData['action'] .= '<div class="main-btn-1"> 
-						<div class="mian-btn"> 
-						<div class="btn-group">
-						<button class="btn btn-primary pay_now" data-voucher_no="'. $value->voucher_ids .'" data-order-id="'.$value->order_ids.'" data-user-id="'.$value->user_id.'" data-shipping_company_ids="'.$value->shipping_company_ids.'" data-amount="'.$value->total_amount.'" type="button"> Pay Now</button> 
-						
-						</div>
-						</div>
-						</div>';
-					}else
-				    {
-				        $mainData['action'] .= ' <div class="main-cont1-2"><b>Ref. No. :</b><p>'.$value->reference_no.'</p> <b>Payout Date :</b>'.$value->payout_date.'';
-					}
-					$data[] = $mainData;
-					$i++;
+			$vouchers = $query->offset($start)
+			->limit($length)
+			->orderBy('id', 'desc')
+			->get();
+			
+			$data = [];
+			$i = $start + 1;
+			foreach ($vouchers as $voucher) {
+				$userName = $voucher->user->name ?? 'N/A';
+				$sellerCompany = $voucher->user->company_name ?? 'N/A';
+				$userEmail = $voucher->user->email ?? 'N/A';
+				$userMobile = $voucher->user->mobile ?? 'N/A';
+				
+				$action = '<div class="main-btn-1">
+				<div class="mian-btn">
+				<div class="btn-group">';
+				if($voucher->voucher_status == 0 && auth()->user()->role == "admin" && config('permission.cod_payout.add'))
+				{
+					$action .='<button class="btn btn-primary" data-payout-id="'.$voucher->id.'" onclick="payNow(this)" type="button"> Pay Now</button>'; 
 				}
+				$url = route('remmitance.download.excel', $voucher->id);
+				$action .='<a class="btn btn-success" href="'.$url.'">Download</a>';
+				$action .='</div>
+				</div>
+				</div>';
+				
+				$data[] = [
+					'id' => $i,
+					'seller_details' => "<div class='main-cont1-2'><p>{$userName} ({$sellerCompany})</p><p>{$userEmail}</p><p>{$userMobile}</p></div>",
+					'voucher_date' => $voucher->voucher_date,
+					'voucher_no' => $voucher->voucher_no,
+					'amount' => $voucher->amount ?? '',
+					'status' => $voucher->voucher_status == 0 ? '<span class="badge badge-danger">UnPaid</span>' : '<span class="badge badge-success">Paid</span>', 
+					'remarks' => $voucher->remarks ?? 'N/A',
+					'reference_no' => $voucher->reference_no ?? 'N/A',
+					'payout_date' => $voucher->payout_date ?? 'N/A',
+					'action' => $action,
+				];
+				$i++;
 			}
 			
-			$response = array(
+			return response()->json([
 			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data,
-			"totAmt"=>$resultsCloned->total_Amt,
-				); 
-				
-				echo json_encode($response);
-				exit;
+			"recordsTotal" => $total,
+			"recordsFiltered" => $total,
+			"data" => $data,
+			]);
 		}
 		
-        public function codRemittance(Request $request)
-        {
-            
-            try {
-                $orderIds = explode(",", $request->order_id);
-                $voucherIds = explode(",", $request->voucher_no);
-				
-                $latestInvoice = DB::table('order_remittances')->orderBy('id', 'desc')->pluck('inv_no')->first();
-                $inv_number = $latestInvoice ? explode('-', $latestInvoice)[1] + 1 : 1;
-                $inv_no = "INVCODP-" . sprintf('%04d', $inv_number);
-				
-                $orderRemittanceData = [
-				'inv_no' => $inv_no,
-				'order_id' => $request->order_id,
-				'user_id' => $request->user_ids,
-				'shipping_company_id' => $request->shipping_company_id,
-				'reference_no' => $request->remittance_reference_id,
-				'amount' => $request->amount,
-				'date' => $request->remittance_date,
-                ];
-				
+        public function storePayout(Request $request)
+        { 
+            try { 
                 DB::beginTransaction();
 				
-                DB::table('order_remittances')->insert($orderRemittanceData);
+				$data = $request->except('id', '_token');
+				$data['voucher_status'] = 1;
 				
-                $voucherUpdateData = [
-				'voucher_status' => '1',
-				'reference_no' => $request->remittance_reference_id,
-				'payout_date' => $request->remittance_date
-                ];
-				
-                foreach ($voucherIds as $voucher_id) {
-                    DB::table('cod_vouchers')
-					->where('id', $voucher_id)
-					->update($voucherUpdateData);
-				}
-				
-                foreach ($orderIds as $order_id) {
-                    DB::table('orders')->where('id', $order_id)->update(['is_payout' => '1']);
-				}
-				
+				$codPayout = CodVoucher::findOrFail($request->id);
+				$codPayout->update($data);
                 DB::commit();
 				
                 return redirect()->back()->with('success', 'Cod Payout successfully.');
-				} catch (\Exception $e) {
-                DB::rollBack();
-                \Log::error($e->getMessage());
-                return redirect()->back()->with('error', 'An error occurred. Please try again.');
+			} catch (\Exception $e)
+			{
+				DB::rollBack(); 
+				return redirect()->back()->with('error', 'An error occurred. Please try again.');
 			}
 		} 
 	}

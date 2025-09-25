@@ -28,11 +28,11 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
 
         $query = Order::with(['user', 'warehouse', 'customer', 'customerAddress', 'orderItems']);
 
-        if (in_array($role, ["user"])) {
-            $query->where('user_id', $userId);
+        if ($role == "user") {
+             $query->where('user_id', $userId);
         }
 
-        if ($this->request->filled('user_id')) {
+        if ($this->request->filled('user_id') && $this->request->user_id != "undefined") {
             $query->where('user_id', $this->request->user_id);
         }
 
@@ -84,6 +84,11 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
             'Seller Details',
             'Order Details',
             'Customer Details',
+            'Customer Address',
+            'City',
+            'State',
+            'Country',
+            'Pincode',
             'Package Details',
             'Payment',
             'Pickup Address',
@@ -117,17 +122,52 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
 		$fullAddress = implode(', ', array_filter($addressParts));
 
 		$this->rowNumber++; // Increment on each map
+		
+		$customeraddr = $order->customerAddress;  
+		 
+		$productDetails = $order->orderItems
+			->map(fn($item) => "{$item->product_description} Amount: {$item->amount} No Of Box: {$item->quantity} Sku: {$item->sku}")
+			->implode(' | ');		
+		return [
+			$this->rowNumber,
 
-        return [
-            $this->rowNumber, // Serial number instead of $order->id
-            Str::substr(optional($order->user)->name, 0, 4),
-            $order->order_prefix . $order->id . ' / Awb Number: ' . $order->awb_number . ' / Courier: ' . ($order->courier_name ?? 'N/A'),
-            optional($order->customer)->first_name . ' ' . optional($order->customer)->last_name . ' / ' . optional($order->customer)->email . ' / ' . optional($order->customer)->mobile,
-            "No Of Box: {$noofBox} / Weight In Kg: {$totalWeightInKg} / ".strip_tags($productDetails),
-            "{$order->order_type} / {$totalOrderTypeLabel} : {$totalOrderTypeAmount}",
+			Str::substr(optional($order->user)->name, 0, 4),
+
+			collect([
+				$order->order_prefix . $order->id,
+				$order->awb_number ? "Awb Number: {$order->awb_number}" : null,
+				$order->courier_name ? "Courier: {$order->courier_name}" : null,
+				$productDetails ? "Product Details: {$productDetails}" : null,
+			])->filter()->implode(" | "),
+
+			collect([
+				optional($order->customer)->first_name . ' ' . optional($order->customer)->last_name,
+				optional($order->customer)->email,
+				optional($order->customer)->mobile, 
+			])->filter()->implode(" | "),
+			
+			$customeraddr->address,
+			$customeraddr->city,
+			$customeraddr->state,
+			$customeraddr->country,
+			$customeraddr->zip_code,
+			
+			collect([
+				"No Of Box: {$noofBox}",
+				"Weight In Kg: {$totalWeightInKg}",
+				$productDetails ? strip_tags($productDetails) : null,
+			])->filter()->implode(" | "),
+
+			collect([
+				$order->order_type,
+				$totalOrderTypeLabel ? "{$totalOrderTypeLabel} : {$totalOrderTypeAmount}" : null,
+			])->filter()->implode(" | "),
+
 			$fullAddress,
-            $order->status_courier,
-            $order->created_at->format('Y-m-d H:i:s'),
-        ];
+
+			$order->status_courier,
+
+			$order->created_at->format('Y-m-d H:i:s'),
+		];  
     }
 }

@@ -22,6 +22,9 @@
 		
 		public function roles()
 		{
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
 			return view('roles.index');
 		}
 		
@@ -340,6 +343,9 @@
  
 		public function staff()
 		{
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
 			return view('staff.index');
 		}
 		

@@ -126,12 +126,7 @@
 		Route::post('/kyc/verified', [App\Http\Controllers\UserController::class, 'kycUserVerified'])->name('users.kyc.verified');  
 		Route::post('/kyc/rejected', [App\Http\Controllers\UserController::class, 'kycUserRejected'])->name('users.kyc.rejected');  
 	});
-	 
-	//New User 
-	Route::get('/new/user', [App\Http\Controllers\UserController::class, 'newuser'])->name('newuser');  
-	Route::post('/new/ajaxnewUser', [App\Http\Controllers\UserController::class, 'ajaxnewUser'])->name('newuser.ajaxnewUser');  
-	Route::post('/new/role', [App\Http\Controllers\UserController::class, 'storeRoleUser'])->name('newuser.storeRoleUser');
-	 
+	  
 	//staffs
     Route::get('/staff', [App\Http\Controllers\StaffController::class, 'staff'])->name('staff');
     Route::post('/staff/ajax', [App\Http\Controllers\StaffController::class, 'staffAjax'])->name('staff.ajax');
@@ -152,12 +147,7 @@
     Route::post('/roles/update/{id}', [App\Http\Controllers\StaffController::class, 'rolesUpdate'])->name('roles.update');
     Route::get('/roles/delete/{id}', [App\Http\Controllers\StaffController::class, 'rolesDelete'])->name('roles.delete');
     Route::get('roles/groups/{id}', [App\Http\Controllers\StaffController::class, 'rolesGroups']);
-	
-    //Permission 
-    Route::get('/permission', [App\Http\Controllers\UserController::class, 'permission'])->name('users.permission');  
-	Route::post('/permission/ajax', [App\Http\Controllers\UserController::class, 'ajaxUserPermission'])->name('users.permission.ajax');
-	Route::post('/permission/store', [App\Http\Controllers\UserController::class, 'storeUserpermission'])->name('users.permission.store');  
-	Route::get('/permission/delete/{id}', [App\Http\Controllers\UserController::class, 'deleteUserpermission']);  
+	 
 	 
 	//Shippping Company
 	Route::group(['prefix'=>'shipping/company'], function()
@@ -198,9 +188,9 @@
 	
 	Route::group(['prefix'=>'ndr'], function()
 	{ 
-		Route::get('/', [App\Http\Controllers\NDRController::class, 'index'])->name('ndr');    
-		Route::post('/ndrajax', [App\Http\Controllers\NDRController::class, 'ndrAjax'])->name('ndr.ajax');  
-		Route::post('/raiserequest', [App\Http\Controllers\NDRController::class, 'raiserequest'])->name('ndr.raiserequest'); 
+		Route::get('/order', [App\Http\Controllers\NDRController::class, 'index'])->name('ndr.order');    
+		Route::post('/order/ajax', [App\Http\Controllers\NDRController::class, 'ndrAjax'])->name('ndr.order.ajax');  
+		Route::post('/order/raise', [App\Http\Controllers\NDRController::class, 'ndrRaise'])->name('ndr.order.raise'); 
 	});	
 	 
 	//Order 
@@ -250,115 +240,85 @@
 	});	
 	
 	// Remmitance Reports
-	Route::group(['prefix'=> 'order/remmitance'], function () {
-		
-		Route::get('/', [App\Http\Controllers\OrderController::class, 'orderRemmitance'])->name('order.remmitance')->middleware('permission:remittance.view'); 
-		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'orderRemmitanceAjax'])->name('order.remmitance.ajax');  
-		Route::post('/store',[App\Http\Controllers\OrderController::class, 'orderRemmitanceStore'])->name('order.remmitance.store');
-		
-	});
+	Route::group(['prefix'=> 'cod-remmitance'], function () { 
+		Route::get('/', [App\Http\Controllers\OrderController::class, 'codRemittance'])->name('cod-remmitance')->middleware('permission:remittance.view'); 
+		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'remmitanceAjax'])->name('remmitance.ajax');
+		Route::get('/download-excel/{id}', [App\Http\Controllers\OrderController::class, 'downloadRemittanceExcel'])->name('remmitance.download.excel'); 
+	}); 
 	
-	Route::group(['prefix'=> 'order/codvoucher'], function () {
-		
-		Route::get('/', [App\Http\Controllers\OrderController::class, 'codVoucher'])->name('order.codvoucher')->middleware('permission:cod_voucher.view'); 
-		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'codVoucherAjax'])->name('order.codvoucher.ajax');  
-		Route::post('/generatevouchers',[App\Http\Controllers\OrderController::class, 'generatevouchers'])->name('generatevouchers');
-		Route::get('/{voucher_no}',[App\Http\Controllers\OrderController::class, 'viewvoucher'])->name('viewvoucher');
-		
+	Route::group(['prefix'=> 'cod-payout'], function () {
+	    Route::get('/',[App\Http\Controllers\OrderController::class, 'codPayout'])->name('cod-payout')->middleware('permission:cod_payout.view');
+		Route::post('/ajax',[App\Http\Controllers\OrderController::class, 'codPayoutAjax'])->name('cod-payout-ajax');
+		Route::post('/store',[App\Http\Controllers\OrderController::class, 'storePayout'])->name('cod-payout-store'); 
 	});
-	Route::group(['prefix'=> 'order/codpayout'], function () {
-	    Route::get('/',[App\Http\Controllers\OrderController::class, 'codPayout'])->name('order.codpayout')
-		->middleware('permission:cod_payout.view');
-		Route::post('/codPayoutajax',[App\Http\Controllers\OrderController::class, 'codPayoutajax'])->name('codPayoutajax');
-		Route::post('/codRemmitance',[App\Http\Controllers\OrderController::class, 'codRemittance'])->name('codRemmitance');
-		
-	});
+	 
 	    
 	// Daily Reports
 	Route::get('/report/order', [App\Http\Controllers\ReportController::class, 'index'])->name('report.order')->middleware('permission:order_report.view'); 
 	Route::post('/report/order/ajax', [App\Http\Controllers\ReportController::class, 'reportOrderAjax'])->name('report.order.ajax');
 	Route::get('/report/export-orders', [App\Http\Controllers\ReportController::class, 'reportOrderExport'])->name('report.order.export');
 	
-	Route::get('/report/income', [App\Http\Controllers\ReportController::class, 'incomeReport'])->name('report.income')->middleware('permission:income_report.view'); 
-	Route::post('/report/income/ajax', [App\Http\Controllers\ReportController::class, 'incomeReportAjax'])->name('report.income.ajax');
-	
-	Route::get('/report/payment', [App\Http\Controllers\ReportController::class, 'paymentReport'])->name('report.payment')->middleware('permission:payment_report.view'); 
-	Route::post('/report/payment/ajax', [App\Http\Controllers\ReportController::class, 'paymentReportAjax'])->name('report.payment.ajax');
-	 
 	Route::get('/passbook/', [App\Http\Controllers\ReportController::class, 'passbookReport'])->name('report.passbook')->middleware('permission:passbook_report.view'); 
 	Route::post('/passbook/ajax', [App\Http\Controllers\ReportController::class, 'passbookReportAjax'])->name('report.passbook.ajax'); 
-	
-	Route::get('/daily_report', [App\Http\Controllers\ReportController::class, 'reports'])->name('daily_report'); 
-	Route::get('/daily_recharge', [App\Http\Controllers\ReportController::class, 'daily_recharge'])->name('daily_recharge');
-	Route::post('/daily_recharge/RechargeAjaxData/', [App\Http\Controllers\ReportController::class, 'RechargeAjaxData'])->name('daily_recharge.RechargeAjaxData'); 
-	  
-	Route::get('/invoice_report', [App\Http\Controllers\ReportController::class, 'invoice_report'])->name('invoice_report'); 
-	Route::post('/invoice_report/invoicetAjax', [App\Http\Controllers\ReportController::class, 'invoicetAjax'])->name('invoicetAjax');
 	 
-	//Recharge Amount 
+	Route::get('/report/shipping-charge', [App\Http\Controllers\ReportController::class, 'shippingCharge'])->name('report.shipping-charge')->middleware('permission:shipping_charge.view'); 
+	Route::post('/report/shipping-charge/ajax', [App\Http\Controllers\ReportController::class, 'shippingChargeAjax'])->name('report.shipping-charge.ajax');
+	 
+	Route::get('report/billing-invoice', [App\Http\Controllers\ReportController::class, 'billingInvoice'])->name('report.billing-invoice');
+	Route::post('report/billing-invoice/ajax', [App\Http\Controllers\ReportController::class, 'billingInvoiceAjax'])->name('report.billing-invoice.ajax');
+	Route::get('report/billing-invoice/pdf/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoicePdf'])->name('report.billing-invoice.pdf');
+	Route::get('report/billing-invoice/excel/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoiceExcel'])->name('report.billing-invoice.excel');
+	
+	//Recharge Amount
 	Route::group(['prefix'=>'recharge'], function()
-	{  
+	{
+		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount');
+		Route::post('/wallet/response', [App\Http\Controllers\RechargeController::class, 'rechargeWalletResponse'])->name('recharge.wallet.response');
+		
+		Route::post('/wallet/recharge', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.wallet.razorpay');
+		
 		Route::get('/list', [App\Http\Controllers\RechargeController::class, 'rechargeList'])->name('recharge.list');
 		Route::post('/ajax', [App\Http\Controllers\RechargeController::class, 'rechargeListAjax'])->name('recharge.list.ajax');
 		
-		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount'); 
-		Route::post('/wallet/response', [App\Http\Controllers\RechargeController::class, 'rechargeWalletResponse'])->name('recharge.wallet.response');
-		
-		Route::post('/razorpay/wallet', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.razorpay.wallet');
-		 
 		Route::get('/list/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAdmin'])->name('recharge.list.history');
 		Route::post('/ajax/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAjaxAdmin'])->name('recharge.list.ajax.history');
 		
 		Route::post('/wallet/action', [App\Http\Controllers\RechargeController::class, 'rechargeWalletAction'])->name('recharge.wallet.action');
-	});	
-	
+	});
+	  
 	//Ticket
 	Route::group(['prefix'=>'ticket'], function()
-	{     
+	{
 		Route::get('/list', [App\Http\Controllers\TicketController::class, 'index'])->name('ticket');
-		Route::post('/ajax', [App\Http\Controllers\TicketController::class, 'ticketListAjax'])->name('ticket.list.ajax'); 
-		Route::get('/add', [App\Http\Controllers\TicketController::class, 'ticketAdd'])->name('ticket.add');	 
-		Route::post('/store', [App\Http\Controllers\TicketController::class, 'ticketStore'])->name('ticket.store');	 
-		Route::get('/delete/{id}', [App\Http\Controllers\TicketController::class, 'ticketDelete']);	 
+		Route::post('/ajax', [App\Http\Controllers\TicketController::class, 'ticketListAjax'])->name('ticket.list.ajax');
+		Route::get('/add', [App\Http\Controllers\TicketController::class, 'ticketAdd'])->name('ticket.add');
+		Route::post('/store', [App\Http\Controllers\TicketController::class, 'ticketStore'])->name('ticket.store');
+		Route::get('/view/{id}', [App\Http\Controllers\TicketController::class, 'ticketView']);
+		Route::post('/remark/store', [App\Http\Controllers\TicketController::class, 'remarkStore'])->name('ticket.remark.store');
 		
 		Route::get('/all/list', [App\Http\Controllers\TicketController::class, 'ticketList'])->name('ticket.admin')->middleware('permission:ticket_request.view');
-		Route::post('/all/ajax', [App\Http\Controllers\TicketController::class, 'ticketAllListAjax'])->name('ticket.admin.ajax');
-		Route::get('/revert_ticket/{id}', [App\Http\Controllers\TicketController::class, 'revert_ticket'])->name('ticket.admin.revert_ticket')->middleware('permission:ticket_request.edit');	
-		Route::post('/update/{id}', [App\Http\Controllers\TicketController::class, 'ticketUpdate'])->name('ticket.admin.update_revert');		
-		Route::get('/close/{id}', [App\Http\Controllers\TicketController::class, 'ticketClose']);	 
-	});	
-	
+		Route::post('/all/ajax', [App\Http\Controllers\TicketController::class, 'ticketAllListAjax'])->name('ticket.admin.ajax')->middleware('permission:ticket_request.view');
+		Route::get('/revert_ticket/{id}', [App\Http\Controllers\TicketController::class, 'revert_ticket'])->name('ticket.admin.revert_ticket')->middleware('role');
+		Route::post('/update/{id}', [App\Http\Controllers\TicketController::class, 'ticketupdate'])->name('ticket.admin.update_revert')->middleware('permission:ticket_request.update');
+		Route::get('/close/{id}', [App\Http\Controllers\TicketController::class, 'ticketClose'])->middleware('permission:ticket_request.update');
+		Route::get('/delete/{id}', [App\Http\Controllers\TicketController::class, 'ticketDelete'])->middleware('permission:ticket_request.delete');
+	});
+	 	 
 	//Weight Management
 	Route::group(['prefix'=>'weight'], function()
-	{     
+	{
 		//ADMIN
 		Route::get('/descripencies/all', [App\Http\Controllers\WeightController::class, 'descrepenciesAll'])->name('weight.admin.descripencies')->middleware('permission:weight_descripencies.view');
-		Route::post('/raise/excess-weight', [App\Http\Controllers\WeightController::class, 'raiseExcessWeight'])->name('weight.raise.excess-weight');  
+		Route::post('/raise/excess-weight', [App\Http\Controllers\WeightController::class, 'raiseExcessWeight'])->name('weight.raise.excess-weight');
 		Route::get('/descripencies/history/{id}', [App\Http\Controllers\WeightController::class, 'weightHoistory']);
-		Route::get('/descripencies/view_image/{id}', [App\Http\Controllers\WeightController::class, 'weightview_image']);
-		Route::get('/descripencies/accepted/{id}', [App\Http\Controllers\WeightController::class, 'weightAccepted']);
-		Route::get('/descripencies/reject/{id}', [App\Http\Controllers\WeightController::class, 'weightRejected']);
+		Route::get('/descripencies/view_image/{id}', [App\Http\Controllers\WeightController::class, 'weightview_image']); 
+		
 		Route::post('/descripencies/bycourier', [App\Http\Controllers\WeightController::class, 'weightbycourier']);
-		Route::get('/descripencies/auto-accepted', [App\Http\Controllers\WeightController::class, 'autoAccepted'])->name('weight.auto-accepted'); 
-		Route::post('/rejetform/store', [App\Http\Controllers\WeightController::class, 'rejectFormStore'])->name('weight.rejetform.store');  
+		Route::get('/descripencies/auto-accepted', [App\Http\Controllers\WeightController::class, 'autoAccepted'])->name('weight.auto-accepted');
 		
-		//User 
+		//User
 		Route::get('/descripencies/list', [App\Http\Controllers\WeightController::class, 'index'])->name('weight.descripencies');
-		
-		Route::get('/freeze/list', [App\Http\Controllers\WeightController::class, 'freezeList'])->name('weight.freeze');
-		Route::get('/freeze/add/{id}', [App\Http\Controllers\WeightController::class, 'freezeAdd']);
-		Route::post('/freeze/store', [App\Http\Controllers\WeightController::class, 'freezeStore'])->name('weight.freeze.store');
-		
-		Route::get('/freeze/all', [App\Http\Controllers\WeightController::class, 'freezeAll'])->name('weight.admin.freeze');
-		
-	});	
-	
-	//Excel upload Pincode 
-	Route::group(['prefix'=>'service'], function()
-	{     
-		Route::get('/list', [App\Http\Controllers\PincodeController::class, 'index'])->name('service.index');
-		Route::post('list/ajax', [App\Http\Controllers\PincodeController::class, 'listAjax'])->name('service.list.ajax');
-		Route::post('/import', [App\Http\Controllers\PincodeController::class, 'import'])->name('service.import');
-		Route::post('/update/charge', [App\Http\Controllers\PincodeController::class, 'updateCharge'])->name('service.update.charge');
-		
-	});			
+		Route::get('/descripencies/accepted/{id}', [App\Http\Controllers\WeightController::class, 'weightAccepted']);
+		Route::get('/descripencies/remark/{id}', [App\Http\Controllers\WeightController::class, 'weightRemark']);
+		Route::post('/descripencies/remark/store', [App\Http\Controllers\WeightController::class, 'remarkStore'])->name('weight.remark.store');  
+	}); 

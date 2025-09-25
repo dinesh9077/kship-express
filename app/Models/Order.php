@@ -7,23 +7,25 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
-    use HasFactory;
+    use HasFactory; 
 	
 	protected $fillable = [
-        'user_id', 'order_prefix', 'order_type', 'vendor_id', 'vendor_address_id',
-        'customer_id', 'customer_address_id', 'shipping_company_id', 'shipping_mode',
-        'tax', 'tax_percentage', 'round_off', 'shipping_charge', 'total_amount',
-        'status_courier', 'courier_logo', 'reason_cancel', 'order_date', 'order_cancel_date', 'delivery_date',
-        'status', 'is_online', 'weight', 'length', 'width', 'height', 'packaging_id',
-        'shipment_id', 'awb_number', 'courier_name', 'courier_id', 'label', 'manifest',
-        'weight_status', 'weight_update_date', 'applicable_weight', 'weight_freeze_status',
-        'percentage_amount', 'is_voucher', 'voucher_no', 'is_remittance', 'is_payout',
-        'remittance_reference_id', 'remittance_amount', 'remittance_date', 'is_invoice',
-        'cod_charges', 'rto_charge', 'pickup_location_name', 'pickup_time', 'pickup_id',
-        'pickup_date', 'expected_package_count', 'on_pro_id', 'warehouse_id', 'freight_mode',
-        'cod_amount', 'dimension_type', 'invoice_no', 'invoice_amount', 'ewaybillno', 'lr_no',
-		'api_response', 'api_response1', 'invoice_document', 'weight_order', 'insurance_type', 'is_fragile_item'
-    ];
+		'user_id', 'order_prefix', 'order_type', 'vendor_id', 'vendor_address_id',
+		'customer_id', 'customer_address_id', 'shipping_company_id', 'shipping_mode',
+		'tax', 'tax_percentage', 'round_off', 'shipping_charge', 'total_amount',
+		'status_courier', 'reason_cancel', 'order_date', 'order_cancel_date',
+		'delivery_date', 'status', 'is_online', 'weight', 'length', 'width', 'height',
+		'packaging_id', 'shipment_id', 'awb_number', 'courier_name', 'courier_id',
+		'weight_status', 'weight_update_date', 'applicable_weight', 'percentage_amount',
+		'is_voucher', 'voucher_no', 'is_remmitance', 'is_payout', 'remittance_reference_id',
+		'remittance_amount', 'remittance_date', 'cod_charges', 'rto_charge', 'pickup_location_name',
+		'pickup_time', 'cod_voucher_id', 'pickup_date', 'expected_package_count', 'on_pro_id',
+		'warehouse_id', 'freight_mode', 'cod_amount', 'dimension_type', 'invoice_no',
+		'invoice_amount', 'ewaybillno', 'lr_no', 'api_response', 'api_response1',
+		'invoice_document', 'weight_order', 'insurance_type', 'is_fragile_item',
+		'is_raise_weight', 'rto_charge_applied', 'invoice_id', 'is_invoice_count'
+	];
+
 	
 	protected $casts = [ 
 		'api_response' => 'array',
@@ -80,10 +82,15 @@ class Order extends Model
 	{
 		return $this->hasMany(OrderItem::class, 'order_id');
 	}
-	
+	 
 	public function excessWeight()
 	{
 		return $this->hasOne(ExcessWeight::class, 'order_id');
+	}
+	
+	public function weightDescripencies()
+	{
+		return $this->hasOne(weightDescrepency::class, 'order_id');
 	}
 	 
 }

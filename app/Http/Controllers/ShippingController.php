@@ -31,6 +31,9 @@
 		
 		public function index()
 		{
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
 			$shippings = ShippingCompany::latest()->where('status', 1)->get();
 			return view('shipping.index', compact('shippings'));
 		}

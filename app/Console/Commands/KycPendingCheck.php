@@ -31,69 +31,74 @@ class KycPendingCheck extends Command
      * Execute the console command.
      */
     public function handle()
-    {
-        // Get all users with pending KYC
-        $users = User::where('role', 'user')->get();
+	{
+		$this->info("Starting KYC pending check...");
 
-        foreach ($users as $user) {
-            $userKyc = UserKyc::where('user_id', $user->id)->first();
+		// Eager load UserKyc to avoid N+1
+		$users = User::where('role', 'user')
+			->with('userKyc')
+			->whereHas('userKyc') 
+			->get();
 
-            if (!$userKyc) {
-                continue; // Skip if no KYC record exists
-            }
+		$notifications = [];
 
-            // KYC checks
-            $kycChecks = [
-                'pancard_status' => 'Pan Card',
-                'aadhar_status' => 'Aadhar Card',
-                'bank_status' => 'Bank Details',
-            ];
+		foreach ($users as $user) {
+			$userKyc = $user->kyc;
 
-            $pendingKycTypes = [];
+			if (!$userKyc) {
+				continue; // Skip users without KYC
+			}
 
-            foreach ($kycChecks as $field => $kycType) {
-                if ($userKyc->$field == 0) {
-                    $pendingKycTypes[] = $kycType;
-                }
-            }
+			// Pending KYC checks
+			$kycChecks = [
+				'pancard_status' => 'Pan Card',
+				'aadhar_status' => 'Aadhar Card',
+				'bank_status' => 'Bank Details',
+			];
 
-            // If the user has pending KYC steps, send an email
-            if (!empty($pendingKycTypes)) {
-                try {
-                    DB::beginTransaction();
+			$pendingKycTypes = [];
+			foreach ($kycChecks as $field => $kycType) {
+				if ($userKyc->$field == 0) {
+					$pendingKycTypes[] = $kycType;
+				}
+			}
 
-                    // Email Message
-                    $message = "Dear {$user->name},<br><br>"
-                        . "Your KYC verification is still incomplete. Please complete the following pending steps:<br>"
-                        . implode(', ', $pendingKycTypes)
-                        . "<br><br>Complete your KYC as soon as possible to enjoy our full services.<br>Regards,<br>"
-                        . config('setting.company_name');
+			if (empty($pendingKycTypes)) {
+				continue; // Nothing pending
+			}
 
-                    // Send Email
-                    try {
-                        Mail::to($user->email)->send(new KycPendingAlert($user, $message));
-                    } catch (\Exception $e) { 
-						$this->info("Failed to send KYC pending email: " . $e->getMessage());
-                    }
-					
-					Notification::insert([
-						'user_id' => $user->id,
-						'task_id' => $user->id,
-						'type' => 'Kyc Pending', 
-						'role' => 'user', 
-						'text' => strip_tags($message), 
-						'created_at' => now(), 
-						'updated_at' => now()
-					]);
-				
-                    DB::commit();
-                } catch (\Exception $e) {
-                    DB::rollBack();
-                    $this->info("Error processing KYC pending check: " . $e->getMessage());
-                }
-            }
-        }
+			// Prepare message
+			$message = "Dear {$user->name},<br><br>"
+				. "Your KYC verification is still incomplete. Please complete the following pending steps:<br>"
+				. implode(', ', $pendingKycTypes)
+				. "<br><br>Complete your KYC as soon as possible to enjoy our full services.<br>Regards,<br>"
+				. config('setting.company_name');
 
-        $this->info("KYC pending check completed.");
-    }
+			// Send email (non-blocking)
+			try {
+				Mail::to($user->email)->send(new KycPendingAlert($user, $message));
+			} catch (\Exception $e) {
+				$this->error("Failed to send KYC email to {$user->email}: {$e->getMessage()}");
+			}
+
+			// Prepare notification for batch insert
+			$notifications[] = [
+				'user_id' => $user->id,
+				'task_id' => $user->id,
+				'type' => 'Kyc Pending',
+				'role' => 'user',
+				'text' => strip_tags($message),
+				'created_at' => now(),
+				'updated_at' => now(),
+			];
+		}
+
+		// Insert all notifications in one query
+		if (!empty($notifications)) {
+			Notification::insert($notifications);
+		}
+
+		$this->info("KYC pending check completed for " . count($notifications) . " users.");
+	}
+ 
 }

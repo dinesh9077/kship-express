@@ -4,26 +4,18 @@
 	
 	use Illuminate\Http\Request;
 	use App\Models\Order;
-	use App\Models\OrderItem;
-	use App\Models\Vendor;
-	use App\Models\VendorAddress;
-	use App\Models\OrderActivity;
-	use App\Models\OrderStatus;
-	use App\Models\Billing;
-	use App\Models\Packaging;
-	use App\Models\WeightFreeze;
-	use App\Models\Customer;
-	use App\Models\User;
-	use App\Models\CustomerAddress;
-	use App\Models\PincodeService;
-	use App\Models\ShippingCompany;
-	use App\Models\CourierWarehouse;
-	use App\Models\ProductCategory;
+	use App\Models\OrderItem; 
+	use App\Models\Billing; 
+	use App\Models\Invoice;
+	use App\Models\User;   
 	use App\Exports\PendingStarOrderExport;
 	use DB,Auth,File,Helper;
 	use Illuminate\Support\Facades\Http;
 	use App\Exports\OrdersExport;
 	use Maatwebsite\Excel\Facades\Excel;
+	use Barryvdh\DomPDF\Facade\Pdf;
+	use Illuminate\Support\Facades\Storage; 
+	use App\Exports\BillingInvoiceExport; 
 
 	class ReportController extends Controller
 	{ 
@@ -34,9 +26,9 @@
 		
 		public function index(Request $request)
 		{ 
-			$users = User::where('role', 'user')->orderBy('name')->get();
-			$status = $request->query('status', 'New');
-
+			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
+			$status = $request->query('status', 'New'); 
+			
 			return view('report.order', compact('status', 'users'));
 		}
  
@@ -49,13 +41,14 @@
 			$columnIndex = $request->post('order')[0]['column'] ?? 0;
 			$orderColumn = $request->post('columns')[$columnIndex]['data'] ?? 'id';
 			$dir = $request->post('order')[0]['dir'] ?? 'asc';
-
+			$search = $request->input('search') ?? $request->input('search.value') ?? '';
+			
 			// Fix incorrect assignment (`=` instead of `==`)
 			if ($orderColumn == 'action') {
 				$orderColumn = 'id';
 			}
 
-			$currentDate = date('Y-m-d'); 
+			$currentDate = now()->toDateString(); 
 			$role = Auth::user()->role;
 			$userId = Auth::id();
 
@@ -82,8 +75,7 @@
 			}
 
 			// Apply search filter
-			if ($request->filled('search')) {
-				$search = $request->input('search');
+			if ($search) { 
 				$query->where(function ($q) use ($search) {
 					$q->where('created_at', 'LIKE', "%{$search}%")
 					  ->orWhereHas('customer', function($q) use ($search){
@@ -126,7 +118,8 @@
 			{ 
 				$totalOrderTypeAmount =  $order->order_type == "cod" ? $order->cod_amount : $order->invoice_amount;
 				$totalOrderTypeLabel =  $order->order_type == "cod" ? 'Cod Amount' : 'Invoice Amount';
-				 
+				
+				$customeraddr = $order->customerAddress;   
 				$data[] = [
 					'id' => $i++,
 					'seller_details' => "<div class='main-cont1-2'><p>" . 
@@ -135,9 +128,18 @@
 					
 					'order_details' => $this->orderShipmentDetailHtml($order),
 					
-					'customer_details' => "<div class='main-cont1-2'><p>" . 
-					(isset($order->customer) ? "{$order->customer->first_name} {$order->customer->last_name}" : "N/A") . 
-					"</p><p>" . ($order->customer->email ?? "N/A") . "</p><p>" . ($order->customer->mobile ?? "N/A") . "</p></div>",
+					'customer_details' => "<div class='main-cont1-2'>
+						<p>" . (isset($order->customer) ? "{$order->customer->first_name} {$order->customer->last_name}" : "N/A") . "</p>
+						<p>" . ($order->customer->email ?? "N/A") . "</p>
+						<p>" . ($order->customer->mobile ?? "N/A") . "</p> 
+					</div>",
+					
+					'customer_address' => "<p style='word-wrap:break-word; white-space:normal;'>" . ($customeraddr->address ?? "N/A") . "</p>",
+					'customer_city' => $customeraddr->city,
+					'customer_state' => $customeraddr->state,
+					'customer_country' => $customeraddr->country,
+					'customer_pincode' => $customeraddr->zip_code,
+					
 		
 					'package_details' => $this->orderPackageDetailHtml($order),
 					
@@ -154,7 +156,7 @@
 					"<br>" . ($order->warehouse->contact_number ?? "") . "</span></div>",
 		
 					'status_courier' => "<p class='prepaid'>{$order->status_courier}</p>",
-					'created_at' => $order->created_at->format('Y-m-d h:i A'), 
+					'created_at' => $order->order_date, 
 				];
 			}
 
@@ -174,162 +176,103 @@
 		
 		function orderShipmentDetailHtml($order)
 		{
-			$productDetails = $order->orderItems
-			->map(fn($item) => "<p>{$item->product_description} Amount: {$item->amount} No Of Box: {$item->quantity}</p>")
-			->implode(' | ');
-			
-			$output = '';
-			
-			$output .= "<div class='main-cont1-1'>
-			<div class='checkbox checkbox-purple'>
-			Order Prefix/LR No: <a href='" . url("order/details/{$order->id}") . "'>#{$order->order_prefix}</a> 
-			</div>
-			<div class='checkbox checkbox-purple'>
-			Courier: ".($order->courier_name ?? 'N/A')."
-			</div>"; 
-			if($order->awb_number)
-			{
-				$output .= "<div class='checkbox checkbox-purple'>
-				AWB Number: <a href='" . url("order/details/{$order->id}") . "'>#{$order->awb_number}</a>
-				</div>"; 
-			} 
-			$output .= "<span style='padding-left:0'> 
-			<a href='javascript:;'> 
-			<div class='tooltip' data-toggle='tooltip' data-placement='top' title='" . strip_tags($productDetails) . "'> 
-			View Products 
-			</div>
-			</a> 
-			</span>
-			</div>";
-			
-			return $output;
+			// Prepare order items JSON
+			$items = $order->orderItems->map(fn($item) => [
+				'product_category' => $item->product_category,
+				'product_name' => $item->product_name,
+				'sku_number' => $item->sku_number,
+				'hsn_number' => $item->hsn_number,
+				'amount' => $item->amount,
+				'quantity' => $item->quantity,
+			]);
+
+			$jsonItems = htmlspecialchars($items->toJson(), ENT_QUOTES, 'UTF-8'); // safely encode JSON
+
+			$html = "<div class='main-cont1-1'>";
+
+			$html .= "<div class='checkbox checkbox-purple'>
+						Order Prefix/LR No: 
+						<a href='" . url("order/details/{$order->id}") . "'>#{$order->order_prefix}</a>
+					  </div>";
+
+			$html .= "<div class='checkbox checkbox-purple'>
+						Courier: " . ($order->courier_name ?? 'N/A') . "
+					  </div>";
+
+			if ($order->awb_number) {
+				$html .= "<div class='checkbox checkbox-purple'>
+							AWB Number: 
+							<a href='" . url("order/details/{$order->id}") . "'>#{$order->awb_number}</a>
+						  </div>";
+			}
+
+			// View Products button with JSON
+			$html .= "<span style='padding-left:0'>
+						<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}'>
+							View Products
+						</a>
+					  </span>";
+
+			$html .= "</div>";
+
+			return $html;
 		}
-		
+ 
 		public static function orderPackageDetailHtml($order)
 		{
 			$orderItems = $order->orderItems;
-			$productDetails = $orderItems->map(fn ($item) => "<p>Weight In Kg: ".($item->dimensions['weight'] ?? '')." Length: ".($item->dimensions['length'] ?? '')." Width: ".($item->dimensions['width'] ?? '')." Height: ".($item->dimensions['height'] ?? '')."</p>")->implode(' | '); 
-			$noofBox = $orderItems->sum('quantity');
-			$totalWeightInKg = $orderItems->sum('dimensions.weight') ?? 0;
+			
+			if ($order->weight_order == 2) {
+				$productDetails = $orderItems->map(function ($item) {
+					return "
+						<p class='text-white'>
+							No Of Box: ".($item->dimensions['no_of_box'] ?? '')."<br>
+							Weight Per Box: ".($item->dimensions['weight'] ?? '')."<br>
+							Length: ".($item->dimensions['length'] ?? '')."<br>
+							Width: ".($item->dimensions['width'] ?? '')."<br>
+							Height: ".($item->dimensions['height'] ?? '')."
+						</p>
+					";
+				})->implode('<hr>');
+			} else {
+				$productDetails = "
+					<p class='text-white'>
+						Weight In Kg: ".($order->weight ?? '')."<br>
+						Length: ".($order->length ?? '')."<br>
+						Width: ".($order->width ?? '')."<br>
+						Height: ".($order->height ?? '')."
+					</p>
+				";
+			}
+			
+			$quantitiy = $orderItems->sum('quantity');
+			$totalWeightInKg = $order->weight ?? 0;
 			
 			$output = ''; 
 			$output .= "<div class='main-cont1-1'>
 				<div class='checkbox checkbox-purple'>
-					No Of Box: {$noofBox}
+					Quantitiy: {$quantitiy}
 				</div> 
 				<div class='checkbox checkbox-purple'>
 					Weight In Kg: {$totalWeightInKg}
 				</div>"; 
 				 
-				$output .= "<span style='padding-left:0'> 
-					<a href='javascript:;'> 
-						<div class='tooltip' data-toggle='tooltip' data-placement='top' title='" . strip_tags($productDetails) . "'> 
-							View Package Details 
-						</div>
-					</a> 
-				</span>
+				$output .= "<div class='tooltip'>View Package Details<span class='tooltiptext'><b>" . $productDetails. "</span></div>  
 			</div>";
 			
 			return $output;
 		}
-		
-		public function incomeReport()
-		{ 
-			$users = User::where('role', 'user')->orderBy('name')->get(); 
-			return view('report.income', compact('users'));
-		}
-		
-		public function incomeReportAjax(Request $request)
+		 
+		public function shippingCharge()
 		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows per page
-			$search = $request->post('search')['value'] ?? null;
-			$orderColumnIndex = $request->post('order')[0]['column'] ?? 0;
-			$orderDirection = $request->post('order')[0]['dir'] ?? 'asc';
-			$columns = $request->post('columns');
-			$orderColumn = $columns[$orderColumnIndex]['data'] ?? 'id';
-
-			if ($orderColumn === 'action') {
-				$orderColumn = 'id';
-			}
-
-			$currentDate = date('Y-m-d');
-			$status = $request->post('status');
-			$userId = Auth::id();
-			$userRole = Auth::user()->role;
-
-			// Optimize with eager loading to reduce queries
-			$query = Order::with(['orderItems', 'user'])
-				->when(in_array($userRole, ["user"]), fn($q) => $q->where('orders.user_id', $userId)) 
-				->when($request->user_id, fn($q) => $q->where('orders.user_id', $request->user_id))
-				->when($request->fromdate && $request->todate, fn($q) => $q->whereBetween('orders.order_date', [$request->fromdate, $request->todate]))
-				->when($request->fromdate && !$request->todate, fn($q) => $q->whereDate('orders.order_date', $request->fromdate))
-				->when($request->todate && !$request->fromdate, fn($q) => $q->whereDate('orders.order_date', $request->todate))
-				->where('orders.shipping_company_id', '!=', '');
-
-			// Searching logic
-			if ($request->filled('search')) {
-				$search = $request->input('search');
-				$query->where(function ($q) use ($search) {
-					$q->where('created_at', 'LIKE', "%{$search}%") 
-					  ->orWhereHas('user', function($q) use ($search){
-						  $q->where('name', 'LIKE', "%{$search}%")
-						  ->orwhere('email', 'LIKE', "%{$search}%")
-						  ->orwhere('company_name', 'LIKE', "%{$search}%")
-						  ->orwhere('mobile', 'LIKE', "%{$search}%");
-						}) 
-					  ->orWhere('awb_number', 'LIKE', "%{$search}%")
-					  ->orWhere('courier_name', 'LIKE', "%{$search}%")
-					  ->orWhere('status_courier', 'LIKE', "%{$search}%")
-					  ->orWhere('id', 'LIKE', "%{$search}%")
-					  ->orWhere('order_prefix', 'LIKE', "%{$search}%");
-				});
-			}
-
-			// Get total records before pagination
-			$totalData = $query->count();
-
-			// Apply sorting and pagination
-			$orders = $query->orderBy("orders.{$orderColumn}", $orderDirection)
-				->offset($start)
-				->limit($limit)
-				->get();
-
-			// Collect order data
-			$data = $orders->map(function ($order, $index) use ($start) {
-				$orderItems = $order->orderItems; // Use eager-loaded relation
-				$productDetails = $orderItems->map(fn($item) => "<p>{$item->product_name} Amount: {$item->amount} QTY: {$item->quantity}</p>")
-					->implode(' | ');
-
-				return [
-					'id' => $start + $index + 1,
-					'seller_details' => "<div class='main-cont1-2'><p>" . 
-					(isset($order->user) ? "{$order->user->name} ({$order->user->company_name})" : "N/A") . 
-					"</p><p>" . ($order->user->email ?? "N/A") . "</p><p>" . ($order->user->mobile ?? "N/A") . "</p></div>",
-					'order_details' => $this->orderShipmentDetailHtml($order),
-					'charge' => "<div class='main-cont1-2'><p>{$order->shipping_charge}</p></div>",
-					'income' => "<div class='main-cont1-2'><p>{$order->percentage_amount}</p></div>",
-				];
-			});
-
-			// Response
-			return response()->json([
-				"draw" => intval($draw),
-				"iTotalRecords" => $totalData,
-				"iTotalDisplayRecords" => $totalData,
-				"aaData" => $data
-			]);
-		}  
-		
-		public function paymentReport()
-		{
-			$users = User::where('role', 'user')->orderBy('name')->get(); 
-			$shippingcompanies = ShippingCompany::whereStatus(1)->get();
-			return view('report.payment', compact('users', 'shippingcompanies'));
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
+			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get(); 
+			return view('report.shipping-charge', compact('users'));
 		}
 		  
-		public function paymentReportAjax(Request $request)
+		public function shippingChargeAjax(Request $request)
 		{
 			$draw = $request->post('draw');
 			$start = $request->post("start");
@@ -409,7 +352,7 @@
 				 
 				// Calculate total charges
 				$shipping_charges = $order->shipping_charge - $order->percentage_amount;
-				$total_charge = $shipping_charges - ($order->tax ?? 0);
+				$total_charge = $shipping_charges;
 				 
 				// Prepare data row
 				$data[] = [
@@ -436,72 +379,56 @@
 		
 		public function passbookReport()
 		{ 
-			$users = User::where('role', 'user')->orderBy('name', 'asc')->get(); 
+			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
 			return view('report.passbook', compact('users'));
 		}
 		
 		public function passbookReportAjax(Request $request)
-		{ 
+		{
 			$draw = $request->post('draw');
 			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows per page
+			$limit = $request->post("length");
 
-			// Sorting
-			$columnIndex = $request->post('order')[0]['column']; // Column index
-			$orderColumn = $request->post('columns')[$columnIndex]['data']; // Column name
-			$orderDir = $request->post('order')[0]['dir']; // Sorting direction
+			$columnIndex = $request->post('order')[0]['column'];
+			$orderColumn = $request->post('columns')[$columnIndex]['data'];
+			$orderDir = $request->post('order')[0]['dir'];
 
-			// Fix ordering issue
 			$orderColumn = ($orderColumn == 'action') ? 'created_at' : $orderColumn;
 
 			$role = Auth::user()->role;
 			$id = Auth::user()->id;
 
-			// Main Query
-			$query = Billing::select('billings.*', 'users.name', 'users.wallet_amount')
-				->join('users', 'users.id', '=', 'billings.user_id')
+			$query = Billing::with(['user'])
 				->when(in_array($role, ['user']), fn($q) => $q->where('billings.user_id', $id))
 				->when(!in_array($role, ['user']) && $request->user_id, fn($q) => $q->where('billings.user_id', $request->user_id))
 				->when($request->fromdate && $request->todate, fn($q) => $q->whereBetween('billings.created_at', [$request->fromdate, $request->todate]))
 				->when($request->fromdate && !$request->todate, fn($q) => $q->whereDate('billings.created_at', $request->fromdate))
 				->when($request->todate && !$request->fromdate, fn($q) => $q->whereDate('billings.created_at', $request->todate));
 
-			// Get total records before filtering
-			$totalData = $query->count();
+			// Get all records for accurate reverse balance calculation
+			$allRecords = $query->orderBy("billings.id", 'asc')->get();
 
-			// Apply search filter
-			if (!empty($request->input('search'))) {
-				$search = $request->input('search');
-				$query->where(function ($q) use ($search) {
-					$q->where('users.name', 'LIKE', "%{$search}%")
-					  ->orWhere('billings.amount', 'LIKE', "%{$search}%")
-					  ->orWhere('billings.billing_type', 'LIKE', "%{$search}%")
-					  ->orWhere('billings.transaction_type', 'LIKE', "%{$search}%")
-					  ->orWhere('billings.note', 'LIKE', "%{$search}%");
-				});
+			// Calculate final balance
+			$totalBalance = 0;
+			foreach ($allRecords as $record) {
+				$totalBalance += ($record->transaction_type == 'debit') ? -$record->amount : $record->amount;
 			}
 
-			// Get total filtered records
-			$totalFiltered = $totalData;
+			// Reverse order for pagination display
+			$reversed = $allRecords->sortByDesc('id')->values();
+			$paginated = $reversed/* ->slice($start, $limit) */;
 
-			// Apply pagination and ordering
-			$values = $query->offset($start)
-							->limit($limit)
-							->orderBy("billings.id", 'asc')
-							->get();
-
-			// Process Data for Response
 			$data = [];
-			$balance = 0;
-			foreach ($values as $key => $value)
-			{
+			$currentBalance = $totalBalance;
+
+			foreach ($paginated as $key => $value) {
 				$orderitems = OrderItem::where('order_id', $value->billing_type_id)->get();
 				$product_details = $orderitems->map(fn($item) => "<p>{$item->product_name} Amount: {$item->amount} QTY: {$item->quantity}</p>")->implode(' | ');
 
 				$billingTypeHtml = $value->billing_type === 'Order'
 					? '<div class="main-cont1-1">
 							<div class="checkbox checkbox-purple">Order Id: 
-								<a href="'.url('order/details/'.$value->billing_type_id).'" target=_blank"> #'.$value->billing_type_id.' </a>
+								<a href="'.url('order/details/'.$value->billing_type_id).'" target="_blank"> #'.$value->billing_type_id.' </a>
 							</div> 
 					   </div>'
 					: "<div class='main-cont1-2'><p>{$value->billing_type}</p></div>";
@@ -509,349 +436,168 @@
 				$transactionTypeHtml = ($value->transaction_type == 'debit')
 					? '<span class="badge badge-danger" disabled>Debit</span>'
 					: '<span class="badge badge-success" disabled>Credit</span>';
-
-				$balance += ($value->transaction_type == 'debit') ? -$value->amount : $value->amount;
-
+				
+				$displayCurrentBalance = $currentBalance;
+				
 				$data[] = [
 					'id' => $start + $key + 1,
-					'name' => "<div class='main-cont1-2'><p>{$value->name}</p></div>",
+					'name' => "<div class='main-cont1-2'><p>{$value->user->name}</p></div>",
 					'billing_type' => $billingTypeHtml,
 					'transaction_type' => "<div class='main-cont1-2'>{$transactionTypeHtml}</div>",
 					'debit' => ($value->transaction_type == 'debit') ? $value->amount : "-",
 					'credit' => ($value->transaction_type == 'credit') ? $value->amount : "-",
-					'balance' => $balance,
+					'balance' => number_format($displayCurrentBalance, 2),
 					'note' => "<div class='main-cont1-2'><p>{$value->note}</p></div>",
 					'created_at' => "<div class='main-cont1-2'><p>".date('Y M d | h:i A', strtotime($value->created_at))."</p></div>",
 				];
+
+				$currentBalance -= ($value->transaction_type == 'debit') ? -$value->amount : $value->amount;
 			}
 
-			// Response
+			return response()->json([
+				"draw" => intval($draw),
+				"iTotalRecords" => $allRecords->count(),
+				"iTotalDisplayRecords" => $allRecords->count(),
+				"aaData" => $data
+			]);
+		}   
+		
+		public function billingInvoice()
+		{
+			$users = User::where('role', 'user')->orderBy('name', 'asc')->get(); 
+			return view('report.invoice', compact('users'));
+		} 
+		
+		public function billingInvoiceAjax(Request $request)
+		{
+			$draw = $request->post('draw');
+			$start = $request->post("start");
+			$limit = $request->post("length");
+
+			$columnIndex_arr = $request->post('order');
+			$columnName_arr = $request->post('columns');
+			$order_arr = $request->post('order');
+			$search_arr = $request->post('search');
+
+			$columnIndex = $columnIndex_arr[0]['column'];
+			$order = $columnName_arr[$columnIndex]['data'] ?? 'created_at';
+			$dir = $order_arr[0]['dir'] ?? 'desc';
+
+			if ($order == 'action') {
+				$order = 'created_at';
+			}
+
+			$user = auth()->user();
+
+			$query = Invoice::with('user');
+
+			if ($user->role === 'user') {
+				$query->where('user_id', $user->id);
+			}
+			 
+			if ($request->filled('user_id')) {
+				$query->where('user_id', $request->user_id);
+			}
+  
+			if ($request->filled('year') && $request->filled('month') && is_numeric($request->year) && is_numeric($request->month)) {
+				$query->whereYear('invoice_date', $request->year)
+					  ->whereMonth('invoice_date', $request->month);
+			}
+
+			$totalData = $query->count();
+
+			// Apply search filter
+			if (!empty($search_arr['value'])) {
+				$search = $search_arr['value'];
+				$query->where(function ($q) use ($search) {
+					$q->whereHas('user', function ($sub) use ($search) {
+						$sub->where('name', 'LIKE', "%{$search}%")
+							->orWhere('email', 'LIKE', "%{$search}%")
+							->orWhere('company_name', 'LIKE', "%{$search}%");
+					})
+					->orWhere('invoice_number', 'LIKE', "%{$search}%")
+					->orWhere('invoice_period', 'LIKE', "%{$search}%")
+					->orWhere('invoice_date', 'LIKE', "%{$search}%")
+					->orWhere('total_amount', 'LIKE', "%{$search}%");
+				});
+			}
+
+			$totalFiltered = $query->count();
+
+			$invoices = $query
+				->orderBy($order, $dir)
+				->offset($start)
+				->limit($limit)
+				->get();
+
+			$data = [];
+			$index = $start + 1;
+
+			foreach ($invoices as $invoice) {
+				$data[] = [
+					'id' => $index++,
+					'invoice_state' => $invoice->invoice_state,
+					'invoice_number' => $invoice->invoice_number,
+					'invoice_period' => $invoice->invoice_period,
+					'invoice_date' => $invoice->invoice_date,
+					'total_amount' => number_format($invoice->total_amount, 2),
+					'user_name' => trim(($invoice->user->name ?? '') . ' ' . ($invoice->user->company_name ?? '')),
+					'action' => '
+						<a href="' . route('report.billing-invoice.pdf', $invoice->id) . '" class="btn btn-sm btn-danger" target="_blank">PDF</a>
+						<a href="' . route('report.billing-invoice.excel', $invoice->id) . '" class="btn btn-sm btn-success" target="_blank">Excel</a>'
+				];
+			}
+
 			return response()->json([
 				"draw" => intval($draw),
 				"iTotalRecords" => $totalData,
 				"iTotalDisplayRecords" => $totalFiltered,
-				"aaData" => $data
-			]); 
+				"aaData" => $data,
+			]);
 		}
+		
+		public function billingInvoicePdf($invoiceId)
+		{
+			$invoiceDetail = Invoice::with('user')->findOrFail($invoiceId);
+			$user = $invoiceDetail->user;
 
-		
-		public function invoice_report()
-		{
-			$users = User::orderBy('name', 'asc')->get();
-			$status = (isset($_GET['status']))?$_GET['status']:'New';
-			return view('report.invoice',compact('status','users'));
+			$invoice = [
+				'number' => $invoiceDetail->invoice_number,
+				'date' => \Carbon\Carbon::parse($invoiceDetail->invoice_date)->format('d M Y'),
+				'period' => \Carbon\Carbon::parse($invoiceDetail->month_start)->format('d') . ' to ' . \Carbon\Carbon::parse($invoiceDetail->month_end)->format('d M Y'),
+				'from' => [
+					'name' => 'SHYAM ENTERPRISES',
+					'address' => '4824 A PAIKI 3RD FLOOR OFFICE 310 BEGUMPURA RING ROAD SURAT GUJARAT 395003',
+					'gst' => '24AFKFS0901F1ZC',
+				],
+				'to' => [
+					'name' => $user->company_name ?? '',
+					'address' => trim(($user->address ?? '') . ', ' . ($user->city ?? '') . ', ' . ($user->state ?? '') . ', ' . ($user->country ?? '')),
+					'mobile' => $user->mobile ?? '',
+				],
+				'charges' => [
+					'shipping' => round($invoiceDetail->base_amount, 2),
+					'cgst' => round($invoiceDetail->cgst_amount, 2),
+					'sgst' => round($invoiceDetail->sgst_amount, 2),
+					'igst' => round($invoiceDetail->igst_amount, 2),
+				],
+			];
+
+			$total = $invoiceDetail->total_amount;
+			$pdf = Pdf::loadView('report.pdf-invoice', compact('invoice', 'total'))->setPaper('a4', 'portrait');
+			$filename = 'invoice_' . $invoiceDetail->invoice_number . '.pdf';
+
+			return $pdf->download($filename); 
 		}
 		
-		
-		public function invoicetAjax(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			
-			
-			
-			$columnIndex = $columnIndex_arr[0]['column']; // Column index
-			$order = $columnName_arr[$columnIndex]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			if($order = 'action')  
-			{
-				$order = 'created_at';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			$query = DB::table('invoices')->where('invoices.id','!=','');
-			$query->select('invoices.*','user_kycs.gst' , 'users.name','users.email','users.company_name','users.mobile','orders.id','orders.awb_number','orders.status_courier as order_status','orders.tax as order_total_tax','users.state as billing_state');
-			$query->join('users','users.id','=','invoices.user_id');
-			$query->join('user_kycs','user_kycs.user_id','=','invoices.user_id');
-			$query->join('orders','orders.id','=','invoices.order_id');
-			if($role != "admin") 
-			{
-				$query->where('invoices.user_id',$id);
-			}
-			
-			$totalData = $query->get()->count();
-			// echo "<pre>";	 print_r($totalData); echo "</pre>"; die;
-			
-			$totalFiltered = DB::table('invoices')->where('invoices.id','!=','');
-			$totalFiltered->select('invoices.*','user_kycs.gst' ,'users.name','users.email','users.company_name','users.mobile','orders.id','orders.awb_number','orders.status_courier as order_status','orders.tax as order_total_tax','users.state as billing_state');
-			$totalFiltered->join('users','users.id','=','invoices.user_id');
-			$totalFiltered->join('user_kycs','user_kycs.user_id','=','invoices.user_id');
-			$totalFiltered->join('orders','orders.id','=','invoices.order_id');
-			if($role != "admin") 
-			{
-				$totalFiltered->where('invoices.user_id',$id);
-				}else{
-				if($request->user_id)
-			    {
-					$user_id = $request->user_id;
-					$totalFiltered->where('invoices.user_id',$user_id);
-				}
-			}
-			
-			
-			$values = DB::table('invoices')->where('invoices.id','!=','');
-			$values->select('invoices.*','user_kycs.gst' , 'users.name','users.email','users.company_name','users.mobile','orders.id','orders.awb_number','orders.status_courier as order_status','orders.tax as order_total_tax','users.state as billing_state');
-			$values->join('users','users.id','=','invoices.user_id');
-			$values->join('user_kycs','user_kycs.user_id','=','invoices.user_id');
-			$values->join('orders','orders.id','=','invoices.order_id');
-			if($role != "admin") 
-			{
-				$values->where('invoices.user_id',$id);
-				}else{
-			    if($request->user_id)
-			    {
-					$user_id = $request->user_id;
-				    $values->where('invoices.user_id',$user_id); 
-				}
-				
-				
-			}
-			
-			
-			if ($request->fromdate && $request->todate) {
-				
-				$values->whereBetween('invoices.date', [$request->fromdate, $request->todate]);
-				} elseif ($request->fromdate) {
-				
-				$values->whereDate('invoices.date', $request->fromdate);
-				} elseif ($request->todate) {
-				
-				$values->whereDate('invoices.date', $request->todate);
-			} 
-			
-			$values->offset($start)->limit($limit)->orderBy('invoices'.'.'.$order,"DESC");
-			
-			if(!empty($request->input('search')))
-			{ 
-				$search = $request->input('search');
-				$values = $values->where(function ($query) use ($search) 
-				{
-					return $query->where('users.name', 'LIKE',"%{$search}%")
-					->where('users.email', 'LIKE',"%{$search}%")
-					->orWhere('users.mobile', 'LIKE',"%{$search}%")
-					->orWhere('orders.awb_number', 'LIKE',"%{$search}%")
-					->orWhere('orders.id', 'LIKE',"%{$search}%")
-					->orWhere('invoices.total_amount', 'LIKE',"%{$search}%")
-					->orWhere('invoices.inv_code', 'LIKE',"%{$search}%")
-					->orWhere('invoices.date', 'LIKE',"%{$search}%");
-				});
-				
-				$totalFiltered = $totalFiltered->where(function ($query) use ($search) {
-			    	return $query->where('users.name', 'LIKE',"%{$search}%")
-					->where('users.email', 'LIKE',"%{$search}%")
-					->orWhere('users.mobile', 'LIKE',"%{$search}%")
-					->orWhere('orders.awb_number', 'LIKE',"%{$search}%")
-					->orWhere('orders.id', 'LIKE',"%{$search}%")
-					->orWhere('invoices.total_amount', 'LIKE',"%{$search}%")
-					->orWhere('invoices.inv_code', 'LIKE',"%{$search}%")
-					->orWhere('invoices.date', 'LIKE',"%{$search}%");
-					
-				});  
-			}
-			
-			$values = $values->get(); 
-			 
-			$totalFiltered = $totalFiltered->count();
-			
-			$data = array();
-			if(!empty($values))
-			{
-				$i = $start + 1; 
-				// 			$balance = 0;
-				foreach ($values as $value)
-				{    	
-					
-					
-					if($value->billing_state == 'Gujarat')
-					{
-						$mainData['sgst'] = number_format(($value->order_total_tax / 2),2);
-						$mainData['cgst'] = number_format(($value->order_total_tax / 2),2);
-						$mainData['igst'] = '';
-						
-					}else
-					{
-						$mainData['sgst'] = '';
-						$mainData['cgst'] = '';
-						$mainData['igst'] = number_format(($value->order_total_tax),2);
-					}
-					$mainData['id'] = $i;
-					$mainData['inv_no'] = $value->inv_code;
-					$mainData['vendor'] = '<div class="main-cont1-2"><p> '.$value->name.' ('.$value->company_name .') </p><p> '.$value->email.'  </p><p> '.$value->mobile.' </p></div>';
-					$mainData['gst'] = '<p> '.$value->gst.'</p>';
-					$mainData['order'] = '<div class="main-cont1-2"><p> Order ID : '.$value->order_id.' </p><p> Awb No : '.$value->awb_number.'  </p></div>';
-					$mainData['order_status'] = $value->order_status;
-					$mainData['date'] = $value->date;
-					$mainData['amount'] = $value->total_amount;
-					
-					
-					$mainData['created_at'] = ' <div class="main-cont1-2"><p>'.date('Y M d | h:i A',strtotime($value->created_at)).' </p></div>';
-					
-					$data[] = $mainData;
-					$i++;
-				}
-			}
-			
-			$response = array(
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
-			); 
-			
-			echo json_encode($response);
-			exit;
-		}
 		 
-		public function daily_recharge()
+		public function billingInvoiceExcel($invoiceId)
 		{
-			$users = User::orderBy('name', 'asc')->get();
-			
-			return view('report.recharge',compact('users'));
+			$invoice = Invoice::with(['orders.user'])->findOrFail($invoiceId);
+			// Replace slashes to make a valid filename
+			$sanitizedNumber = str_replace('/', '-', $invoice->invoice_number);
+			$filename = 'invoice_' . $sanitizedNumber . '.xlsx';
+	
+			return Excel::download(new BillingInvoiceExport($invoice), $filename);
 		}
-		
-		public function RechargeAjaxData(Request $request)
-		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); // Rows display per page
-			
-			$columnIndex_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
-			$order_arr = $request->post('order');
-			$search_arr = $request->post('search');
-			
-			// Assuming 'action' is the default sorting column
-			$order = $columnName_arr[$columnIndex_arr[0]['column']]['data']; // Column name
-			$dir = $order_arr[0]['dir']; // asc or desc
-			
-			if($order === 'action')  
-			{
-				$order = 'id';
-			}
-			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			
-			$query = DB::table('user_wallets')->where('user_wallets.id','!=','');
-			$query->join('users','users.id','=','user_wallets.user_id');
-			
-			if($role != "admin") 
-			{
-				$query->where('user_wallets.user_id',$id);
-			}
-			
-			$totalData = $query->get()->count();
-			
-			$totalFiltered = DB::table('user_wallets')->where('user_wallets.id','!=','');
-			
-			$totalFiltered->join('users','users.id','=','user_wallets.user_id');
-			if($role != "admin") 
-			{
-				$totalFiltered->where('user_wallets.user_id',$id);
-			}
-			
-			$values = DB::table('user_wallets')
-			->select('user_wallets.*','users.name','users.email','users.mobile','users.company_name','users.wallet_amount')
-			->join('users','users.id','=','user_wallets.user_id');
-			
-			if ($request->user_id) {
-				$user_id = $request->user_id;
-				$values->where('user_wallets.user_id',$user_id);
-			}
-			
-			
-			
-			if ($request->fromdate && $request->todate) {
-				
-				$values->whereBetween('user_wallets.created_at', [$request->fromdate, $request->todate]);
-				} elseif ($request->fromdate) {
-				
-				$values->whereDate('user_wallets.created_at', $request->fromdate);
-				} elseif ($request->todate) {
-				
-				$values->whereDate('user_wallets.created_at', $request->todate);
-			} 
-			
-			if ($request->transaction_type && $request->transaction_type != 'All') {
-				
-				$values->where('user_wallets.transaction_type',$request->transaction_type);
-			}
-			
-			
-			if(!empty($request->input('search')))
-			{ 
-				$search = $request->input('search');
-				$values->where(function ($query) use ($search) 
-				{
-					return $query->where('users.name', 'LIKE',"%{$search}%")
-					->orWhere('users.email', 'LIKE',"%{$search}%")
-					->orWhere('users.mobile', 'LIKE',"%{$search}%")
-					->orWhere('user_wallets.created_at', 'LIKE',"%{$search}%")
-					->orWhere('user_wallets.amount', 'LIKE',"%{$search}%");
-				});
-				
-				$totalFiltered = $totalFiltered->where(function ($query) use ($search) {
-					return $query->where('users.name', 'LIKE',"%{$search}%")
-					->orWhere('users.email', 'LIKE',"%{$search}%")
-					->orWhere('users.mobile', 'LIKE',"%{$search}%")
-					->orWhere('user_wallets.created_at', 'LIKE',"%{$search}%")
-					->orWhere('user_wallets.amount', 'LIKE',"%{$search}%");
-				});  
-			}
-			
-			$totalFiltered = $totalFiltered->count();
-			
-			$clonedQuery = clone $values;
-			
-			$resultsCloned = $clonedQuery
-			->select(DB::raw('IFNULL(SUM(CASE WHEN user_wallets.transaction_type = "Online" THEN user_wallets.amount ELSE 0 END),0) AS online_total'),
-            DB::raw('IFNULL(SUM(CASE WHEN user_wallets.transaction_type = "Offline" THEN user_wallets.amount ELSE 0 END),0) AS offline_total'))
-			->first();
-			
-			$values = $values->offset($start)->limit($limit)->orderBy('user_wallets'.'.'.$order,$dir)->get();
-			
-			
-			// $online_total = 
-			$data = array();
-			if(!empty($values))
-			{
-				$i = $start + 1; 
-				foreach ($values as $value)
-				{    
-					$formattedDate = date('d M Y', strtotime($value->created_at));
-					
-					$mainData['id'] = $i;
-					$mainData['user_details'] = ' <div class="main-cont1-2"><p> '.$value->name.' ('.$value->company_name .') </p><p> '.$value->email.'  </p><p> '.$value->mobile.' </p></div>';
-					
-					$mainData['amount'] =  ' <div class="main-cont1-2"> <p> '.number_format($value->amount,2).' </p></div>';
-					$mainData['transaction_type'] = ' <div class="main-cont1-2"> <p> '.$value->transaction_type.' </p></div>';
-					$mainData['date'] =  ' <div class="main-cont1-2"> <p> '.$formattedDate.' </p></div>';
-					$mainData['balance'] =  ' <div class="main-cont1-2"> <p> '.$value->wallet_amount.' </p></div>';
-					
-					$data[] = $mainData;
-					$i++;
-				}
-			}
-			
-			$response = array(
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data,
-			"offlineAmt" => $resultsCloned->offline_total,
-			"onlineAmt" => $resultsCloned->online_total
-			); 
-			
-			return response()->json($response);
-		}
-		 
 	}

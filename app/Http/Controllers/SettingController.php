@@ -15,6 +15,9 @@
 		
 		public function index()
 		{
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
 			return view('setting.general');
 		}
 		

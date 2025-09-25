@@ -214,6 +214,22 @@
 	</div>
 </div>
 
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="hotelInfoModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-scrollable modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title" id="infoModalLabel">Product Details</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">×</span>
+				</button>
+			</div> 
+			<div class="modal-body" id="infoModalBody">
+				<!-- HTML hotel description appears here -->
+			</div>
+		</div>
+	</div>
+</div>
+
 @endsection
 @push('js')  
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> 
@@ -665,5 +681,35 @@
 		$('.show_pickup_msg').html(address);
 		$('.pickupschedulemodal').modal('show'); 
 	}
+	
+	$(document).on('click', '.show-details-btn', function () {
+		var items = $(this).data('order'); // JSON string automatically converted by jQuery
+		if (typeof items === 'string') {
+			items = JSON.parse(items);
+		}
+
+		var totalAmount = 0;
+		var html = "<table class='table table-bordered table-sm'><thead><tr><th>Category</th><th>Name</th><th>SKU</th><th>HSN</th><th>Amount</th><th>Qty</th></tr></thead><tbody>";
+
+		items.forEach(function(item) {
+			html += "<tr>" +
+						"<td>" + item.product_category + "</td>" +
+						"<td>" + item.product_name + "</td>" +
+						"<td>" + item.sku_number + "</td>" +
+						"<td>" + item.hsn_number + "</td>" +
+						"<td>" + item.amount + "</td>" +
+						"<td>" + item.quantity + "</td>" +
+					"</tr>";
+			totalAmount += parseFloat(item.amount * item.quantity) || 0;
+		});
+
+		html += "</tbody>";
+		html += "<tfoot><tr><th colspan='4'>Total</th><th colspan='2'>" + totalAmount.toFixed(2) + "</th></tr></tfoot>";
+		html += "</table>";
+
+		$('#infoModalLabel').html("Product Details");
+		$('#infoModalBody').html(html);
+		$('#infoModal').modal('show');
+	});
 </script> 
 @endpush

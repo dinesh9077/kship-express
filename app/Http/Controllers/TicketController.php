@@ -5,9 +5,11 @@
 	use Illuminate\Http\Request;
 	use App\Models\Ticket;
 	use App\Models\User;
+	use App\Models\TicketRemark;
 	use App\Models\Notification;
-		use App\Models\Permission;
-	use Auth, DB, Log;
+	use Auth, DB, Str;
+	use App\Mail\TicketMail;
+	use Mail;
 	class TicketController extends Controller
 	{
 		public function __construct()
@@ -22,76 +24,76 @@
 		
 		public function ticketListAjax(Request $request)
 		{
-			$draw = $request->get('draw');
-			$start = $request->get('start');
-			$limit = $request->get('length');
-			$orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-			$orderDirection = $request->get('order')[0]['dir'] ?? 'asc';
-			$orderColumn = $request->get('columns')[$orderColumnIndex]['data'] ?? 'id';
-			$searchValue = $request->get('search') ?? '';
+			$draw   = $request->get('draw');
+			$start  = $request->get("start", 0);
+			$limit  = $request->get("length", 10); // default 10
+			$order  = $request->input("columns.".$request->input("order.0.column").".data", "id");
+			$dir    = $request->input("order.0.dir", "asc");
 			$ticket_id = $request->post('ticket_id');
-			$user = Auth::user();
-
-			if ($orderColumn === 'customer_name') {
-				$orderColumn = 'id';
-			}
-
-			$query = Ticket::select('tickets.*', 'users.staff_id')
-				->join('users', 'users.id', '=', 'tickets.user_id');
+			$search = $request->input('search') ?? $request->input('search.value') ?? '';
+			
+			$role = Auth::user()->role;
+			$id   = Auth::user()->id;
+ 
+			$query = Ticket::query();
 
 			if (!empty($ticket_id)) {
-				$query->where('tickets.id', $ticket_id);
-			}
-			
-			if ($user->role == "staff") {
-				$query->where('users.staff_id', $user->id);
-			} elseif ($user->role != "admin") {
-				$query->where('tickets.user_id', $user->id);
+				$query->where('id', $ticket_id);
 			}
 
-			if (!empty($searchValue)) {
-				$query->where(function ($q) use ($searchValue) {
-					$q->where('tickets.contact_name', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.contact_phone', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.awb_number', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.created_at', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.ticket_no', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.status', 'LIKE', "%{$searchValue}%");
+			if ($role !== "admin") {
+				$query->where('user_id', $id);
+			}
+ 
+			if ($search) {
+				$query->where(function ($q) use ($search) {
+					$q->where('contact_name', 'LIKE', "%{$search}%")
+					  ->orWhere('contact_phone', 'LIKE', "%{$search}%")
+					  ->orWhere('awb_number', 'LIKE', "%{$search}%")
+					  ->orWhere('ticket_no', 'LIKE', "%{$search}%")
+					  ->orWhere('status', 'LIKE', "%{$search}%")
+					  ->orWhereDate('created_at', $search);
 				});
 			}
 
-			$totalData = $query->count();
-			$values = $query->orderBy("tickets." . $orderColumn, $orderDirection)
+			$totalData     = Ticket::count();   
+			$totalFiltered = $query->count();  
+ 
+			if ($order === 'customer_name') {
+				$order = 'id';
+			}
+
+			$values = $query->orderBy($order, $dir)
 				->offset($start)
 				->limit($limit)
 				->get();
-
+ 
 			$data = [];
 			$i = $start + 1;
 			foreach ($values as $value) {
 				$data[] = [
-					'id' => $i++,
-					'ticket_no' => $value->ticket_no,
-					'awb_number' => $value->awb_number,
-					'contact_name' => $value->contact_name,
+					'id'            => $i++,
+					'ticket_no'     => $value->ticket_no,
+					'awb_number'    => $value->awb_number,
+					'contact_name'  => $value->contact_name,
 					'contact_phone' => $value->contact_phone,
-					'revert' => $value->revert ?: 'Wait for revert',
-					'status' => $value->status == 'Close' 
-						? '<span class="badge badge-success">Close</span>' 
+					'status'        => $value->status === 'Close'
+						? '<span class="badge badge-success">Close</span>'
 						: '<span class="badge badge-danger">Open</span>',
-					'created_at' => date('d M Y', strtotime($value->created_at)),
-					'action' => '<a href="' . url('ticket/delete', $value->id) . '" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Delete User" onClick="deleteRecord(this,event);"> <i class="mdi mdi-trash-can-outline"></i> </a>'
+					'created_at'    => $value->created_at->format('d M Y'),
+					'action'        => '<a href="'.url('ticket/view', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Ticket View"> <i class="mdi mdi-eye"></i> </a>',
 				];
 			}
-
+ 
 			return response()->json([
 				"draw" => intval($draw),
 				"iTotalRecords" => $totalData,
-				"iTotalDisplayRecords" => $totalData,
-				"aaData" => $data
+				"iTotalDisplayRecords" => $totalFiltered,
+				"aaData" => $data,
 			]);
 		}
- 
+
+		
 		public function ticketAdd()
 		{
 			return view('ticket.add');
@@ -99,224 +101,353 @@
 		
 		public function ticketStore(Request $request)
 		{
-			$ticket_no = strtoupper(uniqid());
-			$user = Auth::user();
-			$email = $user->email;
-
-			$data = $request->except('_token');
-			$data['user_id'] = $user->id;
-			$data['ticket_no'] = $ticket_no;
-			$data['status'] = 'Open';
-			$data['created_at'] = now();
-			$data['updated_at'] = now();
-
+			$user = Auth::user(); 
+			
+			if (Ticket::where('awb_number', $request->awb_number)->where('status', 'Open')->exists()) {
+				return response()->json([
+					'status' => 'error',
+					'msg'    => 'The AWB number you provided already has an open ticket.',
+				]);
+			}
 			DB::beginTransaction();
-			try {
-				$ticket = Ticket::create($data);
-				$awb_number = $data['awb_number'];
-
-				Notification::insert([
-					['user_id' => null, 'task_id' => $ticket->id, 'type' => 'New Ticket', 'role' => 'admin', 'text' => $request->contact_name . ' added a new ticket with ticket no. ' . $ticket_no, 'created_at' => now(), 'updated_at' => now()],
-					['user_id' => $user->id, 'task_id' => $ticket->id, 'type' => 'New Ticket', 'role' => 'user', 'text' => 'Your ticket has been generated with ticket no. ' . $ticket_no, 'created_at' => now(), 'updated_at' => now()]
+			
+			try { 
+				$ticket = Ticket::create([
+					'user_id'    => $user->id,
+					'ticket_no'  => strtoupper(Str::uuid()->toString()), // more unique than uniqid
+					'awb_number' => $request->awb_number,
+					'status'     => 'Open',
+					'contact_name' => $request->contact_name,
+					'text' => $request->text,
+				]);
+ 
+				TicketRemark::create([
+					'ticket_id' => $ticket->id,
+					'user_id'   => $user->id,
+					'role'      => $user->role,
+					'remark'    => $request->text,
+					'images'    => null, // only set when available
+				]);
+ 
+				$notifications = [
+					[
+						'user_id' => null,
+						'task_id' => $ticket->id,
+						'type'    => 'New Ticket',
+						'role'    => 'admin',
+						'text'    => "{$request->contact_name} created a new ticket (No: {$ticket->ticket_no})",
+						'created_at' => now(),
+						'updated_at' => now(),
+					],
+					[
+						'user_id' => $user->id,
+						'task_id' => $ticket->id,
+						'type'    => 'New Ticket',
+						'role'    => 'user',
+						'text'    => "Your ticket has been generated (No: {$ticket->ticket_no})",
+						'created_at' => now(),
+						'updated_at' => now(),
+					]
+				];
+				Notification::insert($notifications);
+ 
+				try {
+					Mail::to($user->email)->send(new TicketMail([
+						'name'       => $request->contact_name,
+						'ticket_no'  => $ticket->ticket_no,
+						'awb_number' => $ticket->awb_number,
+					]));
+				} catch (\Exception $mailException) {
+					\Log::warning("Ticket email failed for ticket {$ticket->id}: ".$mailException->getMessage());
+				}
+				DB::commit();
+				return response()->json([
+					'status' => 'success',
+					'msg'    => 'The ticket has been successfully generated.',
 				]);
 
-				DB::commit();
-
-				try {
-					\Mail::to($email)->send(new \App\Mail\TicketMail([
-						'name' => $request->contact_name,
-						'ticket_no' => $ticket_no,
-						'awb_number' => $awb_number
-					]));
-				} catch (\Exception $e) { 
-				}
-
-				return response()->json(['status' => 'success', 'msg' => 'The ticket has been successfully generated.']);
 			} catch (\Exception $e) {
-				DB::rollBack();
-				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
+				DB::rollback();
+				return response()->json([
+					'status' => 'error',
+					'msg'    => 'Something went wrong while creating the ticket.'.$e->getMessage(),
+				]);
 			}
-		} 
+		}
+		 
+		public function ticketView($id)
+		{
+			$ticket = Ticket::with(['remarks' => function ($q) {
+				$q->orderBy('id');
+			}])->findOrFail($id);
+
+			$role = auth()->user()->role;
+
+			return view('ticket.remark-form', [
+				'id'      => $id,
+				'ticket'  => $ticket,
+				'remarks' => $ticket->remarks,
+				'role'    => $role,
+			]);
+		}
+ 
+		public function remarkStore(Request $request)
+		{   
+			$request->validate([
+				'ticket_id' => 'required|integer',
+				'remark' => 'required|string',
+				'images.*' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+			]);
+			
+			DB::beginTransaction();
+			try {
+				$ticketId = $request->ticket_id;
+				$imagePaths = []; 
+				if ($request->hasFile('images')) {
+					foreach ($request->file('images') as $image) {
+						 
+						// Generate a unique filename
+						$filename = time() . '-' . uniqid() . '.' . $image->getClientOriginalExtension();
+
+						// Store the file in the "weight_descrepency" folder within "storage/app/public"
+						$path = $image->storeAs('ticket-remark/'.$ticketId, $filename, 'public');
+
+						// Save the file path in an array
+						$imagePaths[] = $path;
+					}
+				} 
+				
+				$remark = TicketRemark::create([
+					'ticket_id' => $ticketId,
+					'role' =>  auth()->user()->role,
+					'user_id' => auth()->id(),
+					'remark' => $request->remark,
+					'images' => $imagePaths,
+				]);
+				
+				$now = now();  
+				$ticket = Ticket::find($ticketId);
+				
+				if(auth()->user()->role == "user")
+				{
+    				Notification::insert([
+    					'task_id'    => $ticketId,
+    					'type'       => 'Ticket Remark',
+    					'role'       => 'admin',
+    					'text'       => $ticket->contact_name . ' has created a new ticket reamrk (Ticket No: ' . $ticket->ticket_no . ').',
+    					'created_at' => $now,
+    					'updated_at' => $now
+    				]); 
+				}
+				else {
+				     
+    				Notification::insert([
+    					'user_id'    => $ticket->user_id,
+    					'task_id'    => $ticketId,
+    					'type'       => 'Ticket Remark',
+    					'role'       => 'user',
+    					'text'       => auth()->user()->name . ' has created a new ticket reamrk (Ticket No: ' . $ticket->ticket_no . ').',
+    					'created_at' => $now,
+    					'updated_at' => $now
+    				]);
+    				
+				}
+				DB::commit(); 
+				return redirect()->back()->with('success', 'Remark submitted successfully.');
+			} catch (\Exception $e) {
+				DB::rollback();
+				return redirect()->back()->with('error', 'Failed to submit remark.'. $e->getMessage()); 
+			}
+		}
 		
 		public function ticketDelete($id)
 		{ 
-			DB::beginTransaction();
-			try { 
-				$deleted = Ticket::whereId($id)->delete();
-
-				if ($deleted) {
-					DB::commit();
-					return back()->with('success', 'The ticket has been successfully deleted.');
-				} else {
-					DB::rollBack();
-					return back()->with('error', 'Ticket not found or already deleted.');
-				}
-			} catch (\Exception $e) { 
-				DB::rollBack();
-				Log::error('Ticket Deletion Error: ' . $e->getMessage());
-				return back()->with('error', 'Something went wrong.');
+			try
+			{ 
+				$user = Ticket::whereId($id)->delete(); 
+				return back()->with('success','The ticket has been successfully deleted.'); 
+			}
+			catch(\Exception $e)
+			{ 
+				return back()->with('error','Something went wrong.'); 
 			}  
 		}
- 
-		public function ticketList()
+		
+		public function ticketList(Request $request)
 		{
-			if(isset($_GET['task_id']))
-			{
-				Notification::whereId($_GET['notify_id'])->update(['read_at'=>1]);
+			if (auth()->user()->role === 'user') {
+				abort(403, 'Permission denied');
+			} 
+			if ($request->filled('task_id') && $request->filled('notify_id')) {
+				Notification::where('id', $request->notify_id)->update(['read_at' => 1]);
 			}
-			$ticket_id = (isset($_GET['task_id']))?$_GET['task_id']:'';
+
+			$ticket_id = $request->get('task_id');
+
 			return view('ticket.list', compact('ticket_id'));
 		}
-		
+
 		public function ticketAllListAjax(Request $request)
 		{
-			$draw = $request->get('draw');
-			$start = $request->get("start");
-			$limit = $request->get("length");
-			$orderColumnIndex = $request->get('order')[0]['column'] ?? 0;
-			$orderColumn = $request->get('columns')[$orderColumnIndex]['data'] ?? 'id';
-			$orderDirection = $request->get('order')[0]['dir'] ?? 'asc';
-			$searchValue = $request->get('search') ?? '';
+			$draw = intval($request->get('draw', 1));
+			$start = intval($request->get('start', 0));
+			$limit = intval($request->get('length', 10));
+
+			$columns = $request->get('columns', []);
+			$orderArr = $request->get('order', []);
+			$searchValue = $request->input('search') ?? $request->input('search.value') ?? '';
 			$ticket_id = $request->post('ticket_id');
-			$user = Auth::user();
 
-			$query = Ticket::select('tickets.*', 'users.staff_id')
-				->join('users', 'users.id', '=', 'tickets.user_id');
+			// Determine column for sorting
+			$orderColumn = 'id';
+			$orderDir = 'asc';
+			if (!empty($orderArr)) {
+				$columnIndex = $orderArr[0]['column'] ?? 0;
+				$orderDir = $orderArr[0]['dir'] ?? 'asc';
+				$orderColumn = $columns[$columnIndex]['data'] ?? 'id';
 
+				// Whitelist columns to prevent SQL errors
+				$allowedColumns = ['id','ticket_no','awb_number','contact_name','contact_phone','status','created_at'];
+				if (!in_array($orderColumn, $allowedColumns)) {
+					$orderColumn = 'id';
+				}
+			}
+
+			// Base query
+			$query = Ticket::query();
 			if (!empty($ticket_id)) {
-				$query->where('tickets.id', $ticket_id);
-			}
-			if ($user->role == "staff") {
-				$query->where('users.staff_id', $user->id);
-			} elseif ($user->role != "admin") {
-				$query->where('tickets.user_id', $user->id);
-			}
-
-			if (!empty($searchValue)) {
-				$query->where(function ($q) use ($searchValue) {
-					$q->where('tickets.contact_name', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.contact_phone', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.awb_number', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.created_at', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.ticket_no', 'LIKE', "%{$searchValue}%")
-					  ->orWhere('tickets.status', 'LIKE', "%{$searchValue}%");
-				});
+				$query->where('id', $ticket_id);
 			}
 
 			$totalData = $query->count();
-			$values = $query->orderBy("tickets." . $orderColumn, $orderDirection)
-				->offset($start)
-				->limit($limit)
-				->get();
 
+			// Search filter
+			if (!empty($searchValue)) {
+				$query->where(function ($q) use ($searchValue) {
+					$q->where('contact_name', 'LIKE', "%{$searchValue}%")
+					  ->orWhere('contact_phone', 'LIKE', "%{$searchValue}%")
+					  ->orWhere('awb_number', 'LIKE', "%{$searchValue}%")
+					  ->orWhere('ticket_no', 'LIKE', "%{$searchValue}%")
+					  ->orWhere('status', 'LIKE', "%{$searchValue}%")
+					  ->orWhereDate('created_at', 'LIKE', "%{$searchValue}%");
+				});
+			}
+
+			$totalFiltered = $query->count();
+
+			// Pagination and ordering
+			$tickets = $query->offset($start)
+							 ->limit($limit)
+							 ->orderBy($orderColumn, $orderDir)
+							 ->get();
+
+			// Prepare data for DataTables
 			$data = [];
-			$i = $start + 1;
-			  
-			foreach ($values as $value) {
-				$action = '';
-				if (config('permission.ticket_request.edit')) { 
-					$action .= '<a href="'.url('ticket/revert_ticket', $value->id).'" ><button type="button" class="btn-main-1">Revert Ticket</button></a>'; 
-				} 
-				if($value->status != "Close" && config('permission.ticket_request.delete')) 
-				{
-					$action .= '<a href="'.url('ticket/close', $value->id).'" onclick="closeTicket(this,event);"><button type="button" class="btn-main-1">Close Ticket</button></a>';  
-				}
-				if (config('permission.ticket_request.delete')) { 
-					$action .= '<a href="'.url('ticket/delete', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip"  title="Delete User"  onClick="deleteRecord(this,event);"> <button type="button" class="btn btn-danger">Delete</button> </a>'; 
+			foreach ($tickets as $i => $ticket) {
+				$id = $start + $i + 1;
+				$statusLabel = ($ticket->status === 'Close') ? 
+					'<span class="badge badge-success">Close</span>' : 
+					'<span class="badge badge-danger">Open</span>';
+
+				$action = '<a href="'.url('ticket/view',$ticket->id).'" class="btn-main-1 text-white">View Ticket</a>'; 
+				if ($ticket->status != 'Close') {
+					$action .= ' <a href="'.url('ticket/close',$ticket->id).'" onclick="closeTicket(this,event);" class="btn-main-1 text-white">Close Ticket</a>';
 				}
 				 
-
+				if(config('permission.ticket_request.delete')){
+					$action .= ' <a href="'.url('ticket/delete',$ticket->id).'" onclick="deleteRecord(this,event);" class="btn btn-danger">Delete</a>';
+				}
 				$data[] = [
-					'id' => $i++,
-					'ticket_no' => $value->ticket_no,
-					'awb_number' => $value->awb_number,
-					'contact_name' => $value->contact_name,
-					'contact_phone' => $value->contact_phone,
-					'description' => $value->text,
-					'status' => $value->status == 'Close' ? '<span class="badge badge-success">Close</span>' : '<span class="badge badge-danger">Open</span>',
-					'created_at' => date('d M Y', strtotime($value->created_at)),
+					'id' => $id,
+					'ticket_no' => $ticket->ticket_no,
+					'awb_number' => $ticket->awb_number,
+					'contact_name' => $ticket->contact_name,
+					'contact_phone' => $ticket->contact_phone,
+					'status' => $statusLabel,
+					'created_at' => $ticket->created_at ? $ticket->created_at->format('d M Y') : '',
 					'action' => $action
 				];
 			}
 
 			return response()->json([
-				"draw" => intval($draw),
-				"iTotalRecords" => $totalData,
-				"iTotalDisplayRecords" => $totalData,
-				"aaData" => $data
+				'draw' => $draw,
+				'iTotalRecords' => $totalData,
+				'iTotalDisplayRecords' => $totalFiltered,
+				'aaData' => $data
 			]);
 		}
- 
-		public function revert_ticket($ticketId)
+
+		
+		public function revert_ticket($id)
 		{
-			$ticket = Ticket::find($ticketId); 
-			return view('ticket.revert', compact('ticket'));
+			if(auth()->user()->role == "staff" && !auth()->user()->hasPermissionTo(16))
+			{
+				return abort(403, 'Permission Denied'); 
+			}
+			$tickets = Ticket::where("id",$id)->first();
+			
+			return view('ticket.revert',compact('tickets'));
 		}
-
-		public function ticketUpdate(Request $request, $ticketId)
+		
+		public function ticketupdate($id,Request $request)	
 		{	
-			DB::beginTransaction();
-			try { 
-				$data = $request->except('_token', 'id');
-				$ticket = Ticket::findOrFail($ticketId);
-				$ticket->update($data);
+			try
+			{ 
+				$data = $request->except('_token');
+				Ticket::whereId($id)->update($data); 
+				return response()->json(['status'=>'success','msg'=>'The ticket has been successfully reverted.']);
 				
-				Notification::create([
-					'user_id' => $ticket->user_id,
-					'task_id' => $ticket->id,
-					'type' => 'Revert Ticket', 
-					'role' => 'user', 
-					'text' => 'Your ticket revert msg with ticket no. ' . $ticket->ticket_no, 
-					'created_at' => now(), 
-					'updated_at' => now()
-				]);
-				
-				DB::commit();
-				return response()->json(['status' => 'success', 'msg' => 'The ticket has been successfully reverted.']); 
-			} catch (\Exception $e) { 
-				DB::rollBack(); 
-				return response()->json(['status' => 'error', 'msg' => 'Something went wrong.']);
-			} 
+			}
+			catch(\Exception $e)
+			{ 
+				return response()->json(['status'=>'error','msg'=>$e->getMessage()]);
+			}
+			
 		}
-
 		public function ticketClose($id)
 		{ 
-			DB::beginTransaction();
-			try { 
-				$ticket = Ticket::findOrFail($id);
-				$user = User::findOrFail($ticket->user_id);
-
-				$ticket->update(['status' => 'Close']); 
+			if(auth()->user()->role == "staff" && !auth()->user()->hasPermissionTo(16))
+			{
+				return abort(403, 'Permission Denied'); 
+			}
+			try
+			{ 
+				
+				$ticket = Ticket::whereId($id)->first();
+				
+				$user = User::whereId($ticket->user_id)->first();
+				Ticket::whereId($id)->update(['status'=>'Close']); 
+				
+				$now = now();
 				
 				Notification::insert([
-					'user_id' => $user->id,
-					'task_id' => $ticket->id,
-					'type' => 'Close Ticket', 
-					'role' => 'user', 
-					'text' => 'Your ticket has been close with ticket no. ' . $ticket->ticket_no, 
-					'created_at' => now(), 
-					'updated_at' => now()
-				]);
- 
-				DB::commit();
-
+                    'user_id'    => $ticket->user_id,
+                    'task_id'    => $ticket->id,
+                    'type'       => 'Ticket Remark',
+                    'role'       => 'user',
+                    'text'       => auth()->user()->name . ' has closed the ticket (Ticket No: ' . $ticket->ticket_no . ').',
+                    'created_at' => $now,
+                    'updated_at' => $now
+                ]);
+                
 				$details = [
-					'name' => $ticket->contact_name,
-					'ticket_no' => $ticket->ticket_no,
-					'awb_number' => $ticket->awb_number
+    				'name' => $ticket->contact_name,
+    				'ticket_no' => $ticket->ticket_no,
+    				'awb_number' => $ticket->awb_number
 				];
-			
+				 
+ 
 				try {
-					\Mail::to($user->email)->send(new \App\Mail\TicketCloseMail($details));
-				} catch (\Exception $e) { 
-				}
+                    \Mail::to($user->email)->send(new \App\Mail\TicketCloseMail($details));
+                } catch (\Exception $e) { 
+                }
 
-				return back()->with('success', 'The ticket has been successfully closed.'); 
-
-			} catch (\Exception $e) { 
-				DB::rollBack(); 
-				return back()->with('error', 'Something went wrong.'); 
+				return back()->with('success','The ticket has been successfully close.'); 
+			}
+			catch(\Exception $e)
+			{ 
+				return back()->with('error','Something went wrong.'.$e->getMessage()); 
 			}  
 		}
-  
+		
 	}
