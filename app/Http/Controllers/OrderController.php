@@ -427,14 +427,41 @@
 		{     
 			$user_id = Auth::id();  
 			
-			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
+			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document', 'first_name', 'last_name', 'email', 'gst_number', 'mobile', 'address', 'country', 'state', 'city', 'zip_code']; 
 			if ($request->weight_order == 2) { 
 				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
 			} 
 			$data = $request->except($exclude); 
+			 
+			// Create Customer
+			$customer = Customer::create([
+				'user_id'    => $user_id,
+				'first_name' => $request->first_name,
+				'last_name'  => $request->last_name,
+				'email'      => $request->email,
+				'gst_number' => $request->gst_number ?? null,
+				'mobile'     => $request->mobile,
+				'status'     => 1,
+			]);
 			
+			// Create Customer Address if available
+			$customerAddress = null;
+			if ($request->filled('address')) {
+				$customerAddress = CustomerAddress::create([
+					'customer_id' => $customer->id,
+					'address'     => $request->address,
+					'country'     => $request->country,
+					'state'       => $request->state,
+					'city'        => $request->city,
+					'zip_code'    => $request->zip_code,
+					'status'      => 1,
+				]);
+			}
+				
 			$data['user_id'] = $user_id;
 			$data['status_courier'] = 'New';
+			$data['customer_id'] = $customer->id;
+			$data['customer_address_id'] = $customerAddress->id ?? null;
 			$data['weight'] = $request->total_weight;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 			$data['total_amount'] = $request->invoice_amount;
@@ -707,12 +734,37 @@
 		public function orderUpdate(Request $request, $id)
 		{  
 			$user_id = Auth::id();  
-			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document']; 
+			$exclude = ['_token', 'product_name', 'product_category', 'sku_number', 'hsn_number', 'amount', 'quantity', 'order_image', 'invoice_document', 'first_name', 'last_name', 'email', 'gst_number', 'mobile', 'address', 'country', 'state', 'city', 'zip_code']; 
 			if ($request->weight_order == 2) { 
 				$exclude = array_merge($exclude, ['weight', 'length', 'width', 'height']);
 			} 
 			$data = $request->except($exclude); 
-			 
+			
+			$order = Order::findOrFail($id); 
+			$order->customer()->update([
+				'user_id'    => $user_id,
+				'first_name' => $request->first_name,
+				'last_name'  => $request->last_name,
+				'email'      => $request->email,
+				'gst_number' => $request->gst_number ?? null,
+				'mobile'     => $request->mobile,
+				'status'     => 1,
+				'updated_at' => now(), // ✅ fixed
+			]);
+
+			if (!empty($request->address)) {
+				$order->customerAddress()->update([
+					'customer_id' => $order->customer_id,
+					'address'     => $request->address,
+					'country'     => $request->country,
+					'state'       => $request->state,
+					'city'        => $request->city,
+					'zip_code'    => $request->zip_code,
+					'status'      => 1,
+					'updated_at'  => now(), // ✅ fixed
+				]);
+			}
+ 
 			$data['user_id'] = $user_id;
 			$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 			$data['weight'] = $request->total_weight; 
