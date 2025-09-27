@@ -15,14 +15,13 @@
 								<div class="row" style="row-gap: 10px;">
 									<div class="from-group col-lg-2 col-sm-6">
 										<select name="status" id="status">
-											<option value="5">All</option>
-											<option value="0">Pending</option>
-											<option value="1">Approved</option>
-											<option value="2">Rejected</option>
+											<option value="">All</option> 
+											<option value="Pending">Pending</option>
+											<option value="Paid">Paid</option>
 										</select>
 									</div>
 									<div class="from-group col-lg-2 col-sm-6">
-										<select name="transaction_type" id="transaction_type1">
+										<select name="transaction_type" id="transaction_type">
 											<option value="">All</option>
 											<option value="Online">Online</option>
 											<option value="Offline">Offline</option>
@@ -84,7 +83,7 @@
 				d._token = "{{csrf_token()}}";
 				d.search = $('input[type="search"]').val();
 				d.status = $('#status').val();
-				d.transaction_type = $('#transaction_type1').val();
+				d.transaction_type = $('#transaction_type').val();
 			}
 		},
 		"columns": [{
@@ -114,12 +113,13 @@
 		]
 	});
 
-	$('#transaction_type1,#status').change(function() {
+	$('#transaction_type, #status').change(function() {
 		dataTable.draw()
 	})
+	
 	dataTable.columns(4).visible(false);
 	@if(Auth::user()-> role != "admin")
-	dataTable.columns(1).visible(false);
+		dataTable.columns(1).visible(false);
 	@endif
 </script>
 @endpush

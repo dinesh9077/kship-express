@@ -8,6 +8,8 @@
 	use App\Models\Billing;
 	use Auth,File,DB,Helper;
 	use Razorpay\Api\Api;
+	use Illuminate\Support\Facades\Http;
+	use App\Services\MasterService;
 	class RechargeController extends Controller
 	{   
 		public function rechargeList()
@@ -43,8 +45,8 @@
 				$query->where('user_wallets.transaction_type', $transaction_type);
 			}
 
-			if ($status != 5) {
-				$query->where('user_wallets.status', $status);
+			if (!empty($status)) {
+				$query->where('user_wallets.transaction_status', $status);
 			}
 
 			// Clone query for total count
@@ -81,13 +83,7 @@
 										<img src="'.url('storage/receipt',$image).'" style="height:50px">
 									 </a>';
 					}
-				}
-
-				$statusHtml = match($value->transaction_status) {
-					'Pending' => '<span class="badge badge-warning">Pending</span>',
-					'Success' => '<span class="badge badge-success">Paid</span>',
-					default   => '<span class="badge badge-danger">'.$value->transaction_status.'</span>',
-				};
+				} 
 
 				$data[] = [
 					'id' => $i++,
@@ -96,7 +92,7 @@
 					'amount' => config('setting.currency').$value->amount,
 					'payment_receipt' => $receipt,
 					'note' => $value->note,
-					'status' => $statusHtml,
+					'status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
 					'created_at' => $value->created_at->format('d M Y'),
 				];
 			}
@@ -108,8 +104,7 @@
 				"aaData" => $data
 			]);
 		}
-
-		
+ 
 		public function rechargeListAdmin()
 		{
 			return view('recharge.recharg_history');
@@ -244,263 +239,95 @@
 				$data['reject_note'] = $reject_note;
 				UserWallet::whereId($id)->update($data);
 				return back()->with('success','The payment status has been change to rejected.'); 
-			}
-			 
+			} 
 		}
 		  
-		public function rechargeWalletStore(Request $request)
-		{
-			error_reporting(0);
-
-			$user_id = Auth::user()->id;
-			$amount = $request->amount;
-
-			if ($request->transaction_type == "Online") {
-				// Razorpay credentials
-				$api_key = 'rzp_test_breqGHECxIJvjz';
-				$api_secret = 'mCIqxNi2BUC4UZtY7gifUZUj';
+		public function rechargeWalletStore(Request $request, MasterService $masterService)
+		{  
+			try{
+				$userId = $request->user_id;
+				$amount = $request->amount; 
+				$response = $masterService->rechargeOrderCreate($amount);
+				if (!($response['success'] ?? false)) {
+					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
+					return response()->json(['status' => 'error', 'msg' => $errorMsg]);
+				}
 				
-				// Initialize Razorpay API
-				$api = new Api($api_key, $api_secret);
-
-				// Create order
-				$orderData = [
-					'receipt'         => rand(11111111, 99999999),
-					'amount'          => $amount * 100, // Amount in paise
-					'currency'        => 'INR',
-					'payment_capture' => 1 // Auto capture
-				];
+				if ((isset($response['response']['message']) && $response['response']['message'] === "Failed"))
+				{
+					return response()->json(['status' => 'error', 'msg' => $response['response']['err'] ?? 'An error occurred.']);
+				} 
+			 
+				if (empty($response['response']['data']))
+				{
+					return response()->json(['status' => 'error', 'msg' => 'something went wrong.']);
+				} 
 				
-
-				$razorpayOrder = $api->order->create($orderData);
-				 
+				$responseData = $response['response']['data'];
+				  
 				// Prepare data for database
-				$data = $request->except('_token', 'tid', 'merchant_id', 'order_id', 'currency', 'redirect_url', 'cancel_url', 'language', 'merchant_param5');
-				$data['user_id'] = $user_id;
+				$data = $request->except('_token', 'payment_receipt');
+				$data['user_id'] = $userId;
 				$data['status'] = 1;
 				$data['amount'] = $amount;
-				$data['order_id'] = $razorpayOrder->id;
-				$data['transaction_type'] = 'Online';
-				$data['created_at'] = date('Y-m-d H:i:s');
-				$data['updated_at'] = date('Y-m-d H:i:s');
-				$id = UserWallet::insertGetId($data);
+				$data['order_id'] = $responseData['order_id'] ?? null; 
+				$data['payable_response'] = $responseData ?? null; 
+				$data['created_at'] = now();
+				$data['updated_at'] = now();
+				
+				$wallet = UserWallet::create($data);
 
 				// Return Razorpay order details to the frontend
 				return response()->json([
-					'order_id' => $razorpayOrder->id,
-					'amount' => $razorpayOrder->amount,
-					'currency' => $razorpayOrder->currency,
-					'key' => $api_key,
+					'status' => 'success', 
+					'msg' => 'success',
+					'order' => $responseData
 				]);
-			} else {
-				$data = $request->except('_token', 'tid', 'merchant_id', 'order_id', 'currency', 'redirect_url', 'cancel_url', 'language', 'merchant_param5', 'payment_receipt');
-				$data['user_id'] = $user_id;
-				$data['status'] = 0;
-				$data['created_at'] = date('Y-m-d H:i:s');
-				$data['updated_at'] = date('Y-m-d H:i:s');
-
-				$path_avatar = "storage/app/public/receipt";
-
-				if (!File::isDirectory($path_avatar)) {
-					File::makeDirectory($path_avatar, 0777, true, true);
-				}
-
-				if (!empty($request->file('payment_receipt'))) {
-					$images = $request->file('payment_receipt');
-					$string = "";
-					foreach ($images as $key => $image) {
-						$getAvatar = time() . rand(111111, 999999) . '.' . $image->getClientOriginalExtension();
-						$filename = $path_avatar . "/" . $getAvatar;
-						$image->move($path_avatar, $getAvatar);
-						$string .= $getAvatar . ',';
-					}
-					$data['payment_receipt'] = rtrim($string, ',');
-				}
-
-				try {
-					UserWallet::insert($data);
-					return back()->with('success', 'The recharge amount request has been sent to admin.');
-				} catch (\Exception $e) {
-					return back()->with('error', $e->getMessage());
-				}
 			}
-		}
-		
-		public function encrypt($plainText,$key)
-		{
-			$key = $this->hextobin(md5($key));
-			$initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
-			$openMode = openssl_encrypt($plainText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
-			$encryptedText = bin2hex($openMode);
-			return $encryptedText;
-		}
-		
-		/*
-			* @param1 : Encrypted String
-			* @param2 : Working key provided by CCAvenue
-			* @return : Plain String
-		*/
-		public function decrypt($encryptedText,$key)
-		{
-			$key = $this->hextobin(md5($key));
-			$initVector = pack("C*", 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f);
-			$encryptedText = $this->hextobin($encryptedText);
-			$decryptedText = openssl_decrypt($encryptedText, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $initVector);
-			return $decryptedText;
-		}
-		
-		public function hextobin($hexString) 
-		{ 
-			$length = strlen($hexString); 
-			$binString="";   
-			$count=0; 
-			while($count<$length) 
-			{       
-				$subString =substr($hexString,$count,2);           
-				$packedString = pack("H*",$subString); 
-				if ($count==0)
-				{
-					$binString=$packedString;
-				} 
-				
-				else 
-				{
-					$binString.=$packedString;
-				} 
-				
-				$count+=2; 
-			} 
-			return $binString; 
-		}
-		
-		public function rechargeWalletResponse(Request $request)
-		{
-			error_reporting(0);
-			
-        	$workingKey='633F33CE6FBB1940116F503F0A5342E8';		//Working Key should be provided here.
-        	$encResponse=$_POST["encResp"];			//This is the response sent by the CCAvenue Server
-        	$rcvdString=$this->decrypt($encResponse,$workingKey);		//Crypto Decryption used as per the specified working key.
-        	$order_status="";
-        	$decryptValues=explode('&', $rcvdString);
-        	$dataSize=sizeof($decryptValues);
-		
-        	for($i = 0; $i < $dataSize; $i++) 
-        	{
-        		$information=explode('=',$decryptValues[$i]); 
-        		if($i==3)
-        		{
-        		    $order_status=$information[1];
-				}
-        		if($i==30)
-        		{
-        		    $user_id = $information[1];
-				}
-        		if($i==1)
-        		{
-        		    $txn_number = $information[1];
-				}
-        		if($i==10)
-        		{
-        		    $amount = $information[1];
-				}
-				if($i==27)
-        		{
-        		    $wallet_id = $information[1];
-				}
+			catch(\Exception $e)
+			{
+				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]); 
 			}
-        	
-            Auth::loginUsingId($user_id, true);   
-            
-        	if($order_status==="Success")
-        	{     
-    	    	$data['user_id'] = $user_id;
-    			$data['status'] = 1;
-    			$data['txn_number'] = $txn_number;
-    			$data['amount'] = $amount;
-    			$data['transaction_type'] = 'Online';
-    			$data['payable_response'] = json_encode($decryptValues);
-    			$data['created_at'] = date('Y-m-d H:i:s');
-    			$data['updated_at'] = date('Y-m-d H:i:s');
-				$payable_response = json_encode($decryptValues);
-				// $id = UserWallet::insertGetId($data);
-				UserWallet::whereId($wallet_id)->update(['txn_number'=>$txn_number,'payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-				$w_amount = User::whereId($user_id)->first()->wallet_amount;
-				$wallet_amount = $w_amount + $amount;
-				User::whereId($user_id)->update(['wallet_amount'=>$wallet_amount]);
-				
-				Billing::insert([
-				'user_id'=>$user_id,
-				'billing_type'=>"Recharge Wallet",
-				'billing_type_id'=>$wallet_id,
-				'transaction_type'=>'credit',
-				'amount'=>$amount,
-				'note'=>'Recharge Wallet amount online.',
-				'created_at'=>date('Y-m-d H:i:s'),
-				'updated_at'=>date('Y-m-d H:i:s'),
-				]);
-        		return redirect()->route('home')->with('success','The transaction has been charged and your transaction is successful');  
-			}
-        	else if($order_status==="Aborted")
-        	{ 
-        	    UserWallet::whereId($wallet_id)->update(['payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-        		return redirect()->route('home')->with('error','The transaction has been cancel by user'); 
-			}
-        	else if($order_status==="Failure")
-        	{        
-        	    UserWallet::whereId($wallet_id)->update(['payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-        		return redirect()->route('home')->with('error','The transaction has been declined.'); 
-			}
-        	else
-        	{   
-        	   	UserWallet::whereId($wallet_id)->update(['payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-        		return redirect()->route('home')->with('error','Security Error. Illegal access detected');  
-			} 
-		}
-
+		} 
+		
 		public function rechargeWalletRazorpay(Request $request)
-		{
-        	$api = new Api('rzp_live_dc6C4IBvihVRTV','V8fCcj5USK2u9521mRZYvrVf');
-			$payment = $api->payment->fetch($request->txn_number);
-			$order_status = $payment->status;
-			$payable_response = $request->payable_response;
-            $user_id = $request->user_id;  
-			$txn_number = $request->txn_number;
-			$amount = $request->amount;
-            $data['user_id'] = $user_id;
-    			$data['status'] = 1;
-    			$data['txn_number'] = $txn_number;
-    			$data['amount'] = $amount;
-    			$data['transaction_type'] = 'Online';
-    			$data['payable_response'] = json_encode($payable_response);
-    			$data['created_at'] = date('Y-m-d H:i:s');
-    			$data['updated_at'] = date('Y-m-d H:i:s');
-				$wallet_id = UserWallet::insertGetId($data);
+		{ 
+			try {
+				$userWallet = UserWallet::with('user')->where('order_id', $request->order_id)->firstOrFail();
+				$user = $userWallet->user;
 
-        	if($order_status==="authorized" || $order_status==="captured")
-        	{       	    	
-				UserWallet::whereId($wallet_id)->update(['txn_number'=>$txn_number,'payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-				$w_amount = User::whereId($user_id)->first()->wallet_amount;
-				$wallet_amount = $w_amount + $amount;
-				User::whereId($user_id)->update(['wallet_amount'=>$wallet_amount]);
-				
-				Billing::insert([
-				'user_id'=>$user_id,
-				'billing_type'=>"Recharge Wallet",
-				'billing_type_id'=>$wallet_id,
-				'transaction_type'=>'credit',
-				'amount'=>$amount,
-				'note'=>'Recharge Wallet amount online.',
-				'created_at'=>date('Y-m-d H:i:s'),
-				'updated_at'=>date('Y-m-d H:i:s'),
+				DB::transaction(function () use ($user, $request, $userWallet) {
+					// Update wallet amount
+					$user->increment('wallet_amount', $userWallet->amount);
+
+					// Record billing
+					Billing::create([
+						'user_id' => $user->id,
+						'billing_type' => 'Recharge Wallet',
+						'billing_type_id' => $userWallet->id,
+						'transaction_type' => 'credit',
+						'amount' => $userWallet->amount,
+						'note' => 'Recharge Wallet amount online.',
+					]);
+
+					// Update UserWallet record if needed
+					$userWallet->update([
+						'transaction_status' => 'Paid',
+						'txn_number' => $request->txn_id ?? null,
+					]);
+				});
+
+				return response()->json([
+					'status' => 'success',
+					'message' => 'The transaction has been charged and your wallet updated successfully.'
 				]);
-        		
-				return response()->json(['status' => 'success', 'message' => 'The transaction has been charged and your transaction is successful']);  
+
+			} catch (\Exception $e) {
+				return response()->json([
+					'status' => 'error',
+					'message' => $e->getMessage()
+				], 500);
 			}
-        	else
-        	{   
-        	   	UserWallet::whereId($wallet_id)->update(['payable_response'=>$payable_response,'transaction_status'=>$order_status]);
-        		
-				return response()->json(['status' => 'error', 'message' => 'Security Error. Illegal access detected']);
-			} 
 		}
-	}
+		 
+	} 

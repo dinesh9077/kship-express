@@ -10,6 +10,7 @@ class UserWallet extends Model
     use HasFactory;
 	
 	protected $fillable = [
+		'id',
 		'user_id',
 		'amount',
 		'status',
@@ -21,11 +22,15 @@ class UserWallet extends Model
 		'note',
 		'transaction_status',
 		'reject_note',
+		'created_at',
+		'updated_at',
 	];
+
 
 	protected $casts = [
 		'payable_response' => 'array',
 	];
+	
 	protected $hidden = [
 		'payable_response',
 	];
@@ -33,6 +38,5 @@ class UserWallet extends Model
 	public function user()
 	{
 		return $this->belongsTo(User::class, 'user_id');
-	}
-
+	} 
 }

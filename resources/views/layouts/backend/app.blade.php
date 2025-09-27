@@ -62,6 +62,7 @@
 			.slimscroll.noti-scroll.notifymsg {
 				height: auto !important;
 			}
+			 
 		</style>
 		<script> 
             let modalOpen = false;
@@ -71,54 +72,45 @@
                 {
                     modalOpen = false;
 				},1000)
-			}
+			} 
 		</script>
 	</head> 
-	<body> 
+	<body>  
 		<!-- Begin page -->
 		<div id="wrapper"> 
 			@include('layouts.backend.partial.header') 
 			@include('layouts.backend.partial.leftside-bar') 
-			<div class="modal fade" id="rechargeWalletModal" tabindex="-1" role="dialog" aria-labelledby="rechargeWalletLabel" aria-hidden="true">
+			<div class="modal fade" id="rechargeWalletModal" tabindex="-1" role="dialog" aria-labelledby="rechargeWalletLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
 				<div class="modal-dialog modal-lg model-width-1">
 					<div class="modal-content">
 						
 						{{-- Header --}}
 						<div class="modal-header head-00re pb-0 border-0">
 							<h5 class="modal-title" id="rechargeWalletLabel">Recharge Your Wallet</h5>
-							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+							<!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 								<span aria-hidden="true">&times;</span>
-							</button>
+							</button>-->
 						</div>
 
-						{{-- Form --}}
-						<form method="POST" action="{{ route('recharge.wallet.amount') }}" enctype="multipart/form-data" id="paymentForm">
-							@csrf
-
-							<div class="modal-body pt-0">
-								
+						<form id="paymentForm">
+							<div class="modal-body pt-0"> 
 								{{-- Current Wallet --}}
 								<div class="main-01">
 									<h5>
 										Current Wallet Amount: 
-										<span>{{ config('setting.currency') }}{{ Helper::decimal_number(Auth::user()->wallet_amount) }}</span>
+										<span>{{ config('setting.currency') }}{{ Helper::decimal_number($authUser->wallet_amount) }}</span>
 									</h5>
 								</div>
 
-								<div class="man-01rech">
-									{{-- Transaction Type --}}
-									<h5>Transaction Type</h5>
-									<div class="form-group rech-re-form">
-										<select name="transaction_type" id="transaction_type" class="form-control" required>
-											<option value="Online">Online</option>
-										</select>
-									</div>
-
+								<div class="man-01rech"> 
+									<input type="hidden" id="transaction_type" name="transaction_type" value="Online">
+									<input type="hidden" id="user_id" name="user_id" value="{{ $authUser->id }}">
+								
 									{{-- Amount Input --}}
 									<h5>Enter Amount</h5>
 									<div class="form-group rech-re-form position-relative">
 										<span class="position-absolute custom-rupee-position">{{ config('setting.currency') }}</span>
-										<input type="number" name="amount" id="recharge_amount" value="200" min="200" placeholder="200" class="form-control" required>
+										<input type="number" name="amount" id="recharge_amount"  value="200"  placeholder="200" class="form-control" required>
 										<small class="form-text text-muted">Min value: {{ config('setting.currency') }}200</small>
 									</div>
 
@@ -132,46 +124,24 @@
 												{{ config('setting.currency') }}{{ $preset }}
 											</button>
 										@endforeach
-									</div>
+									</div> 
+								</div> 
+							</div> 
 
-									{{-- Offline Params --}}
-									<div class="offline_param d-none">
-										<h5>Payment Receipt</h5>
-										<div class="form-group rech-re-form">
-											<input type="file" name="payment_receipt[]" id="payment_receipt" multiple class="form-control-file">
-										</div>
+							{{-- QR Code Container --}}
+							<div id="qrcode" style="display:flex; justify-content:center; margin:20px 0;"></div>
 
-										<h5>Note</h5>
-										<div class="form-group rech-re-form">
-											<textarea name="note" id="note" class="form-control"></textarea>
-										</div>
-									</div>
-								</div>
-
-								<input type="hidden" id="user_id" value="{{ Auth::id() }}">
-
-								{{-- Amount Summary --}}
-								<div class="class-main-count">
-									<div class="main-justify-space">
-										<h5>Recharge Amount</h5>
-										<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
-									</div>
-
-									<div class="main-justify-space">
-										<h5>Payable Amount</h5>
-										<h5>{{ config('setting.currency') }}<span class="payableamount">200</span></h5>
-									</div>
-								</div>
-
-							</div>
+							{{-- Status Message --}}
+							<div id="statusMessage" class="status-message" style="text-align:center; margin-bottom:10px; display:none;"></div>
 
 							{{-- Footer --}}
 							<div class="modal-footer justify-content-center">
-								<button type="submit" class="btn btn-primary btn-main-1" id="payButton">
+								<button type="button" class="btn btn-primary btn-main-1" id="butnwallethide" onclick="initiatePayment()">
 									Continue to Payment
 								</button>
 							</div>
 						</form>
+
 					</div>
 				</div>
 			</div>
@@ -189,98 +159,10 @@
 						
 					</div>
 				</div>
-			</footer>
-			<!-- end Footer -->
-			
-		</div>
-		
-		<!-- ============================================================== -->
-		<!-- End Page content -->
-		<!-- ============================================================== -->
-		
-	</div>
-	<!-- END wrapper -->
-	
-	<!-- Right Sidebar -->
-	<div class="right-bar">
-		<div class="rightbar-title">
-			<a href="javascript:void(0);" class="right-bar-toggle float-right">
-				<i class="mdi mdi-close"></i>
-			</a>
-			<h5 class="m-0 text-white">Settings</h5>
-		</div>
-		<div class="slimscroll-menu">
-			<hr class="mt-0">
-			<h5 class="pl-3">Basic Settings</h5>
-			<hr class="mb-0" />
-			 
-			<div class="p-3">
-				<div class="custom-control custom-checkbox mb-2">
-					<input type="checkbox" class="custom-control-input" id="customCheck1" checked>
-					<label class="custom-control-label" for="customCheck1">Notifications</label>
-				</div>
-				<div class="custom-control custom-checkbox mb-2">
-					<input type="checkbox" class="custom-control-input" id="customCheck2" checked>
-					<label class="custom-control-label" for="customCheck2">API Access</label>
-				</div>
-				<div class="custom-control custom-checkbox mb-2">
-					<input type="checkbox" class="custom-control-input" id="customCheck3">
-					<label class="custom-control-label" for="customCheck3">Auto Updates</label>
-				</div>
-				<div class="custom-control custom-checkbox mb-2">
-					<input type="checkbox" class="custom-control-input" id="customCheck4" checked>
-					<label class="custom-control-label" for="customCheck4">Online Status</label>
-				</div>
-				<div class="custom-control custom-checkbox">
-					<input type="checkbox" class="custom-control-input" id="customCheck5">
-					<label class="custom-control-label" for="customCheck5">Auto Payout</label>
-				</div>
-			</div>
-			
-			<!-- Messages -->
-			<hr class="mt-0" />
-			<h5 class="pl-3 pr-3">Messages <span class="float-right badge badge-pill badge-danger">24</span></h5>
-			<hr class="mb-0" />
-			<div class="p-3">
-				<div class="inbox-widget">
-					<div class="inbox-item">
-						<div class="inbox-item-img"><img src="{{asset('assets/images/users/avatar-1.jpg')}}" class="rounded-circle" alt=""></div>
-						<p class="inbox-item-author"><a href="javascript: void(0);">Chadengle</a></p>
-						<p class="inbox-item-text">Hey! there I'm available...</p>
-						<p class="inbox-item-date">13:40 PM</p>
-					</div>
-					<div class="inbox-item">
-						<div class="inbox-item-img"><img src="{{asset('assets/images/users/avatar-2.jpg')}}" class="rounded-circle" alt=""></div>
-						<p class="inbox-item-author"><a href="javascript: void(0);">Tomaslau</a></p>
-						<p class="inbox-item-text">I've finished it! See you so...</p>
-						<p class="inbox-item-date">13:34 PM</p>
-					</div>
-					<div class="inbox-item">
-						<div class="inbox-item-img"><img src="{{asset('assets/images/users/avatar-3.jpg')}}" class="rounded-circle" alt=""></div>
-						<p class="inbox-item-author"><a href="javascript: void(0);">Stillnotdavid</a></p>
-						<p class="inbox-item-text">This theme is awesome!</p>
-						<p class="inbox-item-date">13:17 PM</p>
-					</div>
-					
-					<div class="inbox-item">
-						<div class="inbox-item-img"><img src="{{asset('assets/images/users/avatar-4.jpg')}}" class="rounded-circle" alt=""></div>
-						<p class="inbox-item-author"><a href="javascript: void(0);">Kurafire</a></p>
-						<p class="inbox-item-text">Nice to meet you</p>
-						<p class="inbox-item-date">12:20 PM</p>
-						
-					</div>
-					<div class="inbox-item">
-						<div class="inbox-item-img"><img src="{{asset('assets/images/users/avatar-5.jpg')}}" class="rounded-circle" alt=""></div>
-						<p class="inbox-item-author"><a href="javascript: void(0);">Shahedk</a></p>
-						<p class="inbox-item-text">Hey! there I'm available...</p>
-						<p class="inbox-item-date">10:15 AM</p>
-						
-					</div>
-				</div> <!-- end inbox-widget -->
-			</div> <!-- end .p-3-->
-			
-		</div> <!-- end slimscroll-menu-->
+			</footer> 
+		</div> 
 	</div> 
+	 
 	<div class="rightbar-overlay"></div>
 	<div id="modal-view-render"></div>
  
@@ -294,8 +176,9 @@
 	<script src="{{asset('assets/libs/jquery-toast/jquery.toast.min.js')}}"></script>
 	<script src="{{asset('assets/libs/sweetalert2/sweetalert2.min.js')}}"></script>
 	<script src="{{asset('assets/js/waitMe.js')}}"></script> 
-	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script>
-	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+	<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.js"></script> 
+	<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0/lib/qr-code-styling.js"></script>
 	<script>
 		$(document).ready(function()
 		{
@@ -597,64 +480,116 @@
 			}, 'json');
 		}
 		
-		$(document).ready(function() {
-			$('#payButton').click(function(e) {
-				e.preventDefault();
-				var amount = $('#recharge_amount').val(); 
-				var transaction_type = $('#transaction_type').val();
-				var options = {
-					"key": "rzp_test_kmwVBY7h35GqKE", 
-					"amount": (amount * 100), 
-					"currency": "INR",
-					"name": "Xpressfly",
-					"description": "Wallet Recharge",
-					"image": "{{ asset('assets/images/dashbord/logo.svg') }}",
-					"handler": function (response)
-					{  
-						var payable_response = response;
-						var dataURL = "{{ route('recharge.wallet.razorpay') }}";
-						var user_id = $('#user_id').val();
-						$.ajax({
-							url: dataURL,
-							data: {
-								"_token": "{{ csrf_token() }}",
-								'user_id': user_id,
-								'txn_number' : response.razorpay_payment_id,
-								'amount': amount,
-								'transaction_type': transaction_type,
-								'payable_response': payable_response,
-							},
-							type: 'post',
-							dataType: 'json',
-							success: function (data) {
-								toastrMsg(data.status, data.message);	
-								setTimeout(function() {
-										window.location.reload();
-									}, 2000);
-							},
-							error: function (xhr, status, error) {
-								console.error(xhr.responseText);
-								toastrMsg('error', 'An error occurred while processing your request.');
-								
-							}
-						});
-					},
-					"prefill": {
-						"name": "{{ Auth::user()->name }}",
-						"email": "{{ Auth::user()->email }}"
-					},                
-					"theme": {
-						"color": "#528FF0"
-					}
-				};
-				var rzp1 = new Razorpay(options);
-				rzp1.open();
-			});
-		});
-		
 		function redirectSimpleUrl(url) {
 			window.location.href = url;
 		}
+		 
+		let currentOrderId = null;
+		let checkInterval = null;
+
+		function showMessage(message, type) {
+			const msgEl = document.getElementById('statusMessage');
+			msgEl.textContent = message;
+			msgEl.className = `status-message status-${type}`;
+			msgEl.style.display = 'block';
+		}
+
+		function setRechargeAmount(button, amount) {
+			document.getElementById('recharge_amount').value = amount;
+			document.querySelectorAll('.re-btn').forEach(btn => btn.classList.remove('active'));
+			button.classList.add('active');
+		}
+
+		async function createOrder(amount) {
+			const response = await fetch("{{ route('recharge.wallet.amount') }}", {  // Laravel route to store pending order
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+				body: JSON.stringify({
+					amount: amount,
+					user_id: "{{ $authUser->id }}",
+					transaction_type: 'Online'
+				})
+			});
+			const data = await response.json(); 
+			if (data.status == "error") throw new Error(data.msg);
+			return data.order;
+		}
+
+		async function checkPaymentStatus() {
+		  if (!currentOrderId) return;
+
+		  try {
+			const response = await fetch('https://api.recharge.kashishindiapvtltd.com/payments/check-payment-gateway', {
+				  method: 'POST',
+				  headers: { 'Content-Type': 'application/json' },
+				  body: JSON.stringify({
+						id: currentOrderId,
+						secret_key: "kashishindiapvtltdgatewaywithrznew",
+						user: "8c816dcb-766b-4c7c-bbc3-831b494966fe"
+				  })
+			});
+
+			const data = await response.json();
+			console.log("Payment check:", data);
+
+			if (data?.data?.paymentStatus === "captured")
+			{
+				clearInterval(checkInterval);
+				
+				const response = await fetch("{{ route('recharge.wallet.razorpay') }}", {  // Laravel route to store pending order
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+					body: JSON.stringify({
+						order_id: currentOrderId, 
+						txn_id: data.data.paymentDetails.id ?? '', 
+					})
+				});
+				const res = await response.json();   
+				showMessage("✅ Payment Successful!", "success",data.data.paymentDetails.id); 
+				setInterval(function() {
+					location.reload();
+				}, 3000);
+				
+			} else {
+			  showMessage("Checking... Status: " + (data.data?.status || "Pending"), "info");
+			}
+		  } catch (err) {
+			showMessage("Error checking status: " + err.message, "error");
+		  }
+		}
+		 
+		async function initiatePayment() {
+			const amount = parseFloat(document.getElementById('recharge_amount').value);
+		/* 	if (!amount || amount < 200) {
+				showMessage("Enter a valid amount (min ₹200)", "error");
+				return;
+			} */
+			
+			try {
+				showMessage("Creating order...", "info");
+				const orderData = await createOrder(amount);
+				currentOrderId = orderData.order_id;
+				
+				// Display QR Code
+				const qrCode = new QRCodeStyling({
+					width: 250,
+					height: 250,
+					data: orderData.qrTextContent,
+					dotsOptions: { color: "#000" }
+				});
+				document.getElementById("qrcode").innerHTML = "";
+				qrCode.append(document.getElementById("qrcode"));
+
+				showMessage("Scan QR to Pay via UPI", "info");
+				$('#butnwallethide').hide();
+				// Start checking payment status every 3 sec
+				if (checkInterval) clearInterval(checkInterval);
+				checkInterval = setInterval(checkPaymentStatus, 3000);
+
+			} catch (err) {
+				showMessage("Error: " + err.message, "error");
+			}
+		} 
 	</script>
 	@stack('js')
 </body> 

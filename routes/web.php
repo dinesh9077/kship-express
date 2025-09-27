@@ -251,8 +251,7 @@
 		Route::post('/ajax',[App\Http\Controllers\OrderController::class, 'codPayoutAjax'])->name('cod-payout-ajax');
 		Route::post('/store',[App\Http\Controllers\OrderController::class, 'storePayout'])->name('cod-payout-store'); 
 	});
-	 
-	    
+	  
 	// Daily Reports
 	Route::get('/report/order', [App\Http\Controllers\ReportController::class, 'index'])->name('report.order')->middleware('permission:order_report.view'); 
 	Route::post('/report/order/ajax', [App\Http\Controllers\ReportController::class, 'reportOrderAjax'])->name('report.order.ajax');
@@ -272,11 +271,9 @@
 	//Recharge Amount
 	Route::group(['prefix'=>'recharge'], function()
 	{
-		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount');
-		Route::post('/wallet/response', [App\Http\Controllers\RechargeController::class, 'rechargeWalletResponse'])->name('recharge.wallet.response');
-		
-		Route::post('/wallet/recharge', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.wallet.razorpay');
-		
+		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount'); 
+		Route::post('/wallet/update', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.wallet.razorpay');
+		  
 		Route::get('/list', [App\Http\Controllers\RechargeController::class, 'rechargeList'])->name('recharge.list');
 		Route::post('/ajax', [App\Http\Controllers\RechargeController::class, 'rechargeListAjax'])->name('recharge.list.ajax');
 		
