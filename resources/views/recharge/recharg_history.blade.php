@@ -95,11 +95,10 @@
 								<thead>
 									<tr>
 										<th> SR.No </th>
-										<th> User Name</th> 
-										<th> Transaction Type </th>
+										<th> User Name</th>  
 										<th> Amount </th>
-										<th> Reciept </th>
-										<th> Note </th>
+										<th> Order Id </th>
+										<th> Txn No. </th>
 										<th> Payment status </th>
 										<th> Created At </th>
 										<th> Action </th>
@@ -127,12 +126,11 @@
 				@csrf
 				<div class="modal-body"> 
 					<div class="">
-						<h5> Transaction Type </h5>
+						<h5> Status </h5>
 						<div class="from-group rech-re-form"> 
-							<select name="status" id="status" required> 
-								<option value="0">Pending</option>
-								<option value="1">Approved</option>
-								<option value="2">Rejected</option>
+							<select name="status" id="status" required>  
+								<option value="Pending">Pending</option>
+								<option value="Paid">Paid</option>
 							</select>
 						</div> 
 					</div> 
@@ -211,19 +209,16 @@
 		},
 		"columns": [
 		{ "data": "id" }, 
-		{ "data": "name" },  
-		{ "data": "transaction_type" },  
+		{ "data": "name" },   
 		{ "data": "amount" }, 
-		{ "data": "payment_receipt" }, 
-		{ "data": "note" }, 
+		{ "data": "order_id" }, 
+		{ "data": "txn_number" }, 
 		{ "data": "status" }, 
 		{ "data": "created_at" },
 		{ "data": "action" }
 		]
 	}); 
-	
-	dataTable.columns(8).visible(false);
-	dataTable.columns(4).visible(false); 
+	 
 	function approvedRequest(obj)
 	{ 
 		var id = $(obj).attr('data-id');

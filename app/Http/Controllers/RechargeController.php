@@ -91,6 +91,8 @@
 					'transaction_type' => $value->transaction_type,
 					'amount' => config('setting.currency').$value->amount,
 					'payment_receipt' => $receipt,
+					'order_id' => $value->order_id,
+					'txn_number' => $value->txn_number,
 					'note' => $value->note,
 					'status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
 					'created_at' => $value->created_at->format('d M Y'),
@@ -134,7 +136,7 @@
 			$totalData = (clone $query)->count();
 
 			// Search filter
-			$searchValue = $request->input('search.value');
+			$searchValue = $request->input('search') ?? $request->input('search.value') ?? '';
 			if (!empty($searchValue)) {
 				$query->where(function ($q) use ($searchValue) {
 					$q->whereHas('user', function ($q2) use ($searchValue) {
@@ -142,7 +144,9 @@
 					})
 					->orWhere('user_wallets.amount', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.created_at', 'LIKE', "%{$searchValue}%")
-					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%");
+					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.txn_number', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%");
 				});
 			}
 
@@ -167,26 +171,23 @@
 									 </a>';
 					}
 				}
-
-				// Status badge
-				$status = match($value->transaction_status) {
-					'Pending' => '<span class="badge badge-warning">Pending</span>',
-					'Success' => '<span class="badge badge-success">Paid</span>',
-					default => '<span class="badge badge-danger">'.$value->transaction_status.'</span>',
-				};
-				$status .= '<p>'.($value->reject_note ?? '').'</p>';
-
-				$data[] = [
+ 
+				$array = [
 					'id' => $i++,
-					'name' => $value->user->name ?? '',
-					'transaction_type' => $value->transaction_type,
+					'name' => $value->user->name ?? '', 
 					'amount' => config('setting.currency') . $value->amount,
-					'payment_receipt' => $receipt,
-					'note' => $value->note,
-					'status' => $status,
-					'created_at' => $value->created_at->format('d M Y'),
-					'action' => '<button type="button" data-id="'.$value->id.'" data-reject_note="'.($value->reject_note ?? '').'" data-status="'.$value->status.'" class="btn-main-1" onclick="approvedRequest(this);">Approve Request</button>',
+					'order_id' => $value->order_id,
+					'txn_number' => $value->txn_number,
+					'status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
+					'created_at' => $value->created_at->format('d M Y')
 				];
+				$array['action'] = "";
+				if($value->transaction_status != "Paid")
+				{	
+					$array['action'] = '<button type="button" data-id="'.$value->id.'" data-reject_note="'.($value->reject_note ?? '').'" data-status="'.$value->status.'" class="btn-main-1" onclick="approvedRequest(this);">Approve Request</button>';
+				} 
+				
+				$data[] = $array;
 			}
 
 			return response()->json([
@@ -197,49 +198,45 @@
 			]);
 		}
  
-		
 		public function rechargeWalletAction(Request $request)
-		{
-			$id = $request->id;
-			$status = $request->status;
-			$reject_note = $request->reject_note;
-			
-			$data = [];
-			$data['status'] = $status;
-			if($status == 0)
-			{
-				UserWallet::whereId($id)->update($data);
-				return back()->with('success','The payment status has been change to pending.'); 
+		{ 
+			$userWallet = UserWallet::with('user')->findOrFail($request->id); 
+			try {
+				DB::transaction(function () use ($request, $userWallet) {
+					if ($request->status === "Pending") {
+						$userWallet->update(['transaction_status' => 'Pending']);
+					}
+
+					if ($request->status === "Paid") {
+						// Credit to wallet
+						$userWallet->user->increment('wallet_amount', $userWallet->amount);
+
+						// Add billing entry
+						Billing::create([
+							'user_id'          => $userWallet->user_id,
+							'billing_type'     => "Recharge Wallet",
+							'billing_type_id'  => $userWallet->id,
+							'transaction_type' => 'credit',
+							'amount'           => $userWallet->amount,
+							'note'             => 'Recharge Wallet amount approved by admin.',
+						]);
+
+						$userWallet->update(['transaction_status' => 'Paid']);
+					}
+
+					if ($request->status === "Rejected") {
+						$userWallet->update([
+							'transaction_status'       => 'Rejected',
+							'reject_note'  => $request->reject_note,
+						]);
+					}
+				});
+
+				return back()->with('success', "The payment status has been updated successfully.");
+
+			} catch (\Exception $e) {
+				return back()->with('error', "Error: " . $e->getMessage());
 			}
-			if($status == 1)
-			{  
-				$userwallt = UserWallet::whereId($id)->first();
-				 
-				$w_amount = User::whereId($userwallt->user_id)->first()->wallet_amount;
-				
-				$wallet_amount = $w_amount + $userwallt->amount;
-				User::whereId($userwallt->user_id)->update(['wallet_amount'=>$wallet_amount]);
-				
-				Billing::insert([
-				'user_id'=>$userwallt->user_id,
-				'billing_type'=>"Recharge Wallet",
-				'billing_type_id'=>$id,
-				'transaction_type'=>'credit',
-				'amount'=>$userwallt->amount,
-				'note'=>'Recharge Wallet amount approve by admin.',
-				'created_at'=>date('Y-m-d H:i:s'),
-				'updated_at'=>date('Y-m-d H:i:s'),
-				]);
-				
-				UserWallet::whereId($id)->update($data);
-				return back()->with('success','The payment status has been change to approved and credit to user wallet successfully.'); 
-			}
-			if($status == 2)
-			{
-				$data['reject_note'] = $reject_note;
-				UserWallet::whereId($id)->update($data);
-				return back()->with('success','The payment status has been change to rejected.'); 
-			} 
 		}
 		  
 		public function rechargeWalletStore(Request $request, MasterService $masterService)

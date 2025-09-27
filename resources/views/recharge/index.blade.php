@@ -20,13 +20,13 @@
 											<option value="Paid">Paid</option>
 										</select>
 									</div>
-									<div class="from-group col-lg-2 col-sm-6">
+									<!--<div class="from-group col-lg-2 col-sm-6">
 										<select name="transaction_type" id="transaction_type">
 											<option value="">All</option>
 											<option value="Online">Online</option>
 											<option value="Offline">Offline</option>
 										</select>
-									</div>
+									</div>-->
 								</div>
 							</div>
 							<div class="main-btn0main-1"> </div>
@@ -37,11 +37,10 @@
 								<thead>
 									<tr>
 										<th> SR.No </th>
-										<th> User Name</th>
-										<th> Transaction Type </th>
-										<th> Amount </th>
-										<th> Reciept </th>
-										<th> Note </th>
+										<th> User Name</th> 
+										<th> Amount </th> 
+										<th> Order Id </th>
+										<th> Txn No. </th>
 										<th> Payment status </th>
 										<th> Created At </th>
 									</tr>
@@ -91,18 +90,15 @@
 			},
 			{
 				"data": "name"
-			},
-			{
-				"data": "transaction_type"
-			},
+			}, 
 			{
 				"data": "amount"
 			},
 			{
-				"data": "payment_receipt"
+				"data": "order_id"
 			},
 			{
-				"data": "note"
+				"data": "txn_number"
 			},
 			{
 				"data": "status"
@@ -115,11 +111,7 @@
 
 	$('#transaction_type, #status').change(function() {
 		dataTable.draw()
-	})
-	
-	dataTable.columns(4).visible(false);
-	@if(Auth::user()-> role != "admin")
-		dataTable.columns(1).visible(false);
-	@endif
+	}) 
+	 
 </script>
 @endpush
