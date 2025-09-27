@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Services\DelhiveryService;
 use App\Services\DelhiveryB2CService;
+use App\Services\ShipMozo;
 use Illuminate\Support\Facades\Log;
 	
 class UpdateOrderStatus extends Command
@@ -32,20 +33,22 @@ class UpdateOrderStatus extends Command
      * @return int
      */
 	 
-	protected $delhiveryService; 
-	public function __construct(DelhiveryService $delhiveryService, DelhiveryB2CService $delhiveryB2CService)
+	protected $shipMozo; 
+	public function __construct(ShipMozo $shipMozo)
 	{
 		parent::__construct();
-		$this->delhiveryService = $delhiveryService;
-		$this->delhiveryB2CService = $delhiveryB2CService;
+		$this->shipMozo = $shipMozo; 
 	}
 		
     public function handle()
-    {
-        $orders = Order::with('shippingCompany')
-            ->whereNotIn('status_courier', ['delivered', 'new', 'cancelled'])
-            ->whereNotNull('awb_number')
-            ->get(); 
+    { 
+		$orders = Order::with(['shippingCompany'])
+		->whereNotIn('status_courier', ['delivered', 'New', 'cancelled', 'rto', 'rto delivered', 'rto in transit', 'rto lost', 'rto damaged'])
+		->whereNotNull('awb_number')
+		->whereHas('shippingCompany')
+		->latest()
+		->get(); 
+		 
         $today = now()->toDateString();
         foreach ($orders as $order) {
             $newStatus = $this->getUpdatedStatus($order);
@@ -76,21 +79,24 @@ class UpdateOrderStatus extends Command
             return null;
         }
 
-        if ($shippingCompany->id === 2 && $order->lr_no) {
-            $trackingResponse = $this->delhiveryService->trackOrderByLrNo($order->lr_no, $shippingCompany);
-            
-            return $trackingResponse['response']['data']['status'] ?? $order->status_courier;
-        }
-		
-        if ($shippingCompany->id === 3 && $order->awb_number) {
-            $trackingResponse = $this->delhiveryB2CService->trackOrderByAwbNumber($order->awb_number, $shippingCompany);
-			 
-            if ((isset($trackingResponse['response']['ShipmentData']) && !empty($trackingResponse['response']['ShipmentData'])))
+        if ($shippingCompany->id === 1) {
+            $trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany); 
+			if (!($trackingResponse['success'] ?? false)) {
+				$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
+				return $order->status_courier; 
+			}  
+			if ((isset($trackingResponse['response']['result']) && $trackingResponse['response']['result']) == 0)
+			{ 
+				return $order->status_courier; 
+			} 
+			
+			if($trackingResponse['response']['data']['current_status'] == "pending pickup")
 			{
-				return $trackingResponse['response']['ShipmentData'][0]['Shipment']['Status']['Status'] ?? $order->status_courier;
+				return $order->status_courier; 
 			}
-        }
-        
+			
+            return $trackingResponse['response']['data']['current_status'] ?? $order->status_courier;
+        } 
         return $order->status_courier;
     }
 }

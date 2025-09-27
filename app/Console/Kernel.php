@@ -32,10 +32,10 @@ class Kernel extends ConsoleKernel
 		$schedule->command('kyc:pending-check')->dailyAt('11:00'); 
 		$schedule->command('cod:generate-remittance')->dailyAt('01:00');
 		$schedule->command('update:awb-number-shipmozo')->everyTwoMinutes(); 
-		$schedule->command('shipment:update-status')->everyTenMinutes();
+		$schedule->command('shipment:update-status')->hourly(); 
 		$schedule->command('order:apply-rto-charge')
-         ->everyTwoHours()
-         ->withoutOverlapping();
+        ->everyTwoHours()
+        ->withoutOverlapping();
     }
 
     /**
