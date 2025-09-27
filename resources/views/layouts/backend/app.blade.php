@@ -560,10 +560,10 @@
 		 
 		async function initiatePayment() {
 			const amount = parseFloat(document.getElementById('recharge_amount').value);
-		/* 	if (!amount || amount < 200) {
+		    if (!amount || amount < 200) {
 				showMessage("Enter a valid amount (min ₹200)", "error");
 				return;
-			} */
+			}
 			
 			try {
 				showMessage("Creating order...", "info");
