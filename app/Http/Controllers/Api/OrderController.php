@@ -842,8 +842,8 @@
 					
 					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
 					{
-						return $this->errorResponse($response['response']['message'] ?? 'An error occurred.');   
-					} 
+					return $this->errorResponse($response['response']['data']['error'] ?? $response['response']['message'] ?? 'An error occurred.');
+				} 
 					
 					$orderId = $response['response']['data']['order_id'] ?? '';
 					if (!$orderId) {
@@ -859,7 +859,7 @@
 					
 					if ((isset($courierResponse['response']['result']) && $courierResponse['response']['result'] == 0))
 					{
-						return $this->errorResponse($courierResponse['response']['message'] ?? 'An error occurred.');    
+						return $this->errorResponse($courierResponse['response']['data']['error'] ?? $courierResponse['response']['message'] ?? 'An error occurred.');					 
 					}   
 					$awbNumber = $courierResponse['response']['data']['awb_number'] ?? '';
 					

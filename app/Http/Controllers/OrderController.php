@@ -1358,7 +1358,7 @@
 					
 					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
 					{
-						return response()->json(['status' => 'error', 'msg' => $response['response']['message'] ?? 'An error occurred.']);
+						return $this->errorResponse($response['response']['data']['error'] ?? $response['response']['message'] ?? 'An error occurred.');
 					} 
 					
 					$orderId = $response['response']['data']['order_id'] ?? '';
@@ -1375,7 +1375,7 @@
 					
 					if ((isset($courierResponse['response']['result']) && $courierResponse['response']['result'] == 0))
 					{
-						return response()->json(['status' => 'error', 'msg' => $courierResponse['response']['message'] ?? 'An error occurred.']);
+						return $this->errorResponse($courierResponse['response']['data']['error'] ?? $courierResponse['response']['message'] ?? 'An error occurred.');
 					}   
 					$awbNumber = $courierResponse['response']['data']['awb_number'] ?? '';
 					
