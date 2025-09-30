@@ -90,7 +90,7 @@ class UpdateOrderStatus extends Command
 				return $order->status_courier; 
 			} 
 			
-			if($trackingResponse['response']['data']['current_status'] == "pending pickup")
+			if($trackingResponse['response']['data']['current_status'] == "Pickup Pending")
 			{
 				return $order->status_courier; 
 			}
