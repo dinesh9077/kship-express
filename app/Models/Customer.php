@@ -36,7 +36,7 @@ class Customer extends Model
 	
 	public function customerOrder()
     {
-        return $this->hasOne(order::class, 'customer_id');
+        return $this->hasOne(Order::class, 'customer_id');
     }
 	
 	public function latestCustomerAddress()
