@@ -136,7 +136,7 @@
 				$displayCurrentBalance = $currentBalance;
 				
 				$data[] = [
-					'srno' => $start + $key + 1,
+					'srno' => $key + 1,
 					'name' => $value->user->name,
 					'billing_detail' => $value->billing_type_id,
 					'transaction_type' => $transactionTypeHtml,
