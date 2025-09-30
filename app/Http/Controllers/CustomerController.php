@@ -4,7 +4,7 @@
 	
 	use Illuminate\Http\Request;
 	use App\Models\Customer;
-	use App\Models\order;
+	use App\Models\Order;
 	use App\Models\CustomerAddress;
 	use App\Models\CourierWarehouse; 
 	use Illuminate\Support\Facades\DB;
