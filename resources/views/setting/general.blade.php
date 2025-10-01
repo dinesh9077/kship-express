@@ -93,8 +93,8 @@
 							</div>
 						</div> 
 						@if(config('permission.general_setting.edit'))
-							<div class="text-align-center">
-								<button class="btn-main-1"> Submit </button>
+							<div class="text-align-left">
+								<button class="new-submit-btn mt-3"> Submit </button>
 							</div>
 						@endif
 					</div>

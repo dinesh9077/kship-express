@@ -26,7 +26,7 @@
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
 											<input type="text" 
-												   class="form-control datepicker" 
+												   class="form-control new-height-fcs-rmi datepicker" 
 												   name="fromdate" 
 												   id="fromdate" 
 												   value="{{ request('fromdate') }}" 
@@ -38,7 +38,7 @@
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
 											<input type="text" 
-												   class="form-control datepicker" 
+												   class="form-control new-height-fcs-rmi datepicker" 
 												   name="todate" 
 												   id="todate" 
 												   value="{{ request('todate') }}" 
@@ -50,7 +50,7 @@
 									@if(Auth::user()->role === "admin")
 										<div class="col-lg-2 col-sm-6">
 											<div class="main-selet-11">
-												<select name="vendor_id" id="vendor_id" class="form-control">
+												<select name="vendor_id" id="vendor_id" class="new-height-fcs-rmi form-control " style="background-color: #F3F3F3 !important;">
 													<option value="">Select User</option>
 													@foreach($users as $user)
 														<option value="{{ $user->user->id }}" 
@@ -66,7 +66,7 @@
 									{{-- Voucher Status --}}
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<select name="voucher_status" id="voucher_status" class="form-control">
+											<select name="voucher_status" id="voucher_status" class="new-height-fcs-rmi  form-control" style="background-color: #F3F3F3 !important;">
 												<option value="">Select Status</option>
 												<option value="0" {{ request('voucher_status') === '0' ? 'selected' : '' }}>Unpaid</option>
 												<option value="1" {{ request('voucher_status') === '1' ? 'selected' : '' }}>Paid</option>
@@ -77,7 +77,7 @@
 									{{-- Search Button --}}
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<button type="button" class="btn-main-1 search_data">Search</button>
+											<button type="button" class="btn-main-1 search_data search-btn-remi">Search</button>
 										</div>
 									</div>
 								</div> 

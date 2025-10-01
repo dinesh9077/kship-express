@@ -37,17 +37,18 @@
 }
 
 .table-custom-serch .input-main {
-	min-width: 100px;
+	min-width: 500px;
 }
 .table-custom-serch .input-main { 
-	border: none;
-	border-radius: 3px;
+	    border: 1px solid #dcdcdc;
+	border-radius: 10px;
 	padding: 7px;
 	margin-left: 3px;
 	font-weight: 400;
 	font-size: 14px;
 	color: #000;
-	background-color: #25252547;
+	background-color: white;
+	padding: 10px 20px;
  
 }
 .custom-entry p {
@@ -55,6 +56,10 @@
 	font-size: 14px;
 	color: #0A1629;
 	font-weight: 500;
+}
+
+#page_length{
+	padding: 5px;
 }
 </style>
 
@@ -81,7 +86,7 @@
     						{{-- Year Dropdown --}}
 							<div class="col-lg-2 col-sm-6">
 								<div class="main-selet-11">
-									<select name="year" class="form-control" id="year">
+									<select name="year" class="form-control new-height-fcs-rmi" style="background-color: #F3F3F3 !important;" id="year">
 										@php
 											$currentYear = date('Y');
 											$startYear = $currentYear - 5;
@@ -98,7 +103,7 @@
 							{{-- Month Dropdown --}}
 							<div class="col-lg-2 col-sm-6">
 								<div class="main-selet-11">
-									<select name="month" class="form-control" id="month">
+									<select name="month" class="form-control new-height-fcs-rmi" style="background-color: #F3F3F3 !important;" id="month">
 										@php
 											$selectedMonth = request('month', date('m'));
 										@endphp
@@ -113,7 +118,7 @@
 
     						<div class="col-lg-2 col-sm-6">
     							<div class="main-selet-11">
-    								<button class="btn-main-1 search_user">Search</button>
+    								<button class="btn-main-1 search-btn-remi">Search</button>
 								</div>
 							</div>
 						</div>

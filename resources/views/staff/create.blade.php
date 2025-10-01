@@ -10,33 +10,33 @@
 			<form id="addStaffForm" action="{{ route('staff.store') }}" method="post" enctype="multipart/form-data">
 				<div class="modal-body row">
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="company_name" name="company_name" required>
+						<label for="recipient-name" class="form-label">Company Name{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control  new-border-popups" id="company_name" name="company_name" required>
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Name <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="name" name="name" required>
+						<label for="recipient-name" class="form-label">Name{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control  new-border-popups" id="name" name="name" required>
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Mobile <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="mobile" name="mobile" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
+						<label for="recipient-name" class="form-label">Mobile{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control  new-border-popups" id="mobile" name="mobile" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 					</div>  
 					 
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Email <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="email" name="email" required>
+						<label for="recipient-name" class="form-label">Email{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control  new-border-popups" id="email" name="email" required>
 					</div>  
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Password <span class="text-danger">*</span></label>
-						<input type="password" class="form-control" id="password" name="password" required>
+						<label for="recipient-name" class="form-label">Password{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="password" class="form-control  new-border-popups" id="password" name="password" required>
 					</div> 
 					
 					<div class="mb-3 col-md-6"> 
-						<label for="recipient-name" class="form-label">Geneder <span class="text-danger">*</span></label>
-						<select autocomplete="off" class="form-control" name="gender" id="gender" Required>
+						<label for="recipient-name" class="form-label">Geneder{{-- <span class="text-danger">*</span>--}}</label>
+						<select autocomplete="off" class="form-control  new-border-popups" name="gender" id="gender" Required>
 							<option value=""> Select Gender </option>
 							<option value="Male"> Male </option>
 							<option value="Female"> Female</option>
@@ -45,8 +45,8 @@
 					</div>
 									
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Roles <span class="text-danger">*</span></label>
-						<select class="form-control" id="role" name="role" required>
+						<label for="recipient-name" class="form-label">Roles{{-- <span class="text-danger">*</span>--}}</label>
+						<select class="form-control  new-border-popups" id="role" name="role" required>
 							<option value=""> Select Roles </option> 
 							@foreach($roles as $role)
 								@if($role->name != 'user')
@@ -57,8 +57,8 @@
 					</div>
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Status <span class="text-danger">*</span></label>
-						<select class="form-control" id="status" name="status">
+						<label for="recipient-name" class="form-label">Status{{-- <span class="text-danger">*</span>--}}</label>
+						<select class="form-control  new-border-popups" id="status" name="status">
 							<option value="1"> Active </option>
 							<option value="0"> In-Active </option>
 						</select>
@@ -68,8 +68,8 @@
 				<div class="roles-table-main permission_show row col-md-12 m-0"> </div>
 				
 				
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Submit</button>
+				<div class="modal-footer"  style="border-top: 0px; padding-top : 0px;">
+					<button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>
 			</form>
 		</div>

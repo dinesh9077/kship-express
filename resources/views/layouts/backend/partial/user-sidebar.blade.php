@@ -1,6 +1,6 @@
 <li>
 	<a href="{{ url('home') }}" class="{{ request()->is('home*') ? 'active' : '' }}">
-		<i class="mdi mdi-view-dashboard"></i>
+		<i class="mdi mdi-view-dashboard-outline"></i>
 		<span> Dashboard </span>
 	</a>
 </li>

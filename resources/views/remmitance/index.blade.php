@@ -24,12 +24,12 @@
                                 <div class="row row-re w-100">
                                     <div class="col-lg-2 col-sm-6">
                                         <div class="main-selet-11">
-                                            <input type="text" class="form-control datepicker" name="fromdate" <?php echo (isset($_GET['fromdate'])) ? $_GET['fromdate'] : ''; ?> id="fromdate" placeholder="From Date">
+                                            <input type="text" class="form-control new-height-fcs-rmi datepicker" name="fromdate" <?php echo (isset($_GET['fromdate'])) ? $_GET['fromdate'] : ''; ?> id="fromdate" placeholder="From Date">
 										</div>
 									</div>
                                     <div class="col-lg-2 col-sm-6">
                                         <div class="main-selet-11">
-                                            <input type="text" class="form-control datepicker" name="todate" <?php echo (isset($_GET['todate'])) ? $_GET['todate'] : ''; ?> id="todate" placeholder="To Date">
+                                            <input type="text" class="form-control new-height-fcs-rmi datepicker" name="todate" <?php echo (isset($_GET['todate'])) ? $_GET['todate'] : ''; ?> id="todate" placeholder="To Date">
 										</div>
 									</div>
                                     @if(session('success'))
@@ -39,7 +39,7 @@
                                     @endif 
                                     <div class="col-lg-2 col-sm-6">
                                         <div class="main-selet-11">
-                                            <button type="button" class="btn-main-1 search_data">Search</button>
+                                            <button type="button" class="btn-main-1 search_data search-btn-remi">Search</button>
 										</div>
 									</div>
 								</div> 
