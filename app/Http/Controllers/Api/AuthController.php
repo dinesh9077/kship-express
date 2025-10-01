@@ -222,12 +222,18 @@
 			$user->token = $token;
 			return $this->successResponse($user, 'User registered successfully');
 		}
-		 
+
 		public function user(Request $request)
 		{
-			return $this->successResponse($request->user(), 'User detail fetched.');
+			$user = $request->user();
+
+			$user->profile_image = $user->profile_image
+				? url('storage/profile/' . $user->profile_image)
+				: asset('assets/images/profile-logo.png');
+
+			return $this->successResponse($user, 'User detail fetched.');
 		}
-		 
+ 
 		public function logout(Request $request)
 		{
 			$user = $request->user();
