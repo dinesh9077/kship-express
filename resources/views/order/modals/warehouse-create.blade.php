@@ -19,11 +19,13 @@
 						</h4> 
 					</div> 
                     <div class="col-xl-4 col-md-4 col-sm-12">
+                    <div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Company Name </label>
 							<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
 						</div>
 					</div> 
+					<div class="col-xl-4 col-md-4 col-sm-12">
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Contact Name </label>
@@ -43,6 +45,7 @@
 						</div>
 					</div> 
 				 
+					<div class="col-xl-4 col-md-4 col-sm-12">
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Warehouse Name </label>
@@ -81,6 +84,7 @@
 						</div>
 					</div>
 										
+										
 					<div class="col-xl-6 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Status </label>
@@ -91,6 +95,8 @@
 						</div>
 					</div>  
 				</div>
+                <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
+                    <button type="submit" class="btn new-submit-popup-btn">Submit</button>
                 <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
                     <button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>
