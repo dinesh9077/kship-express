@@ -208,7 +208,7 @@
 
 			// View Products button with JSON
 			$html .= "<span style='padding-left:0'>
-						<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}'>
+						<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}' style='border-bottom: 1px solid #1A4BEC ; color: #1A4BEC;'    >
 							View Products
 						</a>
 					  </span>";

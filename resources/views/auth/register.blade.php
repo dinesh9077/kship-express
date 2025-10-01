@@ -142,7 +142,7 @@
 								<div class="col-lg-12">
 									<div class="from-group">
 										<label for="packaging-type"> Address <span class="text-danger"> * </span></label>
-										<textarea name="address" id="address"></textarea>
+										<textarea name="address" id="address" style="height: 49px;"></textarea>
 									</div>
 								</div>
 								
@@ -180,7 +180,7 @@
 							<button type="resend" id="resend_btn" class="btn btn-primary otp_btn d-none">Resend OTP</button>
 						</div>
 					</form> 
-					<p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}"> Sign in </a> </p>
+					<p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}" style="color: #5640B0;"> Sign in </a> </p>
 				</div>
 				
 				<div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">

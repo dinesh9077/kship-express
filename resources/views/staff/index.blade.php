@@ -13,7 +13,7 @@
                         <div class="main-disolay-felx" style="margin-top: 0 !important;">
 							@if(config('permission.staff.add')) 
 								<div class="main-btn0main-1">
-									<button class="btn-main-1" onclick="addStaff(this, event)"> Create staff </button> 
+									<button class="btn-main-1" onclick="addStaff(this, event)"><span class="mdi mdi-plus"></span> Create staff </button> 
 								</div>
 							@endif
         				</div>

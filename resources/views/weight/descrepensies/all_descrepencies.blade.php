@@ -44,7 +44,7 @@
 									<!-- Date Input -->
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<input type="text" class="form-control datepicker" name="date" id="date" 
+											<input type="text" class="form-control new-height-fcs-rmi datepicker" name="date" id="date" 
 											value="{{ old('date', request('date')) }}" placeholder="Date">
 										</div>
 									</div>
@@ -52,7 +52,7 @@
 									<!-- Search Input -->
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<input type="text" class="form-control" name="search" id="search" 
+											<input type="text" class="form-control new-height-fcs-rmi" name="search" id="search" 
 											value="{{ old('search', request('search')) }}" 
 											placeholder="Search with AWB Number or Order ID">
 										</div>
@@ -61,7 +61,7 @@
 									<!-- Weight Status Dropdown -->
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<select name="weight_status" class="form-control">
+											<select name="weight_status" class="form-control new-height-fcs-rmi" style="background-color: #F3F3F3 !important;">
 												<option value="">All Statuses</option>
 												@foreach(['New Descrepency', 'Accepted', 'Auto Accepted', 'Dispute Accepted by Courier', 'Dispute Rejected by Courier'] as $status)
 												<option value="{{ $status }}" {{ request('weight_status') == $status ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
 									<!-- User Dropdown -->
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<select name="user_id" class="form-control">
+											<select name="user_id" class="form-control new-height-fcs-rmi" style="background-color: #F3F3F3 !important;">
 												<option value="">All Users</option>
 												@foreach($users as $user)
 												<option value="{{ $user->id }}" {{ request('user_id') == $user->id ? 'selected' : '' }}>
@@ -89,7 +89,7 @@
 									<!-- Search Button -->
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<button type="submit" class="btn-main-1">Search</button>
+											<button type="submit" class="btn-main-1 search_data search-btn-remi">Search</button>
 										</div>
 									</div>
 								</div>
@@ -158,7 +158,8 @@
 															<button class="main-gray-b">{{ $order->weight_status }}</button>
 														@endif
 													</td>
-													@if(config('permission:weight_descripencies.add'))
+								
+													 @if(config('permission:weight_descripencies.add'))
 														<td>
 															@if(!empty($order->weight_status))
 																@if($order->weight_status == "remark")
@@ -170,14 +171,14 @@
 																@endif
 
 																@if(in_array($order->weight_status, ["Accepted", "Auto Accepted"]))
+																<a class="btn-main-1 ml-2" style="color:#fff !important" href="{{ url('weight/descripencies/remark', $order->id) }}"> View Remark </a>
 																	<a class="btn-main-1" style="color:#fff !important" href="javascript:;" data-order_id="{{ $order->id }}" onclick="viewHistory(this, event)"> View Details </a>
-																	<a class="btn-main-1 ml-2" style="color:#fff !important" href="{{ url('weight/descripencies/remark', $order->id) }}"> View Remark </a>
 																@endif
 															@else
 																<button class="btn-main-1" data-id="{{ $order->id }}" data-user_id="{{ $order->user_id }}" onclick="raiseExcess(this,event)">Raise Weight</button>
 															@endif
 														</td>
-													@endif
+													@endif 
 												</tr>
 											@empty
 												<tr>
@@ -200,7 +201,7 @@
 </div>
 
 <div class="modal fade excees_weight" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg">
+	<div class="modal-dialog modal-md">
 		<div class="modal-content">
 			<div class="modal-header head-00re pb-0" style="border: none;">
 				<h5 class="modal-title" id="exampleModalLabel"> Action Excess Weight </h5>
@@ -208,35 +209,35 @@
 					<span aria-hidden="true">&times;</span>
 				</button>
 			</div>
-			<form id="raiseWeightForm" method="post" action="{{ route('weight.raise.excess-weight') }}" enctype="multipart/form-data">
+			<form id="raiseWeightForm" method="post" action="{{ route('weight.raise.excess-weight') }}" enctype="multipart/form-data" style="margin-top: 20px;">
 				@csrf
-				<div class="modal-body">
+				<div class="modal-body" style="border-top: 1px solid #dcdcdc;">
 					<div class="row">
 						<br>
-						<div class="form-group col-md-6">
-							<label> Chargeable Weight <span class="text-danger">*</span></label>
-							<input type="text" class="form-control" name="chargeable_weight" id="chargeable_weight" placeholder="Chargeable Weight" required>
+						<div class="form-group col-md-12">
+							<label> Chargeable Weight{{--  <span class="text-danger">*</span>--}}  </label>
+							<input type="text" class="form-control new-border-popups" name="chargeable_weight" id="chargeable_weight" placeholder="Chargeable Weight" required>
 						</div>
 					 
-						<div class="form-group col-md-6">
-							<label> Excess Weight <span class="text-danger">*</span></label>
-							<input type="text" class="form-control" name="excess_weight" id="excess_weight" placeholder="Excess Weight" required>
+						<div class="form-group col-md-12">
+							<label> Excess Weight {{-- <span class="text-danger">*</span>--}}  </label>
+							<input type="text" class="form-control new-border-popups" name="excess_weight" id="excess_weight" placeholder="Excess Weight" required>
 						</div>
 					 
-						<div class="form-group col-md-6">
-							<label> Excess Charge <span class="text-danger">*</span></label>
-							<input type="text" class="form-control" name="excess_charge" id="excess_charge" placeholder="Excess Charge" required>
+						<div class="form-group col-md-12">
+							<label> Excess Charge {{-- <span class="text-danger">*</span>--}}  </label>
+							<input type="text" class="form-control new-border-popups" name="excess_charge" id="excess_charge" placeholder="Excess Charge" required>
 						</div>
-						<div class="form-group col-md-6">
+						<div class="form-group col-md-12">
 							<label> Product Images </label>
-							<input type="file" class="form-control" name="product_images[]" id="product_images" multiple>
+							<input type="file" class="form-control new-border-popups" name="product_images[]" id="product_images" multiple>
 						</div>
 					</div>
 					<input type="hidden" name="order_id" id="order_id">
 					<input type="hidden" name="user_id" id="user_id"> 
 				</div> 
-				<div class="modal-footer" style="justify-content: center;">
-					<button type="submit" class="btn btn-primary btn-main-1"> Submit </button>
+				<div class="px-2 pb-2" style="justify-content: center;">
+					<button type="submit" class="btn new-submit-popup-btn"> Submit </button>
 				</div>
 			</form>
 		</div>

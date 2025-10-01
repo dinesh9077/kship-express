@@ -10,8 +10,8 @@
 			<form id="editPermissionForm" action="{{ route('staff.permission-update', ['id' => $staff->id]) }}" method="post" enctype="multipart/form-data">
 				<div class="modal-body row"> 
 					<div class="mb-3 col-md-12">
-						<label for="recipient-name" class="form-label">Roles <span class="text-danger">*</span></label>
-						<select class="form-control" id="role" name="role">
+						<label for="recipient-name" class="form-label">Roles {{-- <span class="text-danger">*</span>--}}</label>
+						<select class="form-control new-border-popups" id="role" name="role">
 							<option value=""> Select Roles </option> 
 							@foreach($roles as $role)
 								@if($role->name != "user")
@@ -66,8 +66,8 @@
 						</div>
 					</div>  	
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Submit</button>
+				<div class="modal-footer" style="padding-top: 0px; border-top : 0px;">
+					<button type="submit"  class="btn new-submit-popup-btn">Submit</button>
 				</div>
 			</form>
 		</div>

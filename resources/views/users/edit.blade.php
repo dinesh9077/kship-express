@@ -136,8 +136,8 @@
 					</div>
 				</div>
 				
-				<div class="text-align-center mb-4">
-					<button class="btn-main-1" id="customer_submit"> Submit </button>
+				<div class="text-align-start mb-4">
+					<button class="new-submit-btn " id="customer_submit"> Submit </button>
 				</div>
 			</div>
 		</form>

@@ -37,17 +37,18 @@
 }
 
 .table-custom-serch .input-main {
-	min-width: 100px;
+	min-width: 500px;
 }
 .table-custom-serch .input-main { 
-	border: none;
-	border-radius: 3px;
+	    border: 1px solid #dcdcdc;
+	border-radius: 10px;
 	padding: 7px;
 	margin-left: 3px;
 	font-weight: 400;
 	font-size: 14px;
 	color: #000;
-	background-color: #25252547;
+	background-color: white;
+	padding: 10px 20px;
  
 }
 .custom-entry p {
@@ -55,6 +56,25 @@
 	font-size: 14px;
 	color: #0A1629;
 	font-weight: 500;
+}
+
+
+.btn-warning {
+	border-radius: 10px;
+	padding: 10px 20px;
+	background-color: #FBA911;
+	border-radius: 10px;
+}
+
+.btn-blues{
+border-radius: 10px;
+	padding: 10px 20px;
+	background-color: #15A7DD;
+	border-radius: 10px;
+}
+
+#page_length{
+	padding: 5px;
 }
 </style>
 <div class="content-page">
@@ -80,19 +100,19 @@
 
 						<div class="col-lg-2 col-sm-6">
 							<div class="main-selet-11">
-								<input type="text" class="form-control datepicker" name="fromdate" value="{{ request('fromdate') }}" id="fromdate" placeholder="From Date">
+								<input type="text" class="form-control new-height-fcs-rmi  datepicker" name="fromdate" value="{{ request('fromdate') }}" id="fromdate" placeholder="From Date">
 							</div>
 						</div>
 
 						<div class="col-lg-2 col-sm-6">
 							<div class="main-selet-11">
-								<input type="text" class="form-control datepicker" name="todate" value="{{ request('todate') }}" id="todate" placeholder="To Date">
+								<input type="text" class="form-control new-height-fcs-rmi  datepicker" name="todate" value="{{ request('todate') }}" id="todate" placeholder="To Date">
 							</div>
 						</div>
 
 						<div class="col-lg-2 col-sm-6">
 							<div class="main-selet-11">
-								<button type="submit" class="btn-main-1 search_user">Search</button>
+								<button type="submit" class="btn-main-1 search_user search-btn-remi">Search</button>
 							</div>
 						</div>
 					</div> 
@@ -100,8 +120,6 @@
 				<div class="ordr-main-001">
 					<div class="page-heading-main justify-content-between align-items-end  mb-0">
 						<div class="left-head-deta">
-							<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
-							<a href="javascript:;" class="btn btn-warning" id="pdfExport"> PDF</a>
 							<div class="custom-entry">
 								<p>Show</p>
 								<select id="page_length">
@@ -121,6 +139,8 @@
 							<div class="table-custom-serch">
 								<input class="input-main" type="search" id="search_table"  placeholder="Search">
 							</div> 
+							<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
+							<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
 						</div>
 					</div> 
 					<div class="main-data-teble-1 table-responsive">

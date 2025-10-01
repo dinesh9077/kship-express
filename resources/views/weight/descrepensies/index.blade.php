@@ -34,17 +34,17 @@
 								<div class="row">
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<input type="text" class="form-control datepicker" name="date" value="<?= request('date') ?>" id="date" placeholder="Date">
+											<input type="text" class="form-control new-height-fcs-rmi datepicker" name="date" value="<?= request('date') ?>" id="date" placeholder="Date">
 										</div>
 									</div>
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<input type="text" class="form-control" name="search" value="<?= request('search') ?>" id="search" placeholder="Search with AWB Number or Order ID">
+											<input type="text" class="form-control new-height-fcs-rmi" name="search" value="<?= request('search') ?>" id="search" placeholder="Search with AWB Number or Order ID">
 										</div>
 									</div>
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<select name="weight_status" class="form-control">
+											<select name="weight_status" class="form-control new-height-fcs-rmi" style="   background-color: #F3F3F3 !important;">
 												<option value="">All Statuses</option>
 												<?php 
 													$statuses = ['New', 'Accepted', 'Auto Accepted', 'Remark'];
@@ -58,7 +58,7 @@
 									</div>
 									<div class="col-lg-2 col-sm-6">
 										<div class="main-selet-11">
-											<button class="btn-main-1" type="submit">Search</button>
+											<button class="btn-main-1 search_data search-btn-remi" type="submit">Search</button>
 										</div>
 									</div>
 								</div>

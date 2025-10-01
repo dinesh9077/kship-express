@@ -69,8 +69,8 @@
 													   data-url="{{ $shipping->url }}"
 													   data-email="{{ $shipping->email }}"
 													   data-password="{{ $shipping->password }}"
-													   class="btn btn-icon waves-effect waves-light action-icon mr-1">
-														<i class="mdi mdi-pencil"></i>
+													   class="btn class-pencil mr-1">
+														<i class="mdi mdi-pencil " style="color: #1C21DE;"></i>
 													</a>
 												@endif
 											</td>
@@ -168,8 +168,8 @@
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer"> 
-					<button type="submit" class="btn btn-primary btn-main-1"> Save </button>
+				<div class="modal-footer" style="border-top: none; padding-top : 0px;"> 
+					<button type="submit" class="btn new-submit-popup-btn"> Save </button>
 				</div>
 			</form>
 		</div>
@@ -259,8 +259,8 @@
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer"> 
-					<button type="submit" class="btn btn-primary btn-main-1"> Save </button>
+				<div class="modal-footer " style="border-top: none; padding-top: 0px;"> 
+					<button type="submit" class="btn new-submit-popup-btn"> Save </button>
 				</div>
 			</form>
 		</div>

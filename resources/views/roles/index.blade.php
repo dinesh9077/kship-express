@@ -21,7 +21,7 @@
                    <div class="main-disolay-felx" style="margin-top: 0 !important;">
 				   @if(config('permission.roles.add'))
 					   <div class="main-btn0main-1"> 
-						   <button class="btn-main-1" onclick="addRoles(this, event)">Create New Role</button>
+						   <button class="btn-main-1" onclick="addRoles(this, event)"><span class="mdi mdi-plus"></span> Create New Role</button>
 					   </div>
 				   @endif
                    </div>

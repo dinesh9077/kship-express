@@ -3,6 +3,14 @@
 @section('header_title','Change Password')
 @section('content')
 
+<style>
+	.form-control {
+    background-color: white;
+    border: 1px solid #dcdcdc;
+    border-radius: 10px;
+}
+</style>
+
 <div class="content-page">
     <div class="content">
         <!-- Start Content-->
@@ -12,13 +20,19 @@
                 <div class="main-roow-1" style="margin-top: 20px;">
                     <div class="main-row">
                         <div class="main-001">
-                            <!-- <h5> Change Password </h5> -->
+                            <h5> Set New Password </h5>
 						</div>
 						<form method="post" action="{{ route('update.change-password') }}">
 							@csrf
 							<div class="main-change-pass">
 								<div class="row justify-content-center">
-									<div class="col-lg-6">
+									<div class="col-lg-6 col-sm-12" style="    display: flex
+;
+    align-items: center;
+    justify-content: center;">
+										<img src="{{asset('assets/images/dashbord/pass-new.png')}}"alt="">
+									</div>
+									<div class="col-lg-6 col-sm-12">
 										<div class="form-group my-4">
 											<label>Old Password</label>
 											<input type="password" name="old_password" placeholder="Old Password" class="form-control @error('old_password') is-invalid @enderror">
@@ -37,7 +51,7 @@
 										</div>
 
 										<div class="text-center">
-											<button class="btn-main-1">Submit</button>
+											<button class="new-submit-btn">Submit</button>
 										</div>
 									</div>
 								</div>

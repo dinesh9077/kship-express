@@ -12,7 +12,7 @@
                     <div class="main-create-order">
                         <div class="main-disolay-felx" style="margin-top: 0 !important;">
                             <div class="main-btn0main-1">
-                                <a href="{{route('staffuser.add')}}"> <button class="btn-main-1"> Create staff Users </button> </a>
+                                <a href="{{route('staffuser.add')}}"> <button class="btn-main-1"> <span class="mdi mdi-plus"></span> Create staff Users </button> </a>
         					</div>
         				</div>
         				

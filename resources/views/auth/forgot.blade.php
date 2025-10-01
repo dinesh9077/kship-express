@@ -46,7 +46,7 @@
                               <a href="javascript:;"> <button type="submit" class="btn-main-1">  {{ __('Send Mail') }} </button> </a>
                          </div>
                     </form>
-                    <p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}"> Sign in </a> </p>
+                    <p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}" style="color: #5640B0;"> Sign in </a> </p>
                    
                </div>
           </div>
