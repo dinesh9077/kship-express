@@ -30,6 +30,12 @@
 							<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" required> 
 						</div>
 					</div> 
+					<div class="col-xl-4 col-md-4 col-sm-6">
+						<div class="from-group my-2">
+							<label for="username"> Contact Email </label>
+							<input type="text" autocomplete="off" name="contact_email" id="contact_email" placeholder="Contact Name" required> 
+						</div>
+					</div>
 					<div class="col-xl-6 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Contact Number </label>
