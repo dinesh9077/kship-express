@@ -1479,8 +1479,12 @@
 		public function orderWarehouseList()
 		{
 			$user = Auth::user();
-			$pickupWarehouses = CourierWarehouse::where('user_id', $user->id)
-			->where('warehouse_status', 1)
+			$query = CourierWarehouse::query();
+			if($user->role === "user")
+			{
+				$query->where('user_id', $user->id);
+			}
+			$pickupWarehouses = $query->where('warehouse_status', 1)
 			->get();
 			
 			$options = ['<option value="">Select Pickup Location</option>'];
