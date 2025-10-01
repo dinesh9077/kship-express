@@ -7,16 +7,21 @@
 <style>
      .chat-container { 
         margin: auto;
-        background: #f9f9f9;
+        background: white;
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
     }
+
+	.chat-container h4{
+		color: black;
+		margin-bottom: 24px;
+	}
     .chat-box {
         height: 300px;
         overflow-y: auto;
         border-radius: 5px;
-        padding: 10px;
+        padding: 15px;
         background: #fff;
         border: 1px solid #ddd;
     }
@@ -30,15 +35,15 @@
     .chat-input input[type="file"] {
         flex: 1;
         padding: 8px;
-        border-radius: 5px;
+        border-radius: 10px;
         border: 1px solid #ccc;
     }
     .chat-input button {
-        background: #007bff;
+        background: #5640b0;
         color: white;
         border: none;
-        padding: 8px 12px;
-        border-radius: 5px;
+        padding: 14px 38px;
+        border-radius: 10px;
         cursor: pointer;
     }
     .image-preview { 
@@ -62,13 +67,13 @@
 	}
 
 	.admin-message {
-		background-color: #d1e7fd;
-		color: #004085;
+		background-color: #F3F3F3;
+		color: #000000;
 	}
 
 	.user-message {
-		background-color: #c3e6cb;
-		color: #155724;
+		background-color: #F3F3F3;
+		color: #000000;
 	}
 
 	/* Align User Messages to the Right */
@@ -162,18 +167,20 @@
 						@endif
 					@endforeach
 				</div>
+				
 
 				@if($ticket->status === "Open")
-					<form id="remarkForm" action="{{ route('ticket.remark.store') }}" method="POST" enctype="multipart/form-data">
+					<form id="remarkForm" action="{{ route('ticket.remark.store') }}" method="POST" enctype="multipart/form-data" class="mt-3">
 					@csrf
 						<input type="hidden" name="ticket_id" value="{{ $ticket->id }}">   
 						<div class="chat-input">
-							<input type="text" name="remark" id="remarkInput" placeholder="Type your remark..." required>
-							<input type="file" id="imageUpload" name="images[]" accept="image/*" multiple onchange="previewImages()">
+							<input type="text" name="remark" style="height: 49px;" id="remarkInput" placeholder="Type your remark..." required>
+							<input type="file" id="imageUpload" style="height: 49px;"  name="images[]" accept="image/*" multiple onchange="previewImages()">
 							<button type="submit" >Send</button>
 						</div>
 					</form>
 					<div class="image-preview" id="imagePreview"></div>
+
 				@endif
             </div>
         </div>

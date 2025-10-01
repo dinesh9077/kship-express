@@ -25,7 +25,7 @@
 				<div class="main-text-input-filld wrapper1">
 					<div class="main-logo-121">
 						 <img src="{{asset('storage/settings/'.config('setting.login_logo'))}}" style="height: 90px"> 
-						<h5>{{ __('Login') }} Using {{config('setting.company_name')}}</h5>
+						<!-- <h5>{{ __('Login') }} Using {{config('setting.company_name')}}</h5> -->
 					</div>
 					<form method="POST" action="{{ route('login.post') }}">
                         @csrf 
@@ -52,12 +52,14 @@
 							</div> 
 						</div>
 						
+						<p style="color:#fff; line-height: 0;float: right;"><a href="{{ route('forgot-password') }} " style="color: #838383; font-weight : 500;">Forgot Password</a></p>
+
+						
 						<div class="main-login-btn">
 							<a href="javascript:;"> <button type="submit" class="btn-main-1">  {{ __('Login') }} </button> </a>
 						</div>
 					</form>
-					<p style="color:#fff;"><a href="{{ route('forgot-password') }}">forgot Password</a></p>
-					<p class="sin-up"> Don't Have Account <a href="{{ route('register') }}"> Sign Up </a> </p>
+					<p class="sin-up"> Don't Have Account <a href="{{ route('register') }}" style="color: #5640B0;"> Sign Up </a> </p>
 				</div>
 			</div>
 		</section>

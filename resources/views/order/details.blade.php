@@ -27,8 +27,10 @@
                         <div class="main-le-ri-text">
                             <div class="left-order-text">
                                 <div class="mnain-frisnol-det m-0">
-									@php($class = ($order->status_courier == "CANCELED") ? 'background: #80000024;color: #800000;' : 'background: #00800024;color: #008000;') 
-                                    <a href="{{ route('order') }}?weight_order={{ request('weight_order')}}&status={{ request('status')}}"><i class="mdi mdi-chevron-left"></i> <b> #{{ $order->order_prefix }}</b> </a> 
+									@php($class = ($order->status_courier == "CANCELED") ? 'background: #80000024;color: #800000;' : 'background: #009F1D;color: #fff;') 
+                                    <a href="{{ route('order') }}?weight_order={{ request('weight_order')}}&status={{ request('status')}}">
+										<i class="mdi mdi-chevron-left"></i>
+										 <b style="font-weight: 500;"> #{{ $order->order_prefix }}</b> </a> 
 									<span style="{{ $class }}"> {{ $order->status_courier }} </span>
 								</div>
 							</div> 
@@ -42,11 +44,11 @@
 						<div class="main-ord-1-text">
 							<div class="main-hed-order-details">
 								<div class="main-headet-det">
-									<img src="{{asset('assets/images/new1.png')}}">
+									<img src="{{asset('assets/images/dashbord/vo-1.png')}}">
 									<h5> Order Details </h5>
 								</div>
 								
-								<div class="row" style="padding-bottom: 10px; border-bottom: 1px solid #8888882e;">
+								<div class="row" style="padding-bottom: 10px;">
 									<div class="col-lg-3 col-md-6 ship-col">
 										<div class="mani-00-tetxt">
 											<p> Order created on channel </p>
@@ -58,8 +60,8 @@
 										<div class="mani-00-tetxt">
 											<p> Payment </p>
 											<div class="main-cont1-2" style="display: flex; column-gap: 10px;">
-												<p style="color: #000;">{{ $order->order_type == "cod" ? $order->cod_amount : $order->invoice_amount }} </p>
 												<p class="{{ strtolower($order->order_type) }}" > {{ $order->order_type }} </p>
+												<p style="color: #000;">{{ $order->order_type == "cod" ? $order->cod_amount : $order->invoice_amount }} </p>
 											</div>
 										</div>
 									</div>
@@ -103,7 +105,7 @@
 						<div class="main-ord-1-text">
 							<div class="main-hed-order-details">
 								<div class="main-headet-det">
-									<img src="{{asset('assets/images/new3.png')}}">
+									<img src="{{asset('assets/images/dashbord/vo-2.png')}}">
 									<h5> Customer Details </h5>
 								</div>
 								
@@ -141,8 +143,8 @@
 						 
 						<div class="main-ord-1-text">
 							<div class="main-hed-order-details">
-								<div class="main-headet-det">
-									<img src="{{asset('assets/images/new4.png')}}">
+								<div class="main-headet-det" style="border-bottom: none;">
+									<img src="{{asset('assets/images/dashbord/vo-3.png')}}">
 									<h5> Product Details </h5>
 								</div>
 								
@@ -151,29 +153,30 @@
 									<table class="table mb-0">
 										<thead class="thead-light">
 											<tr> 
-												<th> Product name </th> 
-												<th> Product Category </th> 
-												<th> Sku Number </th> 
-												<th> Hsn Number </th> 
-												<th> Qty (No Of Box)</th> 
-												<th> Amount </th> 
+												<th style="border: none;"> Product name </th> 
+												<th style="border: none;"> Product Category </th> 
+												<th style="border: none;"> Sku Number </th> 
+												<th style="border: none;"> Hsn Number </th> 
+												<th style="border: none;"> Qty (No Of Box)</th> 
+												<th style="border: none;"> Amount </th> 
 											</tr>
 										</thead>
 										@if($order->orderItems->isNotEmpty())
 											<tbody>
 												@foreach($order->orderItems as $orderItem)
-												<tr> 
-													<td> {{ $orderItem->product_name }} </td>   
-													<td> {{ $orderItem->product_category }} </td>   
-													<td> {{ $orderItem->sku_number }} </td>   
-													<td> {{ $orderItem->hsn_number }} </td>   
-													<td> {{ $orderItem->quantity }}  </td>
-													<td> {{ $orderItem->amount }} </td>   
+												<tr style="border: none !important;"> 
+													<td style="border: none;"> {{ $orderItem->product_name }} </td>   
+													<td style="border: none;"> {{ $orderItem->product_category }} </td>   
+													<td style="border: none;"> {{ $orderItem->sku_number }} </td>   
+													<td style="border: none;"> {{ $orderItem->hsn_number }} </td>   
+													<td style="border: none;"> {{ $orderItem->quantity }}  </td>
+													<td style="border: none;"> {{ $orderItem->amount }} </td>   
 												</tr>
 												@endforeach 
-												<tr> 
-													<td colspan="5"> <b> Order Total </b> </td>
-													<td> <b> {{ $order->total_amount }} </b> </td>
+												<tr style="border: none !important;"> 
+													<td  style="border: none;"></td>
+													<td  style="border: none;" colspan="4"> <b> Order Total </b> </td>
+													<td  style="border: none;"> <b style="color: #5640B0;"> {{ $order->total_amount }} </b> </td>
 												</tr>
 											</tbody>
 										@endif
@@ -185,7 +188,7 @@
 						<div class="main-ord-1-text">
 							<div class="main-hed-order-details">
 								<div class="main-headet-det">
-									<img src="{{asset('assets/images/new2.png')}}">
+									<img src="{{asset('assets/images/dashbord/vo-4.png')}}">
 									<h5> Package Details </h5>
 								</div>
 								@if($order->orderItems->isNotEmpty())
@@ -286,8 +289,8 @@
 														<div class="line"></div>
 													</div> 
 													<div class="content">
-														<h4> {{ $row->activity_name }} </h4>
-														<h6> {{ date('d M Y, H:i:s', strtotime($row->created_at)) }} </h6>
+														<h4 class="new-tracking-title"> {{ $row->activity_name }} </h4>
+														<h6  class="new-tracking-des"> {{ date('d M Y, H:i:s', strtotime($row->created_at)) }} </h6>
 													</div>
 												</div>
 											@endforeach 
@@ -304,9 +307,9 @@
 																<div class="line"></div>
 															</div> 
 															<div class="content">
-																<h4> {{ $trackingHistory['status'] }} </h4>
-																<h4> {{ $trackingHistory['location'] ?? '' }} </h4>
-																<h6> {{ date('d M Y, h:i a', strtotime($trackingHistory['date'])) }} </h6>
+																<h4 class="new-tracking-title"> {{ $trackingHistory['status'] }} </h4>
+																<h4 class="new-tracking-title"> {{ $trackingHistory['location'] ?? '' }} </h4>
+																<h6  class="new-tracking-des"> {{ date('d M Y, h:i a', strtotime($trackingHistory['date'])) }} </h6>
 															</div>
 														</div>
 													@endif  

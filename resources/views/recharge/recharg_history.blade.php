@@ -50,6 +50,24 @@
 	background-color: #25252547;
 	
 	} 
+
+	
+.btn-blues{
+border-radius: 10px;
+	padding: 10px 20px;
+	background-color: #15A7DD;
+	border-radius: 10px;
+}
+
+
+.btn-warning {
+	border-radius: 10px;
+	padding: 10px 20px;
+	background-color: #FBA911;
+	border-radius: 10px;
+}
+
+
 	.custom-entry p {
 	margin: 0;
 	font-size: 14px;
@@ -68,7 +86,7 @@
 						<div class="main-data-teble-1 table-responsive">
 							<div class="page-heading-main justify-content-between align-items-end  mb-0">
 								<div class="left-head-deta">
-									<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+									<a href="javascript:;" class="btn btn-blus" id="excelExport"> XLXS</a>
 									<a href="javascript:;" class="btn btn-warning" id="pdfExport"> PDF</a>
 									<div class="custom-entry">
 										<p>Show</p>

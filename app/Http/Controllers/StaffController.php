@@ -404,14 +404,14 @@
 					if (!in_array($value->role, ['admin', 'user'])) {
 						$actions = [];
 						if (config('permission.staff.edit')) {  
-							$actions[] = '<a href="' . route('staff.edit', ['id' => $value->id]) . '" onclick="editStaff(this, event)" class="btn btn-sm btn-success">Edit</a>';
+							$actions[] = '<a href="' . route('staff.edit', ['id' => $value->id]) . '" onclick="editStaff(this, event)"><i class="mdi mdi-pencil class-pencil"></i></a>';
 						}
 						// Delete permission
 						if (config('permission.staff.delete')) {  
-							$actions[] = '<a href="' . route('staff.delete', ['id' => $value->id]) . '" onclick="deleteRecord(this, event)" class="btn btn-sm btn-danger">Delete</a>';
+							$actions[] = '<a href="' . route('staff.delete', ['id' => $value->id]) . '" onclick="deleteRecord(this, event)" ><i class="mdi mdi-trash-can-outline class-delete"></i></a>';
 						}
 						if (config('permission.staff.edit')) {  
-							$actions[] = '<a href="' . route('staff.permission', ['id' => $value->id]) . '" onclick="editPermission(this, event)" class="btn btn-sm btn-info">Permission</a>';
+							$actions[] = '<a href="' . route('staff.permission', ['id' => $value->id]) . '" onclick="editPermission(this, event)" ><i class="mdi mdi-lock class-pencil"></i></a>';
 						}
 						  
 						// Combine actions into the action column

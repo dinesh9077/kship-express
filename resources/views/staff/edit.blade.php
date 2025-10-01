@@ -10,32 +10,32 @@
 			<form id="editStaffForm" action="{{ route('staff.update', ['id' => $staff->id]) }}" method="post" enctype="multipart/form-data">
 				 <div class="modal-body row">
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Company Name <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="company_name" name="company_name" value="{{ $staff->company_name }}" required>
+						<label for="recipient-name" class="form-label">Company Name{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="company_name" name="company_name" value="{{ $staff->company_name }}" required>
 					</div> 
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Name <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="name" name="name" value="{{ $staff->name }}">
+						<label for="recipient-name" class="form-label">Name{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="name" name="name" value="{{ $staff->name }}">
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Mobile <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="mobile" name="mobile" value="{{ $staff->mobile }}"  oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));">
+						<label for="recipient-name" class="form-label">Mobile{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="mobile" name="mobile" value="{{ $staff->mobile }}"  oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));">
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Email <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="email" name="email" value="{{ $staff->email }}">
+						<label for="recipient-name" class="form-label">Email{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="email" name="email" value="{{ $staff->email }}">
 					</div>  
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Password <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="password" name="password" value="" autocomplete="off">
+						<label for="recipient-name" class="form-label">Password{{-- <span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="password" name="password" value="" autocomplete="off">
 					</div> 
 					<div class="mb-3 col-md-6"> 
-						<label for="recipient-name" class="form-label">Geneder <span class="text-danger">*</span></label>
-						<select autocomplete="off" class="form-control" name="gender" id="gender" Required>
+						<label for="recipient-name" class="form-label">Geneder{{-- <span class="text-danger">*</span>--}}</label>
+						<select autocomplete="off" class="form-control new-border-popups" name="gender" id="gender" Required>
 							<option value=""> Select Gender </option>
 							<option value="Male"  {{ $staff->gender == 'Male' ? 'selected' : '' }}> Male </option>
 							<option value="Female"  {{ $staff->gender == 'Female' ? 'selected' : '' }}> Female</option>
@@ -43,15 +43,15 @@
 						</select> 
 					</div>
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Status <span class="text-danger">*</span></label>
-						<select class="form-control" id="status" name="status">
+						<label for="recipient-name" class="form-label">Status{{-- <span class="text-danger">*</span>--}}</label>
+						<select class="form-control new-border-popups" id="status" name="status">
 							<option value="1" {{ $staff->status == 1 ? 'selected' : '' }}> Active </option>
 							<option value="0" {{ $staff->status == 0 ? 'selected' : '' }}> In-Active </option>
 						</select>
 					</div>   
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Submit</button>
+				<div class="modal-footer" style="padding-top: 0px; border-top : 0px;">
+					<button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>
 			</form>
 		</div>

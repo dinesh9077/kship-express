@@ -13,7 +13,7 @@
 						{{-- <div class="main-disolay-felx" style="margin-top: 0 !important;">
 							@if(config('permission.client.add'))	
 								<div class="main-btn0main-1">
-									<a href="{{ route('customer.add') }}"> <button class="btn-main-1"> Create Client </button> </a>
+									<a href="{{ route('customer.add') }}"> <button class="btn-main-1"><span class="mdi mdi-plus"></span> Create Client </button> </a>
 								</div>
 							@endif
         				</div> --}}

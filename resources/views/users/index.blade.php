@@ -11,7 +11,7 @@
                 <div class="main-disolay-felx">
 					@if(config('permission.clients.add'))
 						<div class="main-btn0main-1">
-							<a href="{{ route('users.create') }}"> <button class="btn-main-1"> Create Client </button> </a>
+							<a href="{{ route('users.create') }}"> <button class="btn-main-1"><span class="mdi mdi-plus"></span> Create Client </button> </a>
 						</div>
 					@endif
 				</div> 
@@ -66,7 +66,7 @@
 						
 						<div class="from-group rech-re-form">
 							<span class="position-absolute custom-rupee-position"> {{ config('setting.currency') }} </span>
-							<input type="number" placeholder="500" value="500" name="amount" id="recharge_user_amount" required> 
+							<input type="number" placeholder="500" value="500" name="amount" id="recharge_user_amount" required style="margin-left : 5px;"> 
 							<p class="mt-1"> Min value: {{ config('setting.currency') }} 500 </p>
 						</div>
 						
@@ -106,8 +106,8 @@
 						</div> 
 					</div>
 				</div>
-				<div class="modal-footer" style="justify-content: center;"> 
-					<button type="submit" class="btn btn-primary btn-main-1"> Continue to Payment </button>
+				<div class="modal-footer" style="padding-top: 0px ; border-top : 0px;"> 
+					<button type="submit" class="btn new-submit-popup-btn"> Continue to Payment </button>
 				</div>
 			</form>
 		</div>

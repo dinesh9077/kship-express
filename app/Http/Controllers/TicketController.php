@@ -81,7 +81,7 @@
 						? '<span class="badge badge-success">Close</span>'
 						: '<span class="badge badge-danger">Open</span>',
 					'created_at'    => $value->created_at->format('d M Y'),
-					'action'        => '<a href="'.url('ticket/view', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Ticket View"> <i class="mdi mdi-eye"></i> </a>',
+					'action'        => '<a href="'.url('ticket/view', $value->id).'" class="btn  eyess-clss action-icon" data-toggle="tooltip" title="Ticket View"> <i class="mdi mdi-eye"></i> </a>',
 				];
 			}
  
@@ -355,7 +355,7 @@
 				}
 				 
 				if(config('permission.ticket_request.delete')){
-					$action .= ' <a href="'.url('ticket/delete',$ticket->id).'" onclick="deleteRecord(this,event);" class="btn btn-danger">Delete</a>';
+					$action .= ' <a href="'.url('ticket/delete',$ticket->id).'" onclick="deleteRecord(this,event);" class="btn-main-1 text-white">Delete</a>';
 				}
 				$data[] = [
 					'id' => $id,

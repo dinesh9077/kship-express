@@ -123,7 +123,7 @@
 														<input type="text" name="height[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="height" placeholder="0.00" value="0.00"> 
 													</div>
 												</div>
-												<div class="col-lg-2 col-sm-6">
+												<div class="col-lg-3 col-sm-6">
 													<div class="from-group">
 														<label for="pickup-pincode"> Width </label>
 														<input type="text" name="width[]" id="width" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" placeholder="0.00" value="0.00"> 
@@ -139,8 +139,8 @@
 										</div>  
 										@if(config('permission.rate_calculator.add'))
 										<div class="de-flex-clas mt-4">
-											<button type="submit" class="btn-main-1"> Calculate </button>
-											<button type="button" class="btn-main-1" onClick="window.location.reload();"> Reset </button>
+											<button type="submit" class="new-submit-btn"> Calculate </button>
+											<button type="button" class="new-submit-btn-1" onClick="window.location.reload();"> Reset </button>
 										</div>
 										@endif
 									</div>

@@ -20,39 +20,39 @@
 						<div class="main-rowx-1">
                             <div class="main-order-001">
                                 <div class="address_block">
-                                    <!--<div class="main-heading-1 pt-lg-0 pb-lg-2 px-lg-0">
+                                <div class="main-heading-1 pt-lg-0 pb-lg-2 px-lg-0">
                                        <h4 class="mb-0"> 
-											<small class="text-muted d-block">
+											<small  style="font-size : 14px; color : #727272; font-weight : 500;">
 												Note: If Delhivery API is activated, the address will be sent to the warehouse API to add it to the Delhivery portal.
 											</small>
 										</h4> 
-        							</div>--> 
-									<div class="row align-items-end">
-										<div class="col-xl-4 col-md-4 col-sm-6">
+        							</div>
+									<div class="row align-items-end mt-3">
+										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Warehouse Name </label>
 												<input class="default" type="text" data-id="0" autocomplete="off" maxlength="18" name="warehouse_name" id="warehouse_name" placeholder="Warehouse Name" required> 
 											</div>
 										</div>
-										<div class="col-xl-4 col-md-4 col-sm-6">
+										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Company Name </label>
 												<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
 											</div>
 										</div> 
-										<div class="col-xl-4 col-md-4 col-sm-6">
+										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Contact Name </label>
 												<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" required> 
 											</div>
 										</div> 
-										<div class="col-xl-4 col-md-4 col-sm-6">
+										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> Contact Email </label>
 												<input type="text" autocomplete="off" name="contact_email" id="contact_email" placeholder="Contact Name" required> 
 											</div>
 										</div> 
-										<div class="col-xl-4 col-md-4 col-sm-6">
+										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="first-name"> Contact Number </label>
 												<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
@@ -91,6 +91,41 @@
 											</div>
 										</div>
 										 
+										
+        							</div>
+									<div class="row align-items-end my-2">
+										<div class="col-12">
+											<div class="form-group my-1">
+												<input type="checkbox" name="label_options[]" id="hide_contact_on_label" value="hide_contact">
+												<label for="hide_contact_on_label" style="font-weight: 500;color: black;font-size: 16px; margin-left : 5px;">Hide End Customer Contact Number in Label</label>
+											</div>  
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-1">
+												<input type="checkbox" name="label_options[]" id="hide_address_on_label" value="hide_address">
+												<label for="hide_address_on_label" style="font-weight: 500;color: black;font-size: 16px; margin-left : 5px;">Hide Warehouse Address in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-1">
+												<input type="checkbox" name="label_options[]" id="hide_mobile_on_label" value="hide_mobile">
+												<label for="hide_mobile_on_label" style="font-weight: 500;color: black;font-size: 16px; margin-left : 5px;">Hide Warehouse Mobile Number in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-1">
+												<input type="checkbox" name="label_options[]" id="hide_product_on_label" value="hide_product">
+												<label for="hide_product_on_label" style="font-weight: 500;color: black;font-size: 16px; margin-left : 5px;">Hide Product Details in Label</label>
+											</div>
+										</div> 
+										<div class="col-12">
+											<div class="form-group my-1">
+												<input type="checkbox" name="label_options[]" id="hide_weight_on_label" value="hide_weight">
+												<label for="hide_weight_on_label" style="font-weight: 500;color: black;font-size: 16px; margin-left : 5px;">Hide Weight in Label</label>
+											</div>
+										</div> 
+									</div>
+									<div class="row">
 										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="first-name"> Status </label>
@@ -100,47 +135,19 @@
 												</select>
 											</div>
 										</div> 
-        							</div>
-									<div class="row align-items-end">
-										<div class="col-12">
-											<div class="form-group my-2">
-												<input type="checkbox" name="label_options[]" id="hide_contact_on_label" value="hide_contact">
-												<label for="hide_contact_on_label">Hide End Customer Contact Number in Label</label>
-											</div>  
-										</div> 
-										<div class="col-12">
-											<div class="form-group my-2">
-												<input type="checkbox" name="label_options[]" id="hide_address_on_label" value="hide_address">
-												<label for="hide_address_on_label">Hide Warehouse Address in Label</label>
-											</div>
-										</div> 
-										<div class="col-12">
-											<div class="form-group my-2">
-												<input type="checkbox" name="label_options[]" id="hide_mobile_on_label" value="hide_mobile">
-												<label for="hide_mobile_on_label">Hide Warehouse Mobile Number in Label</label>
-											</div>
-										</div> 
-										<div class="col-12">
-											<div class="form-group my-2">
-												<input type="checkbox" name="label_options[]" id="hide_product_on_label" value="hide_product">
-												<label for="hide_product_on_label">Hide Product Details in Label</label>
-											</div>
-										</div> 
-										<div class="col-12">
-											<div class="form-group my-2">
-												<input type="checkbox" name="label_options[]" id="hide_weight_on_label" value="hide_weight">
-												<label for="hide_weight_on_label">Hide Weight in Label</label>
-											</div>
-										</div> 
 									</div>
+									<div class="mt-3">
+                   
+										<button class="new-submit-btn" type="submit" id="customer_submit"> Submit </button>
+				</div>
         						</div> 
     						</div>
 						</div> 
 					</div>
 				</div> 
-                <div class="text-align-center mb-4">
-                    <button class="btn-main-1" type="submit" id="customer_submit"> Submit </button>
-				</div>
+                <!-- <div class="text-align-center mb-4">
+                   
+				</div> -->
 			</div>
 		</form>
 	</div>

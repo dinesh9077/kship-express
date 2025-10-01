@@ -20,7 +20,7 @@
                    <div class="main-disolay-felx" style="margin-top: 0 !important;">
                        <div class="main-btn0main-1">
                            {{-- <a href="{{route('users.addpermission')}}"> <button class="btn-main-1"> Create Permission </button> </a> --}}
-                           <button class="btn-main-1" data-toggle="modal" data-target=".roleUser">Create New Role</button>
+                           <button class="btn-main-1" data-toggle="modal" data-target=".roleUser"><span class="mdi mdi-plus"></span> Create New Role</button>
                        </div>
                    </div>
                     <ul id="tab">                             

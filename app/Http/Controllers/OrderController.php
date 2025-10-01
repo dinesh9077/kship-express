@@ -286,7 +286,7 @@
 				</div>"; 
 			} 
 			$output .= "<span style='padding-left:0'> 
-					<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}'>
+					<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}' style=' color: #1A4BEC ;     font-size: 15px;'  >
 						View Products
 					</a>
 			</span>
@@ -355,7 +355,7 @@
 			$output .= "<div class='mian-btn'>
 			<div class='btn-group'>
 			<button class='dropbtn' type='button' data-toggle='dropdown' aria-haspopup='true' aria-expanded='false'> 
-			<i class='fas fa-ellipsis-h'></i> 
+			<i class='fas fa-ellipsis-v'></i> 
 			</button>
 			<div class='dropdown-menu'>"; 
 			$output .="<a class='dropdown-item' href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>View Order</a>
@@ -2058,7 +2058,7 @@
 					$action .='<button class="btn btn-primary" data-payout-id="'.$voucher->id.'" onclick="payNow(this)" type="button"> Pay Now</button>'; 
 				}
 				$url = route('remmitance.download.excel', $voucher->id);
-				$action .='<a class="btn btn-success" href="'.$url.'">Download</a>';
+				$action .='<a class="btn download-btn" href="'.$url.'">Download</a>';
 				$action .='</div>
 				</div>
 				</div>';

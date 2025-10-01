@@ -22,27 +22,27 @@
 						<div class="row">
 							<div class="col-lg-4 col-md-6">
 								<div class="from-group my-2">
-									<label for="username"> Awb Number <span class="text-danger">*</span></label>
+									<label for="username"> Awb Number{{-- <span class="text-danger">*</span>--}}</label>
 									<input type="text" autocomplete="off" name="awb_number" id="awb_number" placeholder="Awb Number" required>
 								</div>
 							</div>
 							<div class="col-lg-4 col-md-6">
 								<div class="from-group my-2">
-									<label for="first-name"> Contact Name <span class="text-danger">*</span></label>
+									<label for="first-name"> Contact Name{{-- <span class="text-danger">*</span>--}}</label>
 									<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" value="{{Auth::user()->name}}" required>
 								</div>
 							</div>
 
 							<div class="col-lg-4 col-md-6">
 								<div class="from-group my-2">
-									<label for="first-name"> Contact Phone <span class="text-danger">*</span></label>
+									<label for="first-name"> Contact Phone{{-- <span class="text-danger">*</span>--}}</label>
 									<input type="text" autocomplete="off" name="contact_phone" id="contact_phone" placeholder=" Contact Phone" value="{{Auth::user()->mobile}}" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required>
 								</div>
 							</div>
 
-							<div class="col-lg-4 col-md-6">
+							<div class="col-lg-12 col-md-6">
 								<div class="from-group my-2">
-									<label for="first-name"> Description <span class="text-danger">*</span></label>
+									<label for="first-name"> Description{{-- <span class="text-danger">*</span>--}}</label>
 									<textarea autocomplete="off" name="text" id="text" placeholder="Description" required></textarea>
 								</div>
 							</div>
@@ -52,8 +52,8 @@
 					</div>
 				</div>
 
-				<div class="text-align-center mb-4">
-					<button class="btn-main-1" id="customer_submit"> Submit </button>
+				<div class="text-align-left mb-4">
+					<button class="new-submit-btn" id="customer_submit"> Submit </button>
 				</div>
 			</div>
 		</form>

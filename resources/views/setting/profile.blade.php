@@ -5,6 +5,7 @@
 <style>
 	.form-control {
 	border: 1px solid #ced4da !important;
+	background-color: white;
 	}
 	.mnain-frisnol-det h4 {
       color: #000;
@@ -63,7 +64,7 @@
 										<div class="col-lg-4">
 											<div class="mnain-frisnol-det">
 												<h4> Profile Image : </h4>
-												<input type="file" name="profile_image" class="form-control" > 
+												<input type="file" name="profile_image" class="form-control" style="height: 48px;" > 
 											</div>
 										</div>  
 										<div class="col-lg-4">
@@ -135,7 +136,7 @@
 											</div>
 										</div>
 										<div class="col-lg-12">
-											<button class="btn-main-1 ml-3" type="submit"> <i class="mdi mdi-square-edit-outline"></i> Update </button> 
+											<button class="new-submit-btn mx-3" type="submit"> <i class="mdi mdi-square-edit-outline"></i> Update </button> 
 										</div>
 									</div>
 								</div>

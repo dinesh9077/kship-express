@@ -10,12 +10,12 @@
 			<form id="addRoleForm" action="{{ route('roles.store') }}" method="post" enctype="multipart/form-data">
 				<div class="modal-body row">
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Role Name <span class="text-danger">*</span></label>
-						<input type="text" class="form-control" id="name" name="name" required>
+						<label for="recipient-name" class="form-label ">Role Name  {{--<span class="text-danger">*</span>--}}</label>
+						<input type="text" class="form-control new-border-popups" id="name" name="name" required>
 					</div>  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Status <span class="text-danger">*</span></label>
-						<select class="form-control" id="status" name="status" required>
+						<label for="recipient-name" class="form-label ">Status {{-- <span class="text-danger">*</span> --}} </label>
+						<select class="form-control new-border-popups" id="status" name="status" required>
 							<option value="1"> Active </option>
 							<option value="0"> In-Active </option>
 						</select>
@@ -66,8 +66,8 @@
 						</div>
 					</div>  
 				</div>
-				<div class="modal-footer">
-					<button type="submit" class="btn btn-primary">Submit</button>
+				<div class="modal-footer" style="border-top: 0px; padding-top : 0px;">
+					<button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>
 			</form>
 		</div>

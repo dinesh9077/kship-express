@@ -18,32 +18,35 @@
 							</small>
 						</h4> 
 					</div> 
-                    <div class="col-xl-6 col-md-4 col-sm-12">
+                    <div class="col-xl-4 col-md-4 col-sm-12">
+                    <div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Company Name </label>
 							<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
 						</div>
 					</div> 
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Contact Name </label>
 							<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name" required> 
 						</div>
-					</div> 
+					</div>
 					<div class="col-xl-4 col-md-4 col-sm-6">
 						<div class="from-group my-2">
 							<label for="username"> Contact Email </label>
 							<input type="text" autocomplete="off" name="contact_email" id="contact_email" placeholder="Contact Name" required> 
 						</div>
 					</div>
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Contact Number </label>
 							<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
 						</div>
 					</div> 
 				 
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Warehouse Name </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" maxlength="18" name="warehouse_name" id="warehouse_name" placeholder="Warehouse Name" required> 
@@ -80,8 +83,8 @@
 							<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" required> 
 						</div>
 					</div>
-					
-					
+										
+										
 					<div class="col-xl-6 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Status </label>
@@ -92,8 +95,10 @@
 						</div>
 					</div>  
 				</div>
-                <div class="modal-footer">
-                    <button type="submit" class="btn btn-primary btn-main-1">Submit</button>
+                <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
+                    <button type="submit" class="btn new-submit-popup-btn">Submit</button>
+                <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
+                    <button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>
 			</form>
 		</div>

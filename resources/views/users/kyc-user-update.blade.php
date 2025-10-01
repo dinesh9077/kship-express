@@ -53,14 +53,14 @@
 										<div class="row">
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Pancard Number <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="pancard" id="pancard" placeholder="Pancard Number" required value="{{ $userkyc->pancard }}">
+													<label for="username"> Pancard Number{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="text" autocomplete="off" name="pancard" id="pancard" placeholder="Pancard Number" required value="{{ $userkyc->pancard }}" style="height : 48px;" >
 												</div>
 											</div>
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Pancard Image <span class="text-danger">*</span></label>
-													<input type="file" name="pancard_image" id="pancard_image" {{ empty($userkyc->pancard_image) ? 'required' : '' }}>
+													<label for="username"> Pancard Image{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="file" name="pancard_image" id="pancard_image"  style="height : 48px;" {{ empty($userkyc->pancard_image) ? 'required' : '' }}>
 													@if(!empty($userkyc->pancard_image))
 														<img src="{{ url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->pancard_image) }}" style="height: 150px;width: 300px;margin-top: 10px;">
 													@endif
@@ -107,14 +107,14 @@
 										<div class="row">
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Aadhar Number <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="aadhar" id="aadhar" placeholder="Aadhar Number" required value="{{ $userkyc->aadhar }}" maxlength="12">
+													<label for="username"> Aadhar Number{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="text" autocomplete="off" name="aadhar" id="aadhar" placeholder="Aadhar Number" required value="{{ $userkyc->aadhar }}"  maxlength="12" style="height : 48px;">
 												</div>
 											</div>
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Aadhar Front Image <span class="text-danger">*</span></label>
-													<input type="file" name="aadhar_front" id="aadhar_front" {{ empty($userkyc->aadhar_front) ? 'required' : '' }}>
+													<label for="username"> Aadhar Front Image{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="file" style="height: 48px;" name="aadhar_front" id="aadhar_front" {{ empty($userkyc->aadhar_front) ? 'required' : '' }}>
 													@if(!empty($userkyc->aadhar_front))
 														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->aadhar_front)}}" style="height: 150px;width: 300px;margin-top: 10px;">
 													@endif
@@ -122,8 +122,8 @@
 											</div>
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Aadhar Back Image <span class="text-danger">*</span></label>
-													<input type="file" name="aadhar_back" id="aadhar_back" {{ empty($userkyc->aadhar_back) ? 'required' : '' }}>
+													<label for="username"> Aadhar Back Image{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="file" name="aadhar_back" style="height: 48px;" id="aadhar_back" {{ empty($userkyc->aadhar_back) ? 'required' : '' }}>
 													@if(!empty($userkyc->aadhar_back))
 														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->aadhar_back)}}" style="height: 150px;width: 300px;margin-top: 10px;">
 													@endif
@@ -169,14 +169,14 @@
 										<div class="row">
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> GST Number <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="gst" id="gst" placeholder="GST Number" required value="{{ $userkyc->gst }}">
+													<label for="username"> GST Number{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="text" autocomplete="off" name="gst" id="gst" placeholder="GST Number" required value="{{ $userkyc->gst }}" >
 												</div>
 											</div>
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> GST Image <span class="text-danger">*</span></label>
-													<input type="file" name="gst_image" id="gst_image" {{ empty($userkyc->gst_image) ? 'required' : '' }}>
+													<label for="username"> GST Image{{--  <span class="text-danger">*</span> --}}</label>
+													<input type="file" name="gst_image" style="height: 48px;" id="gst_image" {{ empty($userkyc->gst_image) ? 'required' : '' }}>
 													@if(!empty($userkyc->gst_image))
 														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->gst_image)}}" style="height: 150px;width: 300px;margin-top: 10px;">
 													@endif
@@ -222,34 +222,34 @@
 											
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Bank Name <span class="text-danger">*</span></label>
+													<label for="username"> Bank Name{{--  <span class="text-danger">*</span> --}}</label>
 													<input type="text" autocomplete="off" name="bank_name" id="aadhar" placeholder="Bank Name" required value="{{ $userkyc->bank_name }}">
 												</div>
 											</div>
 											<div class="col-lg-4 col-md-6">
 												<div class="from-group my-2">
-													<label for="username"> Account Holder Name <span class="text-danger">*</span></label>
+													<label for="username"> Account Holder Name{{--  <span class="text-danger">*</span> --}}</label>
 													<input type="text" autocomplete="off" name="account_holder_name" id="account_holder_name" placeholder="Account Holder Name" required value="{{ $userkyc->account_holder_name }}">
 												</div>
 											</div>
   
 											<div class="col-lg-4 col-md-6 ">
 												<div class="from-group my-2">
-													<label for="username"> Account Number<span class="text-danger">*</span></label>
+													<label for="username"> Account Number {{-- <span class="text-danger">*</span>--}}</label>
 													<input type="text" autocomplete="off" name="account_number" id="account_number" placeholder="Account Number" required value="{{ $userkyc->account_number }}">
 												</div>
 											</div>
 
 											<div class="col-lg-4 col-md-6 mt-2">
 												<div class="from-group my-2">
-													<label for="username"> IFSC Code<span class="text-danger">*</span></label>
+													<label for="username"> IFSC Code {{-- <span class="text-danger">*</span>--}}</label>
 													<input type="text" autocomplete="off" name="ifsc_code" id="ifsc_code" placeholder="IFSC Code" required value="{{ $userkyc->ifsc_code }}">
 												</div>
 											</div>
 											<div class="col-lg-4 col-md-6 mt-2">
 												<div class="from-group my-2">
-													<label for="username"> Bank Passbook<span class="text-danger">*</span></label>
-													<input type="file" name="bank_passbook" id="bank_passbook" {{ empty($userkyc->bank_passbook) ? 'required' : '' }}>
+													<label for="username"> Bank Passbook {{-- <span class="text-danger">*</span>--}}</label>
+													<input type="file" name="bank_passbook" style="height: 48px;" id="bank_passbook" {{ empty($userkyc->bank_passbook) ? 'required' : '' }}>
 													@if(!empty($userkyc->bank_passbook))
 														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->bank_passbook)}}" style="height: 150px;width: 300px;margin-top: 10px;">
 													@endif

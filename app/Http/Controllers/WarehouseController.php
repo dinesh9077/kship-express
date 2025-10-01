@@ -92,18 +92,18 @@
 
 				if (config('permission.warehouse.edit')) {
 					$actionButtons .= '<a href="' . url('warehouse/edit', $value->id) . '" 
-						class="btn btn-icon waves-effect waves-light action-icon mr-1">
-						<i class="mdi mdi-pencil"></i>
+						>
+						<i class="mdi mdi-pencil class-pencil"></i>
 					</a>';
 				}
 
-				// if (config('permission.warehouse.delete')) {
-					// $actionButtons .= '<a href="' . url('warehouse/delete', $value->id) . '" 
-						// class="btn btn-icon waves-effect waves-light action-icon" 
-						// data-toggle="tooltip" title="Delete" onClick="deleteRecord(this, event);">
-						// <i class="mdi mdi-trash-can-outline"></i>
-					// </a>';
-				// }
+				//  if (config('permission.warehouse.delete')) {
+				// 	 $actionButtons .= '<a href="' . url('warehouse/delete', $value->id) . '" 
+						 
+				// 		 data-toggle="tooltip" title="Delete" onClick="deleteRecord(this, event);">
+				// 		 <i class="mdi mdi-trash-can-outline class-delete"></i>
+				// 	 </a>';
+				//  }
 
 				$data[] = [
 					'id' => $i++,
