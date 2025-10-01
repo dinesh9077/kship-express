@@ -5,7 +5,7 @@
 		<meta charset="utf-8" />
 		<title>{{config('setting.company_name')}} :: Login</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta content="Star Express" name="description" /> 
+		<meta content="{{ config('setting.company_name') }}" name="description" /> 
 		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
 		<!-- App favicon -->
 		<link rel="shortcut icon" href="{{asset('storage/settings/'.config('setting.fevicon_icon'))}}">
