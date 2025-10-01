@@ -38,6 +38,10 @@
 
 		Route::post('profile-update', [CommonController::class, 'updateProfile']);
 		Route::post('change-password', [CommonController::class, 'updatePassword']);
+
+		Route::post('wallet/store', [CommonController::class, 'rechargeWalletStore']); 
+		Route::post('wallet/update', [CommonController::class, 'rechargeWalletRazorpay']);
+
 		Route::get('dashboard',   [CommonController::class, 'dashboard']);   
 		Route::post('rate-calculator',   [CommonController::class, 'rateCalculator']);  
 		

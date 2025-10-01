@@ -17,6 +17,7 @@
 	use Illuminate\Support\Facades\Http; 
 	use Illuminate\Support\Str;
 	use App\Services\ShipMozo;
+	use App\Services\MasterService;
 	use File;
 	
 	class CommonController extends Controller
@@ -218,6 +219,85 @@
 			} catch (\Exception $e) {
 				DB::rollBack();
 				return $this->errorResponse('An error occurred while updating your password. Please try again.'); 
+			}
+		}
+
+		public function rechargeWalletStore(Request $request, MasterService $masterService)
+		{
+			try {
+				$userId = $request->user_id;
+				$amount = $request->amount;
+				if($amount < 200)
+				{
+					return $this->errorResponse('Enter a valid amount (min ₹200)');
+				}
+				$response = $masterService->rechargeOrderCreate($amount);
+				if (!($response['success'] ?? false)) {
+					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
+					return $this->errorResponse($errorMsg);
+				}
+
+				if ((isset($response['response']['message']) && $response['response']['message'] === "Failed")) {
+					return $this->errorResponse( $response['response']['err'] ?? 'An error occurred.');	 
+				}
+
+				if (empty($response['response']['data'])) {
+					return $this->errorResponse('something went wrong.'); 
+				}
+
+				$responseData = $response['response']['data'];
+
+				// Prepare data for database
+				$data = $request->except('_token', 'payment_receipt');
+				$data['user_id'] = $userId;
+				$data['status'] = 1;
+				$data['amount'] = $amount;
+				$data['order_id'] = $responseData['order_id'] ?? null;
+				$data['payable_response'] = $responseData ?? null;
+				$data['created_at'] = now();
+				$data['updated_at'] = now();
+
+				$wallet = UserWallet::create($data);
+
+				// Return Razorpay order details to the frontend
+				return $this->successResponse($responseData, 'success');
+			 
+			} catch (\Exception $e) {
+				return $this->errorResponse($e->getMessage()); 
+			}
+		}
+
+		public function rechargeWalletRazorpay(Request $request)
+		{
+			try {
+				$userWallet = UserWallet::with('user')->where('order_id', $request->order_id)->firstOrFail();
+				$user = $userWallet->user;
+
+				DB::transaction(function () use ($user, $request, $userWallet) {
+					// Update wallet amount
+					$user->increment('wallet_amount', $userWallet->amount);
+
+					// Record billing
+					Billing::create([
+						'user_id' => $user->id,
+						'billing_type' => 'Recharge Wallet',
+						'billing_type_id' => $userWallet->id,
+						'transaction_type' => 'credit',
+						'amount' => $userWallet->amount,
+						'note' => 'Recharge Wallet amount online.',
+					]);
+
+					// Update UserWallet record if needed
+					$userWallet->update([
+						'transaction_status' => 'Paid',
+						'txn_number' => $request->txn_id ?? null,
+					]);
+				}); 
+
+				return $this->successResponse([], 'The transaction has been charged and your wallet updated successfully.');
+
+			} catch (\Exception $e) {
+				return $this->errorResponse($e->getMessage());
 			}
 		}
 	}
