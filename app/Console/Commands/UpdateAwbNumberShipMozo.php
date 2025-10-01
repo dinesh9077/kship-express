@@ -23,7 +23,16 @@
 
 		public function handle()
 		{
-			$orders = Order::with('shippingCompany')->select('id', 'shipping_company_id', 'awb_number', 'shipment_id')->whereNotNull('shipment_id')->whereNull('awb_number')->where('shipping_company_id', 1)->get();
+			$orders = Order::with('shippingCompany')
+			->select('id', 'shipping_company_id', 'awb_number', 'shipment_id')
+			->whereNotNull('shipment_id')
+			->where('shipping_company_id', 1)
+			->where(function ($q) {
+				$q->whereNull('awb_number')
+					->orWhere('awb_number', '');
+			})
+			->get();
+			
 			if(empty($orders))
 			{
 				return;

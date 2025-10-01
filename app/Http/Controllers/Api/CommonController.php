@@ -17,6 +17,7 @@
 	use Illuminate\Support\Facades\Http; 
 	use Illuminate\Support\Str;
 	use App\Services\ShipMozo;
+	use File;
 	
 	class CommonController extends Controller
 	{
@@ -155,5 +156,68 @@
 			} 
 			
 			return $this->successResponse($couriers, 'detail fetched successfully.');
+		}
+
+		public function updateProfile(Request $request)
+		{
+			try {
+				DB::beginTransaction(); // Start transaction
+
+				$user_id = Auth::id();
+				$data = $request->except('_token', 'profile_image');
+
+				if ($request->hasFile('profile_image')) {
+					$photo_image = $request->file('profile_image');
+					$getAvatar = time() . rand(111111, 999999) . '.' . $photo_image->getClientOriginalExtension();
+					$path_avatar = storage_path("app/public/profile");
+
+					// Ensure directory exists
+					if (!File::exists($path_avatar)) {
+						File::makeDirectory($path_avatar, 0777, true, true);
+					}
+
+					// Move file
+					$photo_image->move($path_avatar, $getAvatar);
+					$data['profile_image'] = $getAvatar;
+				}
+
+				// Update user profile
+				User::whereId($user_id)->update($data);
+
+				DB::commit(); // Commit transaction
+				return $this->successResponse($data, 'Your profile has been updated successfully.');	 
+
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('An error occurred while updating your profile. Please try again.'); 
+			}
+		}
+
+		public function updatePassword(Request $request)
+		{
+			// Validate request input 
+			DB::beginTransaction();
+			try {
+				// Get the authenticated user
+				$user = Auth::user();
+
+				// Check if old password is correct
+				if (!Hash::check($request->old_password, $user->password)) {
+					return $this->errorResponse('The old password is incorrect.'); 
+				}
+
+				// Update user password
+				$user->update([
+					'xpass' => $request->new_password,
+					'password' => Hash::make($request->new_password),
+				]);
+
+				DB::commit();
+				return $this->successResponse($user,'Your password has been changed successfully.');
+		  
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('An error occurred while updating your password. Please try again.'); 
+			}
 		}
 	}

@@ -80,7 +80,7 @@
 		}
 		
 		public function updateProfile(Request $request)
-		{
+		{ 
 			try {
 				DB::beginTransaction(); // Start transaction
 

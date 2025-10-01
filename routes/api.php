@@ -35,7 +35,9 @@
 	{
 		Route::post('logout',[AuthController::class, 'logout']); 
 		Route::get('user',   [AuthController::class, 'user']);
-		
+
+		Route::post('profile-update', [CommonController::class, 'updateProfile']);
+		Route::post('change-password', [CommonController::class, 'updatePassword']);
 		Route::get('dashboard',   [CommonController::class, 'dashboard']);   
 		Route::post('rate-calculator',   [CommonController::class, 'rateCalculator']);  
 		
