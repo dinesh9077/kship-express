@@ -4,7 +4,10 @@
 @section('content')
 
 <style>
-
+.new-tbs-white td{
+    background-color: white !important;
+    border-radius: 10px;
+}
 </style>
 
 
@@ -232,6 +235,473 @@
         </div>
     </div>
 
+    <div style="margin: 10px;">
+
+
+    <div style="display: flex; justify-content : space-between; align-items: center; padding : 9px 20px; background : #5640B0; border-radius: 10px;">
+        <h6 style="font-size: 20px; color : white; font-weight : 500; ">Recent Orders</h6>
+        <a href="#" style="font-size: 16px; color : white; font-weight : 300;text-decoration: underline !important; ">View Details</a>
+    </div>
+
+    <table id="neworder_datatable" style="width:100%" class="dataTable no-footer"
+							aria-describedby="neworder_datatable_info">
+							<thead>
+								<tr>
+									<th class="sorting_disabled sorting_desc" rowspan="1" colspan="1"
+										aria-label="Sr.No">Sr.No</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Order Id: activate to sort column ascending">Order Id
+									</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Seller Details: activate to sort column ascending">
+										Seller Details</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Customer Details: activate to sort column ascending">
+										Customer Details</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Total Amount: activate to sort column ascending">Total
+										Amount</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Shipping Details: activate to sort column ascending">
+										Shipping Details</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Status: activate to sort column ascending">Status</th>
+									<th class="sorting" tabindex="0" aria-controls="neworder_datatable" rowspan="1"
+										colspan="1" aria-label="Action: activate to sort column ascending">Action</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="odd new-tbs-white">
+									<td class="sorting_1">1</td>
+									<td>#53<br>
+										<p>Kship Express</p>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>Softieons (Softieons)</p>
+											<p>Amit sharma</p>
+											<p>8754875487</p>
+											<p></p>
+										</div>
+									</td>
+									
+									
+
+                                    	<td>
+										<div class="main-cont1-2">
+											<p>Demo Demo</p>
+											<p>9016105349</p>
+											<div class="tooltip">View Address<span class="tooltiptext"><b>Demo
+														Demo</b><br><b>Address</b>: Surat</span></div>
+										</div>
+									</td>
+
+                                    <td>
+										<div class="main-cont1-2">
+											<p class="cod">cod</p>
+											<p>COD Amount: 12.00</p>
+										</div>
+									</td>
+
+
+
+									<td>
+										<div class="main-cont1-1">
+											<div class="checkbox checkbox-purple">
+												Order Prefix/LR No: <a
+													href="http://127.0.0.1:8000/order/details/53?weight_order=1&amp;status=New">#146</a>
+											</div>
+											<div class="checkbox checkbox-purple">
+												Courier:
+											</div><span style="padding-left:0">
+												<a href="javascript:;" class="show-details-btn"
+													data-order="[{&quot;product_category&quot;:&quot;12&quot;,&quot;product_name&quot;:&quot;12&quot;,&quot;sku_number&quot;:&quot;12&quot;,&quot;hsn_number&quot;:&quot;1&quot;,&quot;amount&quot;:&quot;12.00&quot;,&quot;quantity&quot;:12}]"
+													style=" color: #1A4BEC ;     font-size: 15px;">
+													View Products
+												</a>
+											</span>
+										</div>
+									</td>
+								
+									<td>
+										<p class="prepaid">New</p>
+										<p style="padding-left:0">2025 Sep 30 | 02:20 PM</p>
+									</td>
+									<td>
+										<div class="main-btn-1"><a href="javascript:;">
+												<button type="button" class="customization_popup_trigger btn-light-1"
+													data-weight-order="1" onclick="shipNow(this, event)" data-id="53">
+													Ship Now
+												</button>
+											</a>
+											<div class="mian-btn">
+												<div class="btn-group">
+													<button class="dropbtn" type="button" data-toggle="dropdown"
+														aria-haspopup="true" aria-expanded="false">
+														<i class="fas fa-ellipsis-v"></i>
+													</button>
+													<div class="dropdown-menu"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/details/53?weight_order=1&amp;status=New">View
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/clone/53?weight_order=1">Clone
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/edit/53?weight_order=1">Edit
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/cancel/53?weight_order=1"
+															style="color: red;" onclick="cancelNewOrder(this, event)">
+															Cancel Order
+														</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr class="even new-tbs-white">
+									<td class="sorting_1">2</td>
+									<td>#52<br>
+										<p>Dinesh Patil</p>
+									</td>
+                                    	<td>
+										<div class="main-cont1-2">
+											<p>Softieons (Softieons)</p>
+											<p>Amit sharma</p>
+											<p>8754875487</p>
+											<p></p>
+										</div>
+									</td>
+									
+									
+                                    
+								
+									<td>
+										<div class="main-cont1-1">
+											<div class="checkbox checkbox-purple">
+												Order Prefix/LR No: <a
+													href="http://127.0.0.1:8000/order/details/52?weight_order=1&amp;status=New">#7192</a>
+											</div>
+											<div class="checkbox checkbox-purple">
+												Courier:
+											</div><span style="padding-left:0">
+												<a href="javascript:;" class="show-details-btn"
+													data-order="[{&quot;product_category&quot;:&quot;No&quot;,&quot;product_name&quot;:&quot;No&quot;,&quot;sku_number&quot;:&quot;550080&quot;,&quot;hsn_number&quot;:&quot;01058818&quot;,&quot;amount&quot;:&quot;2500.00&quot;,&quot;quantity&quot;:5}]"
+													style=" color: #1A4BEC ;     font-size: 15px;">
+													View Products
+												</a>
+											</span>
+										</div>
+									</td>
+
+                                    
+                                    <td>
+										<div class="main-cont1-2">
+											<p class="cod">cod</p>
+											<p>COD Amount: 12.00</p>
+										</div>
+									</td>
+
+                                    
+
+                                    	<td>
+										<div class="main-cont1-2">
+											<p>Demo Demo</p>
+											<p>9016105349</p>
+											<div class="tooltip">View Address<span class="tooltiptext"><b>Demo
+														Demo</b><br><b>Address</b>: Surat</span></div>
+										</div>
+									</td>
+									
+									<td>
+										<p class="prepaid">New</p>
+										<p style="padding-left:0">2025 Sep 28 | 12:12 PM</p>
+									</td>
+									<td>
+										<div class="main-btn-1"><a href="javascript:;">
+												<button type="button" class="customization_popup_trigger btn-light-1"
+													data-weight-order="1" onclick="shipNow(this, event)" data-id="52">
+													Ship Now
+												</button>
+											</a>
+											<div class="mian-btn">
+												<div class="btn-group">
+													<button class="dropbtn" type="button" data-toggle="dropdown"
+														aria-haspopup="true" aria-expanded="false">
+														<i class="fas fa-ellipsis-v"></i>
+													</button>
+													<div class="dropdown-menu"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/details/52?weight_order=1&amp;status=New">View
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/clone/52?weight_order=1">Clone
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/edit/52?weight_order=1">Edit
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/cancel/52?weight_order=1"
+															style="color: red;" onclick="cancelNewOrder(this, event)">
+															Cancel Order
+														</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr class="odd new-tbs-white">
+									<td class="sorting_1">3</td>
+									<td>#29<br>
+										<p>Kship Express</p>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>Softieons (Softieons)</p>
+											<p>Amit sharma</p>
+											<p>8754875487</p>
+											<p></p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>John Doe</p>
+											<p>9876543210</p>
+											<div class="tooltip">View Address<span class="tooltiptext"><b>John
+														Doe</b><br><b>Address</b>: 221B Baker Street</span></div>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p class="cod">cod</p>
+											<p>COD Amount: 45451.00</p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-1">
+											<div class="checkbox checkbox-purple">
+												Order Prefix/LR No: <a
+													href="http://127.0.0.1:8000/order/details/29?weight_order=1&amp;status=New">#121</a>
+											</div>
+											<div class="checkbox checkbox-purple">
+												Courier:
+											</div><span style="padding-left:0">
+												<a href="javascript:;" class="show-details-btn"
+													data-order="[{&quot;product_category&quot;:&quot;asd&quot;,&quot;product_name&quot;:&quot;saree&quot;,&quot;sku_number&quot;:&quot;5465&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;451.00&quot;,&quot;quantity&quot;:1},{&quot;product_category&quot;:&quot;shoe&quot;,&quot;product_name&quot;:&quot;addidas sports&quot;,&quot;sku_number&quot;:&quot;7487&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;200.00&quot;,&quot;quantity&quot;:1}]"
+													style=" color: #1A4BEC ;     font-size: 15px;">
+													View Products
+												</a>
+											</span>
+										</div>
+									</td>
+								
+									<td>
+										<p class="prepaid">New</p>
+										<p style="padding-left:0">2025 Sep 25 | 03:03 PM</p>
+									</td>
+									<td>
+										<div class="main-btn-1"><a href="javascript:;">
+												<button type="button" class="customization_popup_trigger btn-light-1"
+													data-weight-order="1" onclick="shipNow(this, event)" data-id="29">
+													Ship Now
+												</button>
+											</a>
+											<div class="mian-btn">
+												<div class="btn-group">
+													<button class="dropbtn" type="button" data-toggle="dropdown"
+														aria-haspopup="true" aria-expanded="false">
+														<i class="fas fa-ellipsis-v"></i>
+													</button>
+													<div class="dropdown-menu"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/details/29?weight_order=1&amp;status=New">View
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/clone/29?weight_order=1">Clone
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/edit/29?weight_order=1">Edit
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/cancel/29?weight_order=1"
+															style="color: red;" onclick="cancelNewOrder(this, event)">
+															Cancel Order
+														</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr class="even new-tbs-white">
+									<td class="sorting_1">4</td>
+									<td>#28<br>
+										<p>Kship Express</p>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>Softieons (Softieons)</p>
+											<p>Amit sharma</p>
+											<p>8754875487</p>
+											<p></p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>John Doe</p>
+											<p>9876543210</p>
+											<div class="tooltip">View Address<span class="tooltiptext"><b>John
+														Doe</b><br><b>Address</b>: 221B Baker Street</span></div>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p class="cod">cod</p>
+											<p>COD Amount: 45451.00</p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-1">
+											<div class="checkbox checkbox-purple">
+												Order Prefix/LR No: <a
+													href="http://127.0.0.1:8000/order/details/28?weight_order=1&amp;status=New">#120</a>
+											</div>
+											<div class="checkbox checkbox-purple">
+												Courier:
+											</div><span style="padding-left:0">
+												<a href="javascript:;" class="show-details-btn"
+													data-order="[{&quot;product_category&quot;:&quot;asd&quot;,&quot;product_name&quot;:&quot;saree&quot;,&quot;sku_number&quot;:&quot;5465&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;451.00&quot;,&quot;quantity&quot;:1},{&quot;product_category&quot;:&quot;shoe&quot;,&quot;product_name&quot;:&quot;addidas sports&quot;,&quot;sku_number&quot;:&quot;7487&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;200.00&quot;,&quot;quantity&quot;:1}]"
+													style=" color: #1A4BEC ;     font-size: 15px;">
+													View Products
+												</a>
+											</span>
+										</div>
+									</td>
+								
+									<td>
+										<p class="prepaid">New</p>
+										<p style="padding-left:0">2025 Sep 25 | 03:03 PM</p>
+									</td>
+									<td>
+										<div class="main-btn-1"><a href="javascript:;">
+												<button type="button" class="customization_popup_trigger btn-light-1"
+													data-weight-order="1" onclick="shipNow(this, event)" data-id="28">
+													Ship Now
+												</button>
+											</a>
+											<div class="mian-btn">
+												<div class="btn-group">
+													<button class="dropbtn" type="button" data-toggle="dropdown"
+														aria-haspopup="true" aria-expanded="false">
+														<i class="fas fa-ellipsis-v"></i>
+													</button>
+													<div class="dropdown-menu"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/details/28?weight_order=1&amp;status=New">View
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/clone/28?weight_order=1">Clone
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/edit/28?weight_order=1">Edit
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/cancel/28?weight_order=1"
+															style="color: red;" onclick="cancelNewOrder(this, event)">
+															Cancel Order
+														</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+								<tr class="odd new-tbs-white">
+									<td class="sorting_1">5</td>
+									<td>#25<br>
+										<p>Kship Express</p>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>Softieons (Softieons)</p>
+											<p>Amit sharma</p>
+											<p>8754875487</p>
+											<p></p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p>John Doe</p>
+											<p>9876543210</p>
+											<div class="tooltip">View Address<span class="tooltiptext"><b>John
+														Doe</b><br><b>Address</b>: 221B Baker Street</span></div>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-2">
+											<p class="cod">cod</p>
+											<p>COD Amount: 45451.00</p>
+										</div>
+									</td>
+									<td>
+										<div class="main-cont1-1">
+											<div class="checkbox checkbox-purple">
+												Order Prefix/LR No: <a
+													href="http://127.0.0.1:8000/order/details/25?weight_order=1&amp;status=New">#220</a>
+											</div>
+											<div class="checkbox checkbox-purple">
+												Courier:
+											</div><span style="padding-left:0">
+												<a href="javascript:;" class="show-details-btn"
+													data-order="[{&quot;product_category&quot;:&quot;asd&quot;,&quot;product_name&quot;:&quot;saree&quot;,&quot;sku_number&quot;:&quot;5465&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;451.00&quot;,&quot;quantity&quot;:1},{&quot;product_category&quot;:&quot;shoe&quot;,&quot;product_name&quot;:&quot;addidas sports&quot;,&quot;sku_number&quot;:&quot;7487&quot;,&quot;hsn_number&quot;:&quot;54564&quot;,&quot;amount&quot;:&quot;200.00&quot;,&quot;quantity&quot;:1}]"
+													style=" color: #1A4BEC ;     font-size: 15px;">
+													View Products
+												</a>
+											</span>
+										</div>
+									</td>
+								
+									<td>
+										<p class="prepaid">New</p>
+										<p style="padding-left:0">2025 Sep 25 | 02:32 PM</p>
+									</td>
+									<td>
+										<div class="main-btn-1"><a href="javascript:;">
+												<button type="button" class="customization_popup_trigger btn-light-1"
+													data-weight-order="1" onclick="shipNow(this, event)" data-id="25">
+													Ship Now
+												</button>
+											</a>
+											<div class="mian-btn">
+												<div class="btn-group">
+													<button class="dropbtn" type="button" data-toggle="dropdown"
+														aria-haspopup="true" aria-expanded="false">
+														<i class="fas fa-ellipsis-v"></i>
+													</button>
+													<div class="dropdown-menu"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/details/25?weight_order=1&amp;status=New">View
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/clone/25?weight_order=1">Clone
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/edit/25?weight_order=1">Edit
+															Order</a>
+														<hr class="m-0"><a class="dropdown-item"
+															href="http://127.0.0.1:8000/order/cancel/25?weight_order=1"
+															style="color: red;" onclick="cancelNewOrder(this, event)">
+															Cancel Order
+														</a>
+													</div>
+												</div>
+											</div>
+										</div>
+									</td>
+								</tr>
+							</tbody>
+		</table>
+
+        </div>
+
     
 </div>
 
@@ -361,6 +831,8 @@
         </div>
     </div> 
 </div>   -->
+
+
 @endsection
 @push('js')
 @endpush
