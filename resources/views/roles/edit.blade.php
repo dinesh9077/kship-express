@@ -10,11 +10,11 @@
 			<form id="editRoleForm" action="{{ route('roles.update', ['id' => $role->id]) }}" method="post" enctype="multipart/form-data">
 				<div class="modal-body row">
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Role Name {{--  <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Role Name <span class="text-danger">*</span></label>
 						<input type="text" class="form-control new-border-popups" id="name" name="name" value="{{ $role->name }}">
 					</div>  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Status {{--  <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Status <span class="text-danger">*</span></label>
 						<select class="form-control new-border-popups" id="status" name="status">
 							<option value="1" {{ $role->status == 1 ? 'selected' : '' }}> Active </option>
 							<option value="0" {{ $role->status == 0 ? 'selected' : '' }}> In-Active </option>

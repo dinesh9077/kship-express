@@ -46,18 +46,18 @@
 				<table id="example" class="example-new-ids-shipping" style="margin: auto;width: 97%;">
 					<thead>
 						<tr style="border-bottom: none !important;">
-							<th class="new-details-table ; " style="text-align:left;"> Logo </th> 
-							<th class="new-details-table ; " > Courier </th>
-							<th class="new-details-table ; " > Chargeable Weight </th>
-							<th class="new-details-table ; " > Charges </th>
-							<th class="new-details-table ; " > Action </th>
+							<th class="new-details-table;" style="text-align:left;"> Logo </th> 
+							<th class="new-details-table;" > Courier </th>
+							<th class="new-details-table;" > Chargeable Weight </th>
+							<th class="new-details-table;" > Charges </th>
+							<th class="new-details-table;" > Action </th>
 						</tr>
 					</thead>
 					<tbody>
 						@foreach($couriers as $key => $courier)
 							<tr  style="border-bottom: none !important;" class="">
 								<td style="text-align: start;">
-									<div class="main-img-and-product">
+									<div class="main-img-and-product" style="padding : 20px 0px  20px 15px;">
 										<div class="pro-img-11">
 											<img src="{{$courier['shipping_company_logo']}}" style="width: 80px; height: 70px;">
 										</div> 

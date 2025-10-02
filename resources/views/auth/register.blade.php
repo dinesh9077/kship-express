@@ -1,94 +1,262 @@
 <!DOCTYPE html>
 <html lang="en">
-	
-	<head>
-		<meta charset="utf-8" />
-		<title>{{config('setting.company_name')}} :: Register</title>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta content="{{ config('setting.company_name') }}" name="description" /> 
-		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-		<!-- App favicon -->
-		<link rel="shortcut icon" href="{{asset('storage/settings/'.config('setting.fevicon_icon'))}}">
-		 
-		<!-- App css -->
-		<!-- App css -->
-		<link href="{{asset('assets/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
-		<link href="{{asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
-		<link href="{{asset('assets/css/app.min.css')}}" rel="stylesheet" type="text/css" />  
-		
-		<link rel="stylesheet" href="//code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
-        <link href="{{asset('assets/libs/custombox/custombox.min.css')}}" rel="stylesheet" type="text/css" >
-        <link href="{{asset('assets/libs/select2/select2.min.css')}}" rel="stylesheet" type="text/css" />
-        <link href="{{asset('assets/libs/bootstrap-daterangepicker/daterangepicker.css')}}" rel="stylesheet">
-		
-		<link href="{{asset('assets/css/waitMe.css')}}" rel="stylesheet" type="text/css" />
-		<link href="{{asset('assets/libs/jquery-toast/jquery.toast.min.css')}}" rel="stylesheet" type="text/css" />
-		<link href="{{asset('assets/libs/sweetalert2/sweetalert2.min.css')}}" rel="stylesheet" type="text/css" />
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> 
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
-		
-	</head>
-	
-	<body class="p-0">
-	    
-	    <style>
-	        .main-text-input-filld-up{ 
-				z-index: 999;
-				position: relative;
-	        }
-			
-			.main-login-21 .from-group {
-				margin: 15px 0px !important;
-			}
-	           
-            .otp_btn{
-				background-color: #030326  !important;
-				border-color: #030326 !important;
+
+<head>
+    <meta charset="utf-8" />
+    <title>{{config('setting.company_name')}} :: Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="{{ config('setting.company_name') }}" name="description" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Favicon -->
+    <link rel="shortcut icon" href="{{asset('storage/settings/'.config('setting.fevicon_icon'))}}">
+
+    <!-- CSS -->
+    <link href="{{asset('assets/css/bootstrap.min.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/css/icons.min.css')}}" rel="stylesheet" type="text/css" />
+    <link href="{{asset('assets/css/app.min.css')}}" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css">
+
+    <style>
+        body {
+            background: #f7f7f7;
+        }
+
+        .login-container {
+            max-width: 1800px;
+            margin: 50px auto;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        @media(max-width : 1800px) {
+            .login-container {
+                max-width: 1700px;
             }
-            .otp_btn:hover{
-				background-color: #030326  !important;
-				border-color: #030326 !important;
+        }
+
+        @media(max-width : 1700px) {
+            .login-container {
+                max-width: 1600px;
+                margin: 100px;
             }
-            
-            @media(max-width: 1600px){
-				.from-group-up input, .from-group-up select, .from-group-up textarea{
-					font-size: 12px !important;
-				}
-				.from-group-up label{
-					font-size: 13px !important;
-					margin-bottom: 5px;
-				}
-				.main-logo-121 h5{
-					font-size: 16px;
-				}
-				.form-control {
-					font-size: 12px !important;
-					padding: 9px !important;
-				} 
+        }
+
+        @media(max-width : 1600px) {
+            .login-container {
+                max-width: 1500px;
             }
-            @media(max-width: 991px)
-			{
-				.main-text-input-filld-up{
-					width: 100%;
-				}
+        }
+
+        @media(max-width : 1500px) {
+            .login-container {
+                max-width: 1400px;
             }
-            @media(max-width: 576px){
-				section.main-logout-login{
-					height: auto !important;
-					padding: 20px 0;
-				}
+        }
+
+        @media(max-width : 1400px) {
+            .login-container {
+                max-width: 1300px;
             }
-		</style>
-		<section class="main-logout-login">
-			<div class="container">
-				<div class="main-text-input-filld-up wrapper1">
-					<div class="main-logo-121">
-						<img src="{{ asset('storage/settings/'.config('setting.login_logo')) }}" style="height: 90px">
+        }
+
+        @media(max-width : 1300px) {
+            .login-container {
+                max-width: 1200px;
+            }
+        }
+
+        @media(max-width : 1200px) {
+            .login-container {
+                max-width: 1100px;
+            }
+        }
+
+        @media(max-width : 1100px) {
+            .login-container {
+                max-width: 1000px;
+            }
+        }
+
+        @media(max-width : 1100px) {
+            .login-container {
+                max-width: 900px;
+            }
+        }
+
+        @media(max-width : 900px) {
+            .login-container {
+                max-width: 800px;
+            }
+        }
+
+        @media(max-width : 800px) {
+            .login-container {
+                max-width: 700px;
+            }
+        }
+
+        @media(max-width : 700px) {
+            .login-container {
+                max-width: 600px;
+            }
+        }
+
+        @media(max-width : 600px) {
+            .login-container {
+                max-width: 500px;
+                margin: 0px;
+            }
+        }
+
+        @media(max-width : 500px) {
+            .login-container {
+                max-width: 400px;
+            }
+        }
+
+        .login-left {
+            padding: 50px 100px;
+        }
+
+      
+
+
+
+        .login-left h5 {
+            font-weight: 600;
+            margin: 20px 0;
+        }
+
+        .form-control {
+            border-radius: 25px;
+            padding: 12px 20px;
+        }
+
+        .btn-main-1 {
+            border-radius: 25px;
+            background: #5640B0;
+            color: #fff;
+            font-weight: 600;
+            padding: 12px;
+            width: 100%;
+            border: none;
+            transition: 0.3s;
+        }
+
+        .btn-main-1:hover {
+            background: #432e8f;
+        }
+
+        .forgot {
+            font-size: 16px;
+            font-weight: 500;
+            color: #727272;
+            display: block;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .sin-up {
+            font-size: 14px;
+            margin-top: 15px;
+        }
+
+        .login-right {
+            background: #5640B0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 100px 100px;
+            position: relative;
+        }
+
+        @media(max-width : 1600px) {
+            .login-right {
+
+                padding: 100px 50px;
+
+            }
+
+        }
+
+        .login-right h1 {
+            font-size: 26px;
+            font-weight: 400;
+            margin-top: 20px;
+            text-transform: capitalize;
+        }
+
+        .login-right p {
+            font-size: 16px;
+            font-weight: 500;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .info-box {
+            position: absolute;
+            padding: 12px 18px;
+            border-radius: 10px;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .rate-box {
+            top: 50px;
+            right: 50px;
+            background: #fcdca7;
+        }
+
+        .recharge-box {
+            bottom: 100px;
+            left: 40px;
+            background: #b8f3c8;
+        }
+
+        .order-box {
+            bottom: 40px;
+            right: 70px;
+            background: #dcd8fc;
+        }
+
+        @media(max-width: 992px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-right {
+                min-height: 300px;
+            }
+        }
+
+		.from-group input{
+			border-radius: 50px !important;
+		}
+    </style>
+</head>
+
+<body class="p-0">
+
+    <section class="login-container d-flex">
+
+        <!-- Left Side -->
+        <div class="login-left col-lg-7 col-12">
+            <div class="text-center mb-4">
+                <img src="{{ asset('storage/settings/'.config('setting.login_logo')) }}" style="height: 90px">
 						
-						<h5 style="color: #000;"> Register now! </h5>
-					</div>
-					
-					<form method="post" id="signupForm" action="#">
+            </div>
+            <h5 class="text-center mt-5">{{ __('Register now! ') }}</h5>
+
+           <form method="post" id="signupForm" action="#">
 						@csrf 
 						<div class="main-login-21">
 							<div class="row">
@@ -130,7 +298,7 @@
 								<div class="col-lg-4 col-sm-6">
 									<div class="from-group">
 										<label for="packaging-type"> Gender <span class="text-danger"> * </span></label>
-										<select name="gender" id="genderDropdown" class="form-control" required>
+										<select name="gender" id="genderDropdown" class="form-control" style="border-radius: 50px !important;" required>
 											<option value=""> Select Gender</option>
 											<option value="Male"> Male</option>
 											<option value="Female"> Female</option>
@@ -142,7 +310,7 @@
 								<div class="col-lg-12">
 									<div class="from-group">
 										<label for="packaging-type"> Address <span class="text-danger"> * </span></label>
-										<textarea name="address" id="address" style="height: 49px;"></textarea>
+										<textarea name="address" id="address" style="height: 49px; border-radius: 49px !important;"></textarea>
 									</div>
 								</div>
 								
@@ -176,14 +344,17 @@
 							</div>
 						</div>
 						<div class="main-login-btn mt-2">
-							<a href="javascript:;"> <button type="submit" id="sign_up" class="btn-main-1"> Sign Up </button> </a>
+							<a href="javascript:;"> <button type="submit" id="sign_up" class="btn-main-1" style="    width: fit-content;     padding: 14px 48px; border-radius : 50px !important;"> Sign Up </button> </a>
 							<button type="resend" id="resend_btn" class="btn btn-primary otp_btn d-none">Resend OTP</button>
 						</div>
 					</form> 
-					<p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}" style="color: #5640B0;"> Sign in </a> </p>
-				</div>
-				
-				<div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
+					<p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}" style="color: #5640B0; width : fit-content;"> Sign in </a> </p>
+
+
+            <p class="text-center" style="color : #3f3f3fff; font-weight : 500; margin-top : 10px; font-size : 18px;">Developed By <span style="color: #000000ff;"> Softieons</span> </a></p>
+        </div>
+
+        <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
 					<div class="modal-dialog">
 						<div class="modal-content">
 							<div class="modal-header">
@@ -204,10 +375,23 @@
 						</div>
 					</div>
 				</div>
-				
-			</div>
-		</section>
-		<script src="{{asset('assets/js/vendor.min.js')}}"></script>
+
+
+        <!-- Right Side -->
+        <div class="login-right col-lg-5 col-12" style="position: relative;">
+            <img src="{{asset('assets/images/dashbord/login-image1.png')}}" alt="" class="img-fluid mb-3">
+            <h1 class="mt-5">{{ config('setting.company_name') }} Solutions Worldwide</h1>
+            <p class="mt-5">"Express Delivery," "Standard Delivery," or "Fragile Goods Handling" under "Domestic Shipping"</p>
+
+            <img src="{{asset('assets/images/dashbord/vecotr-login.png')}}" alt="" style="position: absolute; bottom : 0px ;left : 0px;">
+            <img src="{{asset('assets/images/dashbord/vecotr-login.png')}}" alt="" style="position: absolute; top : 0px; right : 0px;">
+
+        </div>
+
+    </section>
+
+
+    	<script src="{{asset('assets/js/vendor.min.js')}}"></script>
 	
 		<script src="{{asset('assets/libs/chart-js/Chart.bundle.min.js')}}"></script> 
 		<script src="{{asset('assets/libs/moment/moment.min.js')}}"></script>
@@ -462,5 +646,7 @@
 				}  
 			}; */
 		</script>
-	</body>  
+
+</body>
+
 </html>
