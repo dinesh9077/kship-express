@@ -4088,7 +4088,7 @@ ul#tabs {
 
 
 ul#tabs li {
-	padding: 10px 32px;
+	padding: 9px 23px;
 	cursor: pointer;
 	/* background: #ECEDF8; */
 	border-radius:10px ;
@@ -8554,7 +8554,7 @@ td .btn.btn-icon.waves-effect.waves-light.action-icon {
 
     .new-q-action-bg{
         background-color: black;
-        padding: 14px 10px;
+        padding: 10px 10px;
         border-radius: 10px ;
     }
 
@@ -8958,7 +8958,7 @@ color : white !important;
 
   .custom-dropdown-box {
     background: black;
-    padding: 14.5px 15px;
+    padding: 10px 15px;
     display: flex;
     border-radius: 10px;
     align-items: center;
@@ -8981,4 +8981,14 @@ color : white !important;
     padding: 12px 15px;
     font-size: 14px;
     outline: none;
+  }
+
+  .chat-3-img{
+    width: 100%;
+  }
+
+  @media(max-width : 767px){
+     .chat-3-img{
+    width: fit-content;
+  }
   }
