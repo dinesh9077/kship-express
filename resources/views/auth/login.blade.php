@@ -26,10 +26,12 @@
         .login-container {
             max-width: 1800px;
             margin: 100px auto;
-            background: #fff;
+            /* background: #fff; */
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            /* box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1); */
+                justify-content: center;
+
         }
 
         @media(max-width : 1800px) {
@@ -119,7 +121,8 @@
         }
 
         .login-left {
-            padding: 100px 250px;
+            padding: 100px 130px;
+            background-color: white;
         }
 
       
@@ -127,15 +130,12 @@
 
         @media(max-width : 1600px) {
             .login-left {
-                padding: 100px 150px;
+                padding: 100px 30px;
             }
         }
 
-           @media(max-width : 1100px) {
-            .login-left {
-                padding: 50px 50px;
-            }
-        }
+          
+    
 
 
         .login-left h5 {
@@ -186,6 +186,7 @@
             flex-direction: column;
             padding: 100px 100px;
             position: relative;
+            border-radius: 0px 10px 10px 0px;
         }
 
         @media(max-width : 1600px) {
@@ -198,7 +199,7 @@
         }
 
         .login-right h1 {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 400;
             margin-top: 20px;
             text-transform: capitalize;
@@ -238,6 +239,7 @@
             bottom: 40px;
             right: 70px;
             background: #dcd8fc;
+            
         }
 
         @media(max-width: 992px) {
@@ -257,7 +259,10 @@
     <section class="login-container d-flex">
 
         <!-- Left Side -->
-        <div class="login-left col-lg-7 col-12">
+        <div class="login-left col-lg-5 col-12" style="display: flex
+;
+    flex-direction: column;
+    justify-content: space-between;">
             <div class="text-center mb-4">
                 <img src="{{asset('storage/settings/'.config('setting.login_logo'))}}" style="height: 80px">
             </div>
@@ -299,7 +304,7 @@
             <p class="sin-up text-center">Don't Have Account <a href="{{ route('register') }}" style="color: #5640B0;"> Sign Up </a></p>
 
 
-            <p class="text-center" style="color : #3f3f3fff; font-weight : 500; margin-top : 96px; font-size : 18px;">Developed By <span style="color: #000000ff;"> Softieons</span> </a></p>
+        
         </div>
 
         <!-- Right Side -->
