@@ -25,7 +25,7 @@
         <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/blog/add')?>" role="form" novalidate>
 
           <div class="form-group">
-              <label class="col-sm-2 control-label p-0" for="example-input-normal"><?php echo trans('category') ?> <span class="text-danger">*</span></label>
+              <label class="col-sm-2 control-label p-0" for="example-input-normal"><?php echo trans('category') ?>  <span class="text-danger">*</span></label>
               <select class="form-control" name="category" required>
                   <option value=""><?php echo trans('select') ?></option>
                   <?php foreach ($categories as $category): ?>
@@ -38,7 +38,7 @@
           </div>
 
           <div class="form-group">
-            <label><?php echo trans('title') ?> <span class="text-danger">*</span></label>
+            <label><?php echo trans('title') ?>  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="title" value="<?php echo html_escape($blog[0]['title']); ?>" >
           </div>
 

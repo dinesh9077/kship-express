@@ -33,7 +33,7 @@
 			<form id="cat-form" method="post" enctype="multipart/form-data" class="row validate-form mt-20 p-30" action="<?php echo base_url('admin/vendor/add') ?>" role="form" novalidate>
 				<input type="hidden" name="gst_validation" id="gst_validation" value="0">
 				<div class="col-lg-6 form-group">
-					<label><?php echo trans('vendor-name') ?> <span class="text-danger">*</span></label>
+					<label><?php echo trans('vendor-name') ?>  <span class="text-danger">*</span></label>
 					<input type="text" class="form-control" required name="name" value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['name'] : html_escape($vendor[0]['name']); ?>">
 				</div>
 

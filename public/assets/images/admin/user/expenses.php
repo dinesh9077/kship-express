@@ -150,13 +150,13 @@
 
 				<div class="col-lg-6 form-group">
 					<label>
-						<?php echo trans('expense-amount') ?> <span class="text-danger">*</span>
+						<?php echo trans('expense-amount') ?>  <span class="text-danger">*</span>
 					</label>
 					<input type="text" class="form-control" required name="amount" value="<?php echo html_escape($expense[0]['amount']); ?>">
 				</div>
 				<div class="col-lg-6 form-group">
 					<label class="col-sm-12 control-label p-0" for="example-input-normal">
-						<?php echo trans('expense-category') ?><span class="text-danger">*</span>
+						<?php echo trans('expense-category') ?> <span class="text-danger">*</span>
 					</label>
 					<select class="form-control single_select" style="width:100%" name="category" id="expense_category" required>
 						<option value="">
@@ -173,7 +173,7 @@
 
 				<div class="col-lg-6 form-group">
 					<label for="inputEmail3" class="col-sm-12 control-label p-0">
-						<?php echo trans('date') ?> <span class="text-danger">*</span>
+						<?php echo trans('date') ?>  <span class="text-danger">*</span>
 					</label>
 					<div class="input-group">
 						<input type="text" class="form-control datepicker" required placeholder="yyyy/mm/dd" name="date" value="<?php echo date('Y-m-d') ?>">

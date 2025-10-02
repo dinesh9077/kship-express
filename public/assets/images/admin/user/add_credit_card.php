@@ -25,13 +25,13 @@
                  <?php if (isset($page_title) && $page_title == "Edit"): ?>
                   <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/add_card')?>" role="form" novalidate> 
                     <div class="col-lg-6 form-group ">
-                        <label  for="example-input-normal">Select Account Type <span class="text-danger">*</span></label>
+                        <label  for="example-input-normal">Select Account Type  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="account_type" name="account_type" required>
 							<option>Credit Card</option>
 						</select>
 					</div> 
 					<div class="col-lg-6 form-group">
-						<label>Account Holder Name <span class="text-danger">*</span></label>
+						<label>Account Holder Name  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" id="account_name" name="account_name" value="<?php echo html_escape($customer[0]['account_name']); ?>" required>
 					</div>
 					
@@ -40,7 +40,7 @@
 						<input type="text" class="form-control" name="account_code" value="<?php echo html_escape($customer[0]['account_code']); ?>" >
 					</div> -->
                     <div class="col-lg-6 form-group d-none">
-                        <label class="control-label p-0" for="example-input-normal">Currency <span class="text-danger">*</span></label>
+                        <label class="control-label p-0" for="example-input-normal">Currency  <span class="text-danger">*</span></label>
                        <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="currency" name="currency" required>
                             <!--<option value=""><?php //echo trans('select') ?></option>-->
                             <option <?php echo ($customer[0]['currency'] == "INR") ? 'selected' : ''; ?>>INR</option>
@@ -60,7 +60,7 @@
 					</div>
                     
                     <div class="col-lg-6 form-group">
-                        <label>Bank Name <span class="text-danger">*</span></label>
+                        <label>Bank Name  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="bank_name" name="bank_name" value="<?php echo html_escape($customer[0]['bank_name']); ?>" required>
 					</div>
                     
@@ -70,17 +70,17 @@
 					</div> -->
                     
                     <div class="col-lg-6 form-group">
-                        <label id="card_lim">Card Limit <span class="text-danger">*</span></label> 
+                        <label id="card_lim">Card Limit  <span class="text-danger">*</span></label> 
                         <input type="text" class="form-control" id="main_bal" name="main_balance" value="<?php echo html_escape($customer[0]['main_balance']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>        
                   	</div>
                   	<span id="span_main" style="display:none;"><?php echo html_escape($customer[0]['main_balance']); ?></span>
                   	<span id="span_current" style="display:none;"><?php echo html_escape($customer[0]['opening_balance']); ?></span>
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Currrent Limit <span class="text-danger">*</span></label>
+                        <label id="card_lim">Currrent Limit  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="card_upd_bal"  name="opening_balance" value="<?php echo html_escape($customer[0]['opening_balance']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" readonly required>
 					</div>	
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Card Due Date <span class="text-danger">*</span></label>
+                        <label id="card_lim">Card Due Date  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control datepicker"   name="card_duedate" value="<?php echo html_escape(date('Y-m-d',strtotime($customer[0]['card_duedate']))); ?>" required>
 					</div>
                     
@@ -89,7 +89,7 @@
                         <textarea class="form-control" name="description"><?php echo html_escape($customer[0]['description']); ?></textarea>
 					</div> 
 					<div class="col-lg-6 form-group">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="status" name="status" required>
 								<option value="1" <?php echo ($customer[0]['status'] == "1") ? 'selected' : ''; ?>>Active</option>
                             <option value="0"<?php echo ($customer[0]['status'] == "0") ? 'selected' : ''; ?>>In-Active</option>
@@ -113,17 +113,17 @@
                   
                 <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/add_card')?>" role="form" novalidate> 
                     <div class="col-lg-6 form-group ">
-                        <label  for="example-input-normal">Select Account Type <span class="text-danger">*</span></label>
+                        <label  for="example-input-normal">Select Account Type  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="account_type" name="account_type" required>
 							<option>Credit Card</option>
 						</select>
 					</div> 
 					<div class="col-lg-6 form-group">
-						<label>Account Holder Name <span class="text-danger">*</span></label>
+						<label>Account Holder Name  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" id="account_name" name="account_name" value="" required>
 					</div> 
                     <div class="col-lg-6 form-group d-none">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="currency" name="currency" required> 
                             <option>INR</option>
                             <option>AUD</option>
@@ -142,20 +142,20 @@
 					</div>
                     
                     <div class="col-lg-6 form-group">
-                        <label>Bank Name <span class="text-danger">*</span></label>
+                        <label>Bank Name  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="bank_name" name="bank_name" value="" required>
 					</div>
                      
                     <div class="col-lg-6 form-group">
-                        <label>Card Limit <span class="text-danger">*</span></label>
+                        <label>Card Limit  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" onkeyup="update_cardcurrent(this.value);" name="main_balance" value="" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
 					</div>
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Currrent Limit <span class="text-danger">*</span></label>
+                        <label id="card_lim">Currrent Limit  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="card_ope_bal" name="opening_balance" value="" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
 					</div>	
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Card Due Date <span class="text-danger">*</span></label>
+                        <label id="card_lim">Card Due Date  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control datepicker" name="card_duedate" required>
 					</div>
                     
@@ -164,7 +164,7 @@
                         <textarea class="form-control" name="description"></textarea>
 					</div> 
 					<div class="col-lg-6 form-group">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="status" name="status" required>
 							<option value="1">Active</option>
                             <option value="0">In-Active</option>

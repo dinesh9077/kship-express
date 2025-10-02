@@ -40,11 +40,11 @@
   		<form method="post" enctype="multipart/form-data" id="loan_form" class="row validate-form mt-20 p-30" action="<?php echo base_url('admin/banking/add_loan_sys') ?>" role="form" novalidate>
 
   			<div class="col-lg-6 form-group">
-  				<label>Loan Taken Bank Name<span class="text-danger">*</span></label>
+  				<label>Loan Taken Bank Name <span class="text-danger">*</span></label>
   				<input type="text" class="form-control" required name="loan_taken_bank" value="<?php echo html_escape($loan_system[0]['loan_taken_bank']); ?>" required>
   			</div>
   			<div class="col-lg-6 form-group">
-  				<label class="col-sm-12 control-label p-0" for="example-input-normal">Select Bank To Transfer Loan<span class="text-danger">*</span></label>
+  				<label class="col-sm-12 control-label p-0" for="example-input-normal">Select Bank To Transfer Loan <span class="text-danger">*</span></label>
   				<select class="form-control single_select" style="width:100%" name="bank_id" required>
   					<option value=""><?php echo trans('select') ?></option>
   					<?php foreach ($bankings as $banking) : ?>
@@ -83,7 +83,7 @@
   				</select>
   			</div>
   			<div class="col-lg-6 form-group">
-  				<label>Loan Type<span class="text-danger">*</span></label>
+  				<label>Loan Type <span class="text-danger">*</span></label>
   				<select class="form-control single_select" style="width:100%" name="loan_type" id="loan_type" required>
   					<option value="">Select Loan Type</option>
   					<option value="Home Loan" <?php echo ($loan_system[0]['loan_type'] == 'Home Loan') ? 'selected' : ''; ?>>Home Loan</option>
@@ -97,7 +97,7 @@
   				</select>
   			</div>
   			<div class="col-lg-6 form-group">
-  				<label>Intrest Type<span class="text-danger">*</span></label>
+  				<label>Intrest Type <span class="text-danger">*</span></label>
   				<select class="form-control single_select" style="width:100%" name="intrest_type" id="intrest_type" required>
   					<option value="">Select Intrest Type</option>
   					<option value="1" <?php echo ($loan_system[0]['intrest_type'] == 1) ? 'selected' : ''; ?>>Fixed/Flat-Rate Intrest</option>
@@ -106,27 +106,27 @@
   			</div>
   			<?php if (isset($page_title) && $page_title == "Edit") : ?>
   				<div class="col-lg-6 form-group">
-  					<label>Loan Amount<span class="text-danger">*</span></label>
+  					<label>Loan Amount <span class="text-danger">*</span></label>
   					<input type="text" class="form-control" name="loan_amount" id="loan_amount" value="<?php echo html_escape($loan_system[0]['loan_amount']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');">
   				</div>
   			<?php else : ?>
   				<div class="col-lg-6 form-group">
-  					<label>Loan Amount<span class="text-danger">*</span></label>
+  					<label>Loan Amount <span class="text-danger">*</span></label>
   					<input type="text" class="form-control" name="loan_amount" id="loan_amount" value="<?php echo html_escape($loan_system[0]['loan_amount']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
   				</div>
   			<?php endif ?>
   			<div class="col-lg-6 form-group">
-  				<label>Rate of Interest <span class="text-danger">*</span></label>
+  				<label>Rate of Interest  <span class="text-danger">*</span></label>
   				<input type="text" class="form-control" name="roi" id="roi" value="<?php echo html_escape($loan_system[0]['roi']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
   			</div>
 
   			<div class="col-lg-6 form-group">
-  				<label>EMI Tenure (In Month) <span class="text-danger">*</span></label>
+  				<label>EMI Tenure (In Month)  <span class="text-danger">*</span></label>
   				<input type="text" class="form-control" name="emi_tenure" id="emi_tenure" value="<?php echo html_escape($loan_system[0]['emi_tenure']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
   			</div>
 
   			<div class="col-lg-6 form-group">
-  				<label>EMI Amount <span class="text-danger">*</span></label>
+  				<label>EMI Amount  <span class="text-danger">*</span></label>
   				<input type="text" class="form-control" name="emi_amount" id="emi_amount" value="<?php echo html_escape($loan_system[0]['emi_amount']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
   			</div>
 
@@ -148,12 +148,12 @@
 				<span class="error_any_other_charge extra_amount"></span>
   			</div>
   			<div class="col-lg-6 form-group">
-  				<label>Total Amount To Transfer Bank <span class="text-danger">*</span> </label>
+  				<label>Total Amount To Transfer Bank  <span class="text-danger">*</span> </label>
   				<input type="text" class="form-control" id="transfer_bank_amt" name="transfer_bank_amt" value="<?php echo html_escape($loan_system[0]['transfer_bank_amt']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
   			</div>
 
   			<div class="col-lg-6 form-group">
-  				<label for="inputEmail3" class="col-sm-12 control-label p-0">Loan Issue Date<span class="text-danger">*</span></label>
+  				<label for="inputEmail3" class="col-sm-12 control-label p-0">Loan Issue Date <span class="text-danger">*</span></label>
   				<div class="input-group">
   					<input type="text" class="form-control edit_emi_date" required placeholder="yyyy/mm/dd" name="loan_issue_date" value="<?php echo date('Y-m-d') ?>">
   					<div class="input-group-append">
@@ -165,7 +165,7 @@
   			</div>
 
   			<div class="col-lg-6 form-group">
-  				<label>EMI Date <span class="text-danger">*</span></label>
+  				<label>EMI Date  <span class="text-danger">*</span></label>
   				<input type="text" class="form-control edit_emi_date" name="emi_date" value="<?php echo html_escape($loan_system[0]['emi_date']); ?>" required>
   			</div>
 
@@ -295,7 +295,7 @@
 				<div class="modal-body">
 					<form method="post" enctype="multipart/form-data" class="row validate-form " action="<?php echo base_url('admin/banking/add_loan_emi') ?>" role="form" novalidate>
 						<div class="col-lg-12 form-group">
-							<label>Select Bank To Transfer Loan<span class="text-danger">*</span></label>
+							<label>Select Bank To Transfer Loan <span class="text-danger">*</span></label>
 							<select class="form-control single_select" style="width:100%" name="bank_id" required>
 								<option value=""><?php echo trans('select') ?></option>
 								<?php foreach ($bankings as $banking) : ?>
@@ -313,12 +313,12 @@
 						</div>
 
 						<div class="col-lg-12 form-group">
-							<label>EMI Amount<span class="text-danger">*</span></label>
+							<label>EMI Amount <span class="text-danger">*</span></label>
 							<input type="text" class="form-control" name="emi_amount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" readonly value="<?php echo $loan->emi_amount; ?>" required>
 						</div>
 
 						<div class="col-lg-12 form-group">
-							<label>EMI Date <span class="text-danger">*</span></label>
+							<label>EMI Date  <span class="text-danger">*</span></label>
 							<input type="text" class="form-control edit_emi_date" name="emi_date" value="" required>
 						</div>
 

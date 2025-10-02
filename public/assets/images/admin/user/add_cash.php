@@ -25,17 +25,17 @@
                  <?php if (isset($page_title) && $page_title == "Edit"): ?>
                   <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/add_cash_data')?>" role="form" novalidate> 
                     <div class="col-lg-6 form-group ">
-                        <label  for="example-input-normal">Select Account Type <span class="text-danger">*</span></label>
+                        <label  for="example-input-normal">Select Account Type  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="account_type" name="account_type" required>
 							<option>Cash In Hand</option>
 						</select>
 					</div>   
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Cash Holder Name <span class="text-danger">*</span></label>
+                        <label id="card_lim">Cash Holder Name  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="account_name" value="<?php echo html_escape($customer[0]['account_name']); ?>" required>
 					</div>
                     <div class="col-lg-6 form-group d-none">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="currency" name="currency" required>
                             <!--<option value=""><?php //echo trans('select') ?></option>-->
                             <option <?php echo ($customer[0]['currency'] == "INR") ? 'selected' : ''; ?>>INR</option>
@@ -50,7 +50,7 @@
 					</div>
                      
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Cash Balance <span class="text-danger">*</span></label>
+                        <label id="card_lim">Cash Balance  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="opening_balance" value="<?php echo html_escape($customer[0]['opening_balance']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
 					</div>	
 					  
@@ -59,7 +59,7 @@
                         <textarea class="form-control" name="description"><?php echo html_escape($customer[0]['description']); ?></textarea>
 					</div> 
 					<div class="col-lg-6 form-group">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="status" name="status" required>
 								<option value="1" <?php echo ($customer[0]['status'] == "1") ? 'selected' : ''; ?>>Active</option>
                             <option value="0"<?php echo ($customer[0]['status'] == "0") ? 'selected' : ''; ?>>In-Active</option>
@@ -83,19 +83,19 @@
                   
                 <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/add_cash_data')?>" role="form" novalidate> 
                     <div class="col-lg-6 form-group ">
-                        <label  for="example-input-normal">Select Account Type <span class="text-danger">*</span></label>
+                        <label  for="example-input-normal">Select Account Type  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="account_type" name="account_type" required>
 							<option>Cash In Hand</option>
 						</select>
 					</div> 
 				      
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Cash Holder Name <span class="text-danger">*</span></label>
+                        <label id="card_lim">Cash Holder Name  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="account_name" value="" required>
 					</div>	
 					 
                     <div class="col-lg-6 form-group d-none">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Currency  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="currency" name="currency" required> 
                             <option>INR</option>
                             <option>AUD</option>
@@ -109,7 +109,7 @@
 					</div>
                       
 					<div class="col-lg-6 form-group">
-                        <label id="card_lim">Cash Balance <span class="text-danger">*</span></label>
+                        <label id="card_lim">Cash Balance  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="opening_balance" value="" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
 					</div>	
 					 
@@ -118,7 +118,7 @@
                         <textarea class="form-control" name="description"></textarea>
 					</div> 
 					<div class="col-lg-6 form-group">
-                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status <span class="text-danger">*</span></label>
+                        <label class="col-sm-2 control-label p-0" for="example-input-normal">Status  <span class="text-danger">*</span></label>
                         <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="status" name="status" required>
 							<option value="1">Active</option>
                             <option value="0">In-Active</option>

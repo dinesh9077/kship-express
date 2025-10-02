@@ -73,7 +73,7 @@
 
 								<div class="form-group col-md-12">
 									<label>
-										<?php echo trans('name') ?> <span class="text-danger">*</span>
+										<?php echo trans('name') ?>  <span class="text-danger">*</span>
 									</label>
 									<input type="text" class="form-control" required name="name"
 										value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['name'] : html_escape($busines[0]['name']); ?>"
@@ -200,7 +200,7 @@
 
 								<div class="form-group col-md-12">
 									<label for="example-input-normal">
-										<?php echo trans('country') ?> <span class="text-danger">*</span>
+										<?php echo trans('country') ?>  <span class="text-danger">*</span>
 									</label>
 									<select
 										class="selectfield textfield--grey single_select col-sm-12 single_select"

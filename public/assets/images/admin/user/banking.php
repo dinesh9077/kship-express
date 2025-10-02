@@ -28,7 +28,7 @@ $account_types = ['Bank', 'Current account', 'Savings account', 'Salary account'
                 <div class="box-body">
                     <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/add') ?>" role="form" novalidate>
                         <div class="col-lg-6 form-group ">
-                            <label for="example-input-normal">Account Type <span class="text-danger">*</span></label>
+                            <label for="example-input-normal">Account Type  <span class="text-danger">*</span></label>
                             <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="account_type" name="account_type" required>
                                 <option value="">Select Account Type</option>
                                 <option <?php echo ((isset($_SESSION['error']) && $_SESSION['post_data']['account_type'] == 'Current account"') || $customer[0]['account_type'] == "Current account") ? 'selected' : ''; ?>>Current account</option>
@@ -40,7 +40,7 @@ $account_types = ['Bank', 'Current account', 'Savings account', 'Salary account'
                             </select>
                         </div>
                         <div class="col-lg-6 form-group">
-                            <label>Account Holder Name <span class="text-danger">*</span></label>
+                            <label>Account Holder Name  <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="account_name" name="account_name" value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['account_name'] : html_escape($customer[0]['account_name']); ?>" required>
                         </div>
 
@@ -53,7 +53,7 @@ $account_types = ['Bank', 'Current account', 'Savings account', 'Salary account'
                         </div>
 
                         <div class="col-lg-6 form-group">
-                            <label> Bank Name <span class="text-danger">*</span></label>
+                            <label> Bank Name  <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="bank_name" name="bank_name" value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['bank_name'] : html_escape($customer[0]['bank_name']); ?>" required>
                         </div>
 
@@ -63,7 +63,7 @@ $account_types = ['Bank', 'Current account', 'Savings account', 'Salary account'
                         </div>
 
                         <div class="col-lg-6 form-group">
-                            <label id="card_lim">Opening Balance <span class="text-danger">*</span></label>
+                            <label id="card_lim">Opening Balance  <span class="text-danger">*</span></label>
                             <input type="number" class="form-control" name="opening_balance" value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['opening_balance'] : html_escape($customer[0]['opening_balance']); ?>" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
                         </div>
 
@@ -72,7 +72,7 @@ $account_types = ['Bank', 'Current account', 'Savings account', 'Salary account'
                             <textarea class="form-control" name="description"><?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['description'] : html_escape($customer[0]['description']); ?></textarea>
                         </div>
                         <div class="col-lg-3 form-group">
-                            <label class="control-label p-0" for="example-input-normal">Status <span class="text-danger">*</span></label>
+                            <label class="control-label p-0" for="example-input-normal">Status  <span class="text-danger">*</span></label>
                             <select class="form-control col-sm-12 wd-100 single_select" style="width:100%" id="status" name="status" required>
                                 <option value="1" <?php echo ((isset($_SESSION['error']) && $_SESSION['post_data']['status'] == '1') || $customer[0]['status'] == "1") ? 'selected' : ''; ?>>Active</option>
                                 <option value="0" <?php echo ((isset($_SESSION['error']) && $_SESSION['post_data']['status'] == '0') || $customer[0]['status'] == "0") ? 'selected' : ''; ?>>In-Active</option>

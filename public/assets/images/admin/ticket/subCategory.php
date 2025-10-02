@@ -31,7 +31,7 @@
 						</select>
 					</div>
 					<div class="form-group">
-						<label><?php echo trans('category-name') ?> <span class="text-danger">*</span></label>
+						<label><?php echo trans('category-name') ?>  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" required name="name" value="<?php echo html_escape($category[0]['name']); ?>" >
 					</div>
 					 

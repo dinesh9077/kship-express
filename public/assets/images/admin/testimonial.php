@@ -25,12 +25,12 @@
         <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/testimonial/add')?>" role="form" novalidate>
 
           <div class="form-group">
-            <label><?php echo trans('client-name') ?> <span class="text-danger">*</span></label>
+            <label><?php echo trans('client-name') ?>  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="name" value="<?php echo html_escape($testimonial[0]['name']); ?>" >
           </div>
 
           <div class="form-group">
-            <label><?php echo trans('designation') ?> <span class="text-danger">*</span></label>
+            <label><?php echo trans('designation') ?>  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="designation" value="<?php echo html_escape($testimonial[0]['designation']); ?>" >
           </div>
 
@@ -49,7 +49,7 @@
           </div>
 
           <div class="form-group">
-            <label><?php echo trans('feedback') ?> <span class="text-danger">*</span></label>
+            <label><?php echo trans('feedback') ?>  <span class="text-danger">*</span></label>
             <textarea class="form-control" required name="feedback" rows="6"><?php echo html_escape($testimonial[0]['feedback']); ?></textarea>
           </div>
 

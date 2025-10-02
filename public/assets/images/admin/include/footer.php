@@ -413,17 +413,17 @@
 				<form id="callback_from" action="<?php echo base_url() . 'admin/ticket/submit_request'; ?>"
 					method="post">
 					<div class="form-group validate">
-						<label>Name <span class="text-danger">*</span></label>
+						<label>Name  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" required="" name="name" value=""
 							aria-invalid="false">
 					</div>
 					<div class="form-group validate">
-						<label>Contact No. <span class="text-danger">*</span></label>
+						<label>Contact No.  <span class="text-danger">*</span></label>
 						<input type="number" class="form-control" required="" name="contact_no" value=""
 							aria-invalid="false">
 					</div>
 					<div class="form-group validate">
-						<label>Email Id <span class="text-danger">*</span></label>
+						<label>Email Id  <span class="text-danger">*</span></label>
 						<input type="email" class="form-control" required="" name="email" value=""
 							aria-invalid="false">
 					</div>

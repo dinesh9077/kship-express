@@ -34,7 +34,7 @@
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")
 			<li class="head-li moin-bord" data-toggle="modal" data-target="#rechargeWalletModal" >
 				<div class="balcnce-wa">
-					<img src="{{asset('assets/images/dashbord/wallet-1.png')}}" style="    width: auto;padding: 17px 15px;background: black;border-radius: 10px 0px 0px 10px;">
+					<img src="{{asset('assets/images/dashbord/wallet-1.png')}}" style="    width: auto;padding: 13px 12px;background: black;border-radius: 10px 0px 0px 10px;">
 					<h6 style="margin-right : 10px;"> {{ config('setting.currency') }} {{ Helper::decimal_number(Auth::user()->wallet_amount) }} </h6>
 					<!-- <i class="fe-refresh-ccw" style="color: #000000ff;"></i> -->
 				</div>

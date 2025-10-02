@@ -527,7 +527,7 @@ body.enlarged {
 }
 
 .balcnce-wa h6,.head-li.moin-bord .mail button {
-    font-size: 16px;
+    font-size: 15px;
     margin: 0;
     font-weight: 500;
     color: #000000;
@@ -4088,7 +4088,7 @@ ul#tabs {
 
 
 ul#tabs li {
-	padding: 10px 32px;
+	padding: 9px 23px;
 	cursor: pointer;
 	/* background: #ECEDF8; */
 	border-radius:10px ;
@@ -4781,12 +4781,12 @@ div[role="progressbar"]::before {
     box-shadow: 0 0 13px  rgba(0, 0, 0, 0.1);
 }
 
-@media(max-width : 1600px){
-   
-.main-roow-1 {
-    padding: 0px;
-} 
+@media(max-width : 1500px){
+    .main-roow-1 {
+    padding: 10px 20px;
+    }
 }
+
 
 .main-roow-1 h5 {
     font-size: 16px;
@@ -5549,6 +5549,7 @@ button.simple-021-btn {
     display: flex;
     column-gap: 10px;
     align-items: center;
+    justify-content: end;
 }
 
 .mian-btn .dropbtn {
@@ -5812,8 +5813,8 @@ Login Page Css
 
 section.main-logout-login {
 margin: 0px 0px;
-  padding: 100px 0px;
-  background-image: url(../images/log_bg.jpg);
+  /* padding: 100px 0px; */
+  /* background-image: url(../images/log_bg.jpg); */
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
@@ -5822,9 +5823,10 @@ margin: 0px 0px;
   align-items: center;
   height: 100vh !important;
   position: relative;
+  background: #F5F5f5;
 }
 
-section.main-logout-login::after {
+/* section.main-logout-login::after {
   position: absolute;
   top: 0;
   left: 0;
@@ -5834,17 +5836,18 @@ section.main-logout-login::after {
   height: 100%;
   background: rgba(0,0,0,0.3);
   content: '';
-}
+} */
 
 .main-text-input-filld {
-      width: 46.8%;
-    padding: 50px 30px;
-    border-radius: 15px;
+      /* width: 46.8%; */
+    padding: 100px;
+    border-radius: 15px 0px 0px 15px;
     margin: 0 auto;
     background: #fff;
     position: relative;
     z-index: 999;
        overflow: hidden;
+       height: auto;
 }
 
 .main-login-21 .from-group {
@@ -7056,7 +7059,7 @@ Media Query
 
 @media(max-width: 1600px) {
     .main012 h4 {
-        font-size: 12px;
+        font-size: 14px;
     }
 
     .main-box-cont-dash h5 {
@@ -8224,9 +8227,7 @@ table.dataTable.no-footer td a {
         font-size: 16px;
     }
 
-    .main-roow-1 {
-        padding: 0px;
-    }
+   
 
     .star-first-cards {
         gap: 15px;
@@ -8554,7 +8555,7 @@ td .btn.btn-icon.waves-effect.waves-light.action-icon {
 
     .new-q-action-bg{
         background-color: black;
-        padding: 14px 10px;
+        padding: 10px 10px;
         border-radius: 10px ;
     }
 
@@ -8664,6 +8665,15 @@ align-items: start;
         height: 348px;
         padding: 30px 40px ;
     }
+
+    @media(max-width : 1399px){
+ .border-c-3{
+    
+        padding: 30px 20px ;
+    }
+    }
+
+   
     .border-c-4{
         border-left: 2px solid #00A30B;
         height: 140px;
@@ -8683,6 +8693,8 @@ align-items: start;
         bottom: 40px;
         right: 40px;
     }
+
+ 
 
     .new-amount-div{
         text-align: end;
@@ -8958,7 +8970,7 @@ color : white !important;
 
   .custom-dropdown-box {
     background: black;
-    padding: 14.5px 15px;
+    padding: 10px 15px;
     display: flex;
     border-radius: 10px;
     align-items: center;
@@ -8981,4 +8993,19 @@ color : white !important;
     padding: 12px 15px;
     font-size: 14px;
     outline: none;
+  }
+
+  .chat-3-img{
+    width: 100%;
+  }
+
+  @media(max-width : 767px){
+     .chat-3-img{
+    width: fit-content;
+  }
+  }
+
+  .blue-ng-login-page{
+    background-color: #5640B0;
+    height: auto;
   }

@@ -29,7 +29,7 @@
                                                                 echo $expense[0]['bank_id'];
                                                             } ?>">
                 <div class="col-lg-6 form-group">
-                    <label class="col-sm-12 control-label p-0" for="example-input-normal">Select Type <span class="text-danger">*</span></label>
+                    <label class="col-sm-12 control-label p-0" for="example-input-normal">Select Type  <span class="text-danger">*</span></label>
                     <select class="form-control" id="type_transaction" name="type_transaction" onchange="changeFunction();" required>
                         <option value=""><?php echo trans('select') ?></option>
                         <option value="Expense" <?php echo ($expense[0]['type_transaction'] == "Expense") ? 'selected' : ''; ?>>Expense</option>
@@ -43,7 +43,7 @@
                                                                         } else {
                                                                             echo "style='display:none;'";
                                                                         } ?>>
-                    <label><?php echo trans('expense-amount') ?> <span class="text-danger">*</span></label>
+                    <label><?php echo trans('expense-amount') ?>  <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="expense_amount" name="expense_amount" value="<?php echo html_escape($expense[0]['amount']); ?>">
                 </div>
 
@@ -52,7 +52,7 @@
                                                                     } else {
                                                                         echo "style='display:none;'";
                                                                     } ?>>
-                    <label>Income Amount <span class="text-danger">*</span></label>
+                    <label>Income Amount  <span class="text-danger">*</span></label>
                     <input type="text" class="form-control" id="income_amount" name="income_amount" value="<?php echo html_escape($expense[0]['amount']); ?>">
                 </div>
 
@@ -79,7 +79,7 @@
                                                                         } else {
                                                                             echo "style='display:none;'";
                                                                         } ?>>
-                    <label class="col-sm-12 control-label p-0" for="example-input-normal"><?php echo trans('expense-category') ?><span class="text-danger">*</span></label>
+                    <label class="col-sm-12 control-label p-0" for="example-input-normal"><?php echo trans('expense-category') ?> <span class="text-danger">*</span></label>
                     <select class="form-control" id="expense_category" name="expense_category">
                         <option value=""><?php echo trans('select') ?></option>
                         <?php foreach ($expense_category as $category) : ?>
@@ -95,7 +95,7 @@
                                                                     } else {
                                                                         echo "style='display:none;'";
                                                                     } ?>>
-                    <label class="col-sm-12 control-label p-0" for="example-input-normal">Income Category<span class="text-danger">*</span></label>
+                    <label class="col-sm-12 control-label p-0" for="example-input-normal">Income Category <span class="text-danger">*</span></label>
                     <select class="form-control" id="income_category" name="income_category">
                         <option value=""><?php echo trans('select') ?></option>
                         <?php foreach ($income_category as $category) : ?>
@@ -107,7 +107,7 @@
                 </div>
 
                 <div class="col-lg-6 form-group">
-                    <label for="inputEmail3" class="col-sm-12 control-label p-0"><?php echo trans('date') ?> <span class="text-danger">*</span></label>
+                    <label for="inputEmail3" class="col-sm-12 control-label p-0"><?php echo trans('date') ?>  <span class="text-danger">*</span></label>
                     <div class="input-group">
                         <input type="text" class="form-control datepicker" placeholder="yyyy/mm/dd" name="date" value="<?php echo date('Y-m-d') ?>">
                         <div class="input-group-append">

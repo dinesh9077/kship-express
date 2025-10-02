@@ -23,17 +23,17 @@
         <form method="post" enctype="multipart/form-data" action="<?php echo base_url('admin/feature/add')?>" role="form">
 
           <div class="form-group">
-            <label> <?php echo trans('title') ?> <span class="text-danger">*</span></label>
+            <label> <?php echo trans('title') ?>  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="name" value="<?php echo html_escape($feature[0]['name']); ?>" >
           </div>
 
           <div class="form-group">
-            <label> <?php echo trans('order') ?> <span class="text-danger">*</span></label>
+            <label> <?php echo trans('order') ?>  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" name="orders" value="<?php echo html_escape($feature[0]['orders']); ?>" >
           </div>
 
           <div class="form-group">
-            <label><?php echo trans('details') ?> <span class="text-danger">*</span></label>
+            <label><?php echo trans('details') ?>  <span class="text-danger">*</span></label>
             <textarea class="form-control" id="ckEditor" name="details" rows="6"><?php echo html_escape($feature[0]['details']); ?></textarea>
           </div>
 

@@ -672,7 +672,7 @@
 						<div id="cus_contact" class="tab-pane in active">
 							<h3>Contact</h3>
 							<div class="form-group">
-								<label><?php echo trans('customer-name') ?> <span class="text-danger">*</span></label>
+								<label><?php echo trans('customer-name') ?>  <span class="text-danger">*</span></label>
 								<input type="text" class="form-control" required name="name">
 							</div>
 							<div class="form-group">

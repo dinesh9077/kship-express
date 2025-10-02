@@ -30,7 +30,7 @@
             <div class="box-body">
                 <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/customer/add') ?>" role="form" novalidate>
                     <div class="col-lg-6 form-group">
-                        <label><?php echo trans('customer-name') ?> <span class="text-danger">*</span></label>
+                        <label><?php echo trans('customer-name') ?>  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" required name="name" value="<?php echo (isset($_SESSION['error'])) ? $_SESSION['post_data']['name'] : html_escape($customer[0]['name']); ?>">
                     </div>
                     <div class="col-lg-6 form-group">

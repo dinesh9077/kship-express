@@ -32,7 +32,7 @@
 		<div class="box-body">
 			<form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row" action="<?php echo base_url('admin/banking/addTransfer') ?>" role="form" novalidate>
 				<div class="col-lg-6 form-group">
-					<label class="col-sm-4 control-label p-0" for="example-input-normal">From <span class="text-danger">*</span></label>
+					<label class="col-sm-4 control-label p-0" for="example-input-normal">From  <span class="text-danger">*</span></label>
 					<select class="form-control single_select" style="width:100%" name="from_bank_id" id="from_bank_id" required onchange="from_bank(this);">
 						<option value=""><?php echo trans('select') ?></option>
 						<?php foreach ($new_bankdetails as $type => $banks) { ?>
@@ -48,7 +48,7 @@
 					<span id="show_from_bank"></span>
 				</div>
 				<div class="col-lg-6 form-group">
-					<label class="col-sm-4 control-label p-0" for="example-input-normal">To <span class="text-danger">*</span></label>
+					<label class="col-sm-4 control-label p-0" for="example-input-normal">To  <span class="text-danger">*</span></label>
 					<select class="form-control single_select" style="width:100%" name="to_bank_id" id="to_bank_id" required onchange="to_bank(this);">
 						<option value=""><?php echo trans('select') ?></option>
 						<?php foreach ($new_bankdetails as $type => $banks) { ?>

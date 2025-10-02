@@ -73,11 +73,11 @@
 				</div>
 
 				<div class="col-lg-6 form-group">
-					<label>Income Amount <span class="text-danger">*</span></label>
+					<label>Income Amount  <span class="text-danger">*</span></label>
 					<input type="text" class="form-control" required name="amount" value="<?php echo html_escape($expense[0]['amount']); ?>">
 				</div>
 				<div class="col-lg-6 form-group">
-					<label class="col-sm-12 control-label p-0" for="example-input-normal">Income Category<span class="text-danger">*</span></label>
+					<label class="col-sm-12 control-label p-0" for="example-input-normal">Income Category <span class="text-danger">*</span></label>
 					<select class="form-control single_select" style="width:100%" name="category" id="income_category" required>
 						<option value=""><?php echo trans('select') ?></option>
 						<?php foreach ($income_category as $category) : ?>
@@ -90,7 +90,7 @@
 				</div>
 
 				<div class="col-lg-6 form-group">
-					<label for="inputEmail3" class="col-sm-12 control-label p-0"><?php echo trans('date') ?> <span class="text-danger">*</span></label>
+					<label for="inputEmail3" class="col-sm-12 control-label p-0"><?php echo trans('date') ?>  <span class="text-danger">*</span></label>
 					<div class="input-group">
 						<input type="text" class="form-control datepicker" required placeholder="yyyy/mm/dd" name="date" value="<?php echo date('Y-m-d') ?>">
 						<div class="input-group-append">

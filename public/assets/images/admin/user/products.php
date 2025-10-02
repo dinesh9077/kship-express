@@ -115,7 +115,7 @@
 			<div class="box-body">
 				<form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form row edit_re" action="<?php echo base_url('admin/product/add') ?>" role="form" novalidate>
 					<div class="col-lg-6 form-group">
-						<label>Types <span class="text-danger">*</span> <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="Product Types"></i></label>
+						<label>Types  <span class="text-danger">*</span> <i class="fa fa-question-circle" data-toggle="tooltip" data-placement="right" title="Product Types"></i></label>
 						<div class="radio radio-info radio-inline mt-10">
 							<input type="radio" id="good" value="1" name="pro_type" <?php if (isset($page_title) && $page_title == "Edit") { if ($product[0]['pro_type'] == 1) { echo "checked"; } } else { echo "checked"; } ?>>
 							<label class="text-primary" for="good"> Goods </label>
@@ -125,7 +125,7 @@
 					</div>
 					<?php if ($this->business->hsn_sac == 1) : ?>
 						<div class="col-lg-6 form-group" id="good_show">
-							<label>HSN Code <span class="text-danger">*</span></label>
+							<label>HSN Code  <span class="text-danger">*</span></label>
 							<div class="d-flex align-items-center">
 								<input type="number" min="0" class="form-control" name="hsn_code" id="hsn_code" value="<?php echo html_escape($product[0]['hsn_code']); ?>" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" onkeyup="return this.value = this.value.replace(/[^0-9\.]/g,'');">
 								<button type="button" class="srch-btn" data-toggle="modal" data-target="#Hsn_code"><i class="fa fa-search" aria-hidden="true"></i></button>
@@ -133,7 +133,7 @@
 						</div>
 
 						<div class="col-lg-6 form-group" style="display:none;" id="service_show">
-							<label>SAC Code <span class="text-danger">*</span></label>
+							<label>SAC Code  <span class="text-danger">*</span></label>
 							<div class="d-flex align-items-center">
 								<input type="number" min="0" class="form-control" name="sac_code" id="sac_code" value="<?php echo html_escape($product[0]['hsn_code']); ?>" style="border-top-right-radius: 0; border-bottom-right-radius: 0;" onkeyup="return this.value = this.value.replace(/[^0-9\.]/g,'');">
 								<button type="button" class="srch-btn" data-toggle="modal" data-target="#Sca_code"><i class="fa fa-search" aria-hidden="true"></i></button>
@@ -141,12 +141,12 @@
 						</div>
 					<?php endif; ?>
 					<div class="col-lg-6 form-group">
-						<label><?php echo trans('product-name') ?> <span class="text-danger">*</span></label>
+						<label><?php echo trans('product-name') ?>  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" required name="name" value="<?php echo html_escape($product[0]['name']); ?>">
 					</div>
 
 					<div class="col-lg-6 form-group">
-						<label><?php echo trans('price') ?> <span class="text-danger">*</span></label>
+						<label><?php echo trans('price') ?>  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" required name="price" value="<?php echo html_escape($product[0]['price']); ?>" onkeyup="return this.value = this.value.replace(/[^0-9\.]/g,'');">
 					</div>
 
@@ -154,12 +154,12 @@
 					if ($this->business->enable_stock == 1) :
 						if ($this->business->enable_serial_no != 1) : ?>
 							<div class="col-lg-6 form-group">
-								<label><?php echo trans('stock-quantity') ?> <span class="text-danger">*</span></label>
+								<label><?php echo trans('stock-quantity') ?>  <span class="text-danger">*</span></label>
 								<input type="text" class="form-control" required name="quantity" value="<?php echo html_escape($product[0]['quantity']); ?>" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
 							</div>
 						<?php else : ?>
 							<div class="col-lg-6 form-group">
-								<label><?php echo trans('stock-quantity') ?> <span class="text-danger">*</span></label>
+								<label><?php echo trans('stock-quantity') ?>  <span class="text-danger">*</span></label>
 								<div class="d-flex align-items-center">
 									<input type="text" class="form-control" id="serial_quantity" required name="quantity" value="<?php echo html_escape(isset($product[0]['quantity'])) ? $product[0]['quantity'] : 0; ?>" style="border-top-right-radius: 0; border-bottom-right-radius: 0;">
 									<button type="button" class="srch-btn" style="width: 160px;" id="openserialmodal">Add Serial No</button>
