@@ -55,27 +55,27 @@
               <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/country/add') ?>" role="form" novalidate>
 
                 <div class="form-group">
-                  <label><?php echo trans('name') ?> <span class="text-danger">*</span></label>
+                  <label><?php echo trans('name') ?>  <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" required name="name" placeholder="Country <?php echo trans('name') ?>">
                 </div>
 
                 <div class="form-group">
-                  <label><?php echo trans('country-code') ?> <span class="text-danger">*</span></label>
+                  <label><?php echo trans('country-code') ?>  <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" required name="code" placeholder="<?php echo trans('country-code') ?>">
                 </div>
 
                 <div class="form-group">
-                  <label><?php echo trans('currency-name') ?> <span class="text-danger">*</span></label>
+                  <label><?php echo trans('currency-name') ?>  <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" required name="currency_name" placeholder="<?php echo trans('currency-name') ?>">
                 </div>
 
                 <div class="form-group">
-                  <label><?php echo trans('currency-symbol') ?> <span class="text-danger">*</span></label>
+                  <label><?php echo trans('currency-symbol') ?>  <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" required name="currency_symbol" placeholder="<?php echo trans('currency-symbol') ?>">
                 </div>
 
                 <div class="form-group">
-                  <label><?php echo trans('currency-code') ?> <span class="text-danger">*</span></label>
+                  <label><?php echo trans('currency-code') ?>  <span class="text-danger">*</span></label>
                   <input type="text" class="form-control" required name="currency_code" placeholder="<?php echo trans('currency-code') ?>">
                 </div>
 

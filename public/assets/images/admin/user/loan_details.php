@@ -67,7 +67,7 @@ foreach ($loan_details as $loans) {
 			<form method="post" enctype="multipart/form-data" class="row validate-form mt-20 p-30" action="<?php echo base_url('admin/banking/add_loan_emi') ?>" role="form" novalidate>
 
 				<div class="col-lg-6 form-group">
-					<label class="col-sm-12 control-label p-0" for="example-input-normal">Select Bank To Transfer Loan<span class="text-danger">*</span></label>
+					<label class="col-sm-12 control-label p-0" for="example-input-normal">Select Bank To Transfer Loan <span class="text-danger">*</span></label>
 					<select class="form-control" name="bank_id" required>
 						<option value=""><?php echo trans('select') ?></option>
 						<?php foreach ($bankings as $banking) : ?>
@@ -84,12 +84,12 @@ foreach ($loan_details as $loans) {
 					</select>
 				</div>
 				<div class="col-lg-6 form-group">
-					<label>EMI Amount<span class="text-danger">*</span></label>
+					<label>EMI Amount <span class="text-danger">*</span></label>
 					<input type="text" class="form-control" name="emi_amount" value="<?php echo html_escape($loan_system[0]['emi_amount']); ?>" readonly oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" required>
 				</div>
 
 				<div class="col-lg-6 form-group">
-					<label>EMI Date <span class="text-danger">*</span></label>
+					<label>EMI Date  <span class="text-danger">*</span></label>
 					<input type="text" class="form-control datepicker" name="emi_date" value="<?php echo html_escape($loan_system[0]['emi_date']); ?>" required>
 				</div>
 
@@ -218,7 +218,7 @@ foreach ($loan_details as $loans) {
 			<div class="modal-body">
 				<form method="post" enctype="multipart/form-data" class="row validate-form " action="<?php echo base_url('admin/banking/add_loan_emi') ?>" role="form" novalidate>
 					<div class="col-lg-12 form-group">
-						<label>Select Bank To Transfer Loan<span class="text-danger">*</span></label>
+						<label>Select Bank To Transfer Loan <span class="text-danger">*</span></label>
 						<select class="form-control" name="bank_id" required>
 							<option value=""><?php echo trans('select') ?></option>
 							<?php foreach ($bankings as $banking) : ?>
@@ -236,12 +236,12 @@ foreach ($loan_details as $loans) {
 					</div>
 
 					<div class="col-lg-12 form-group">
-						<label>EMI Amount<span class="text-danger">*</span></label>
+						<label>EMI Amount <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" name="emi_amount" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');" readonly value="<?php echo $loan->emi_amount; ?>" required>
 					</div>
 
 					<div class="col-lg-12 form-group">
-						<label>EMI Date <span class="text-danger">*</span></label>
+						<label>EMI Date  <span class="text-danger">*</span></label>
 						<input type="text" class="form-control datepicker" name="emi_date" value="" required>
 					</div>
 

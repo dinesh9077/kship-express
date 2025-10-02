@@ -29,7 +29,7 @@
         <form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/services/add') ?>" role="form" novalidate>
 
           <div class="form-group">
-            <label>Service Name <span class="text-danger">*</span></label>
+            <label>Service Name  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="name" value="<?php echo html_escape($service[0]['name']); ?>">
           </div>
 
@@ -48,7 +48,7 @@
           </div>
 
           <div class="form-group">
-            <label>Service Details <span class="text-danger">*</span></label>
+            <label>Service Details  <span class="text-danger">*</span></label>
             <textarea class="form-control" required name="details" rows="6"><?php echo html_escape($service[0]['details']); ?></textarea>
           </div>
 

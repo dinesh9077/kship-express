@@ -38,7 +38,7 @@
 										<form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/unit/add_unit') ?>" role="form" novalidate>
 
 											<div class="form-group">
-												<label>Unit <?php echo trans('name') ?> <span class="text-danger">*</span></label>
+												<label>Unit <?php echo trans('name') ?>  <span class="text-danger">*</span></label>
 												<input type="text" class="form-control" required name="unit" value="<?php echo html_escape($unit[0]['unit']); ?>">
 											</div>
 

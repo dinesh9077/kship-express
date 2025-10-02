@@ -46,11 +46,11 @@
 			<div class="modal-body">
 				<form action="<?php echo base_url().'admin/contact/sendnotification';?>" method="post" enctype="multipart/form-data">
 				    <div class="form-group validate">
-                        <label>Title <span class="text-danger">*</span></label>
+                        <label>Title  <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" required="" name="title" value="" aria-invalid="false">
 					</div> 
 					<div class="form-group validate">
-                        <label>Content <span class="text-danger">*</span></label>
+                        <label>Content  <span class="text-danger">*</span></label>
                         <textarea class="form-control" name="content" aria-invalid="false" placeholder="Write a brief description of our query" style="height: 110px;"></textarea>
 					</div>   
                     <div class="form-group validate">

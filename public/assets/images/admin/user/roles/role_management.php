@@ -65,7 +65,7 @@
                   <div class="col-md-6 mr-auto">
 
                     <div class="form-group">
-                      <label><?php echo trans('name') ?> <span class="text-danger">*</span></label>
+                      <label><?php echo trans('name') ?>  <span class="text-danger">*</span></label>
                       <input type="text" class="form-control" required name="name" value="<?php echo html_escape($user[0]['name']); ?>">
                     </div>
 

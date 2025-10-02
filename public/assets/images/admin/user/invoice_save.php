@@ -409,14 +409,14 @@
 										<div class="row">
 											<div class="col-md-4">
 												<div class="form-group">
-													<label><?php echo trans('start-date') ?> <span class="text-danger">*</span></label>
+													<label><?php echo trans('start-date') ?>  <span class="text-danger">*</span></label>
 													<input type="text" class="form-control datepicker" required name="recurring_start" autocomplete="off" value="<?php echo date('Y-m-d') ?>">
 												</div>
 											</div>
 											
 											<div class="col-md-4">
 												<div class="form-group">
-													<label><?php echo trans('repeat-this-invoice') ?> <span class="text-danger">*</span></label>
+													<label><?php echo trans('repeat-this-invoice') ?>  <span class="text-danger">*</span></label>
 													<select class="form-control" name="frequency">
 														<option value=""><?php echo trans('select') ?></option>
 														<option value="7"><?php echo trans('weekly') ?></option>

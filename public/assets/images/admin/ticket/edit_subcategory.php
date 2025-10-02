@@ -31,7 +31,7 @@
 						</select>
 					</div>
 					<div class="form-group">
-						<label>Sub category<span class="text-danger">*</span></label>
+						<label>Sub category <span class="text-danger">*</span></label>
 						<input type="text" class="form-control" required name="name" value="<?php echo html_escape($subcategory[0]['subcat_name']); ?>" >
 					</div>
 					 

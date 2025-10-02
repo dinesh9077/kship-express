@@ -204,14 +204,14 @@
 								</div>
 								<div class="col-md-4">
 									<div class="form-group">
-										<label><?php echo trans('start-date') ?> <span class="text-danger">*</span></label>
+										<label><?php echo trans('start-date') ?>  <span class="text-danger">*</span></label>
 										<input type="text" class="form-control datepicker" value="<?php echo html_escape($invoice[0]['recurring_start']) ?>" name="recurring_start" autocomplete="off">
 									</div>
 								</div>
 
 								<div class="col-md-4">
 									<div class="form-group">
-										<label><?php echo trans('repeat-this-invoice') ?> <span class="text-danger">*</span></label>
+										<label><?php echo trans('repeat-this-invoice') ?>  <span class="text-danger">*</span></label>
 										<select class="form-control" name="frequency">
 											<option value=""><?php echo trans('select') ?></option>
 											<option <?php if ($invoice[0]['frequency'] == 7) {
@@ -821,7 +821,7 @@
 						<div id="cus_contact" class="tab-pane in active">
 							<h3>Contact</h3>
 							<div class="form-group">
-								<label><?php echo trans('customer-name') ?> <span class="text-danger">*</span></label>
+								<label><?php echo trans('customer-name') ?>  <span class="text-danger">*</span></label>
 								<input type="text" class="form-control" required name="name">
 							</div>
 							<div class="form-group">

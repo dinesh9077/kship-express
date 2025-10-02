@@ -10,32 +10,32 @@
 			<form id="addStaffForm" action="{{ route('staff.store') }}" method="post" enctype="multipart/form-data">
 				<div class="modal-body row">
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Company Name{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Company Name{{--  <span class="text-danger">*</span>--}}</label>
 						<input type="text" class="form-control  new-border-popups" id="company_name" name="company_name" required>
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Name{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Name{{--  <span class="text-danger">*</span>--}}</label>
 						<input type="text" class="form-control  new-border-popups" id="name" name="name" required>
 					</div>  
 					  
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Mobile{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Mobile{{--  <span class="text-danger">*</span>--}}</label>
 						<input type="text" class="form-control  new-border-popups" id="mobile" name="mobile" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 					</div>  
 					 
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Email{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Email{{--  <span class="text-danger">*</span>--}}</label>
 						<input type="text" class="form-control  new-border-popups" id="email" name="email" required>
 					</div>  
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Password{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Password{{--  <span class="text-danger">*</span>--}}</label>
 						<input type="password" class="form-control  new-border-popups" id="password" name="password" required>
 					</div> 
 					
 					<div class="mb-3 col-md-6"> 
-						<label for="recipient-name" class="form-label">Geneder{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Geneder{{--  <span class="text-danger">*</span>--}}</label>
 						<select autocomplete="off" class="form-control  new-border-popups" name="gender" id="gender" Required>
 							<option value=""> Select Gender </option>
 							<option value="Male"> Male </option>
@@ -45,7 +45,7 @@
 					</div>
 									
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Roles{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Roles{{--  <span class="text-danger">*</span>--}}</label>
 						<select class="form-control  new-border-popups" id="role" name="role" required>
 							<option value=""> Select Roles </option> 
 							@foreach($roles as $role)
@@ -57,7 +57,7 @@
 					</div>
 					
 					<div class="mb-3 col-md-6">
-						<label for="recipient-name" class="form-label">Status{{-- <span class="text-danger">*</span>--}}</label>
+						<label for="recipient-name" class="form-label">Status{{--  <span class="text-danger">*</span>--}}</label>
 						<select class="form-control  new-border-popups" id="status" name="status">
 							<option value="1"> Active </option>
 							<option value="0"> In-Active </option>

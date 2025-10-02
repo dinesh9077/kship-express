@@ -50,7 +50,7 @@
 								<div class="col-lg-12"> 
 										<div class="row">
 											<div class="from-group col-6"> 
-											<h5  class="new-title-b2c-order"> Pickup Location {{-- <span class="text-danger">*</span>--}}</h5>
+											<h5  class="new-title-b2c-order"> Pickup Location {{--  <span class="text-danger">*</span>--}}</h5>
 											<div class="main-rox-input">
 												<select name="warehouse_id" class="control-form select2" id="warehouse_id" style="border-radius: 5px 0px 0px 5px" onchange="warehousePickup(this)" required>
 													<option value="">Select Pickup Location</option> 
@@ -78,7 +78,7 @@
 								 
 								<div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
-                                        <label for="packaging-type"> Type Of Package {{-- <span class="text-danger">*</span>--}}</label>
+                                        <label for="packaging-type"> Type Of Package {{--  <span class="text-danger">*</span>--}}</label>
                                         <select name="type_of_package" class="control-form select2" id="type_of_package" style="border-radius: 5px 0px 0px 5px" required>
 											<option value="1">B2C</option> 
 											<option value="2">B2B</option> 
@@ -87,7 +87,7 @@
                                 </div> 
                                 <div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
-                                        <label for="packaging-type"> Upload Excel {{-- <span class="text-danger">*</span>--}}</label>
+                                        <label for="packaging-type"> Upload Excel {{--  <span class="text-danger">*</span>--}}</label>
                                         <input type="file" class="form-control" id="bulk_excel" style="height: 46px;" name="bulk_excel" accept=".xlsx,.xls" required> 
                                     </div>
                                 </div>  

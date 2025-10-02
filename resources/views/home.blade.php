@@ -139,7 +139,7 @@
                                                         <div class="main012">
                                                             <img src="{{asset('assets/images/dashbord/rr-1.png')}}">
                                                             <h5> {{ $manifested }} </h5>
-                                                            <div style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                            <div style="display: flex;     justify-content: space-between;">
                                                                 <h4> Manifested / Pending Pickup </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
                                                             </div>
@@ -151,7 +151,7 @@
                                                         <div class="main012">
                                                             <img src="{{asset('assets/images/dashbord/rr-2.png')}}">
                                                             <h5> {{ $cancelledOrder }} </h5>
-                                                            <div style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                            <div style="display: flex;     justify-content: space-between;">
                                                                 <h4> Cancelled </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
                                                             </div>
@@ -168,7 +168,7 @@
                                                         <div class="main012">
                                                             <img src="{{asset('assets/images/dashbord/rr-4.png')}}">
                                                             <h5> {{ $inTransit }} </h5>
-                                                            <div style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                            <div style="display: flex;     justify-content: space-between;">
                                                                 <h4> In-Transit </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
 
@@ -180,7 +180,7 @@
                                                     <div class="main012">
                                                         <img src="{{asset('assets/images/dashbord/rr-5.png')}}">
                                                         <h5> {{ $rto }} </h5>
-                                                        <div  style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                        <div  style="display: flex;     justify-content: space-between;">
                                                             <h4> RTO </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
                                                         </div>
@@ -195,7 +195,7 @@
                                                     <div class="main012">
                                                         <img src="{{asset('assets/images/dashbord/rr-3.png')}}">
                                                         <h5> {{ $outForDelivery }} </h5>
-                                                           <div style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                           <div style="display: flex;     justify-content: space-between;">
                                                                <h4> Out For Delivery </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
                                                            </div>
@@ -206,7 +206,7 @@
                                                         <div class="main012">
                                                             <img src="{{asset('assets/images/dashbord/rr-6.png')}}">
                                                             <h5> {{ $delivered }} </h5>
-                                                            <div style="display: flex;     justify-content: space-between; flex-wrap : wrap;">
+                                                            <div style="display: flex;     justify-content: space-between;">
                                                                 <h4> Delivered </h4>
                                                                 <img src="{{asset('assets/images/dashbord/arro.png')}}" style="object-fit: none; width: fit-content;">
 

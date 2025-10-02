@@ -67,7 +67,7 @@
 								<div class="row">
 									<div class="col-xl-3 col-lg-6">
 										<div class="form-group m-t-20">
-											<label class="control-label" for="example-input-normal"><?php echo trans('name') ?> <span class="text-danger">*</span></label>
+											<label class="control-label" for="example-input-normal"><?php echo trans('name') ?>  <span class="text-danger">*</span></label>
 											<div class="">
 												<input type="text" name="name" value="<?php echo html_escape($user->name); ?>" class="form-control" required>
 											</div>
@@ -76,7 +76,7 @@
 
 									<div class="col-xl-3 col-lg-6">
 										<div class="form-group m-t-20">
-											<label class="control-label" for="example-input-normal"><?php echo trans('email') ?> <span class="text-danger">*</span></label>
+											<label class="control-label" for="example-input-normal"><?php echo trans('email') ?>  <span class="text-danger">*</span></label>
 											<div class="">
 												<input type="text" name="email" value="<?php echo html_escape($user->email); ?>" class="form-control" required>
 											</div>
@@ -85,7 +85,7 @@
 
 									<div class="col-xl-3 col-lg-6">
 										<div class="form-group m-t-20">
-											<label class="control-label" for="example-input-normal"><?php echo trans('phone') ?> <span class="text-danger">*</span></label>
+											<label class="control-label" for="example-input-normal"><?php echo trans('phone') ?>  <span class="text-danger">*</span></label>
 											<div class="">
 												<input type="text" name="phone" value="<?php echo html_escape($user->phone); ?>" class="form-control" required>
 											</div>
@@ -94,7 +94,7 @@
 
 									<div class="col-xl-3 col-lg-6">
 										<div class="form-group p-0">
-											<label class="control-label" for="example-input-normal"><?php echo trans('country') ?> <span class="text-danger">*</span></label>
+											<label class="control-label" for="example-input-normal"><?php echo trans('country') ?>  <span class="text-danger">*</span></label>
 											<div class="">
 												<select class="form-control single_select" name="country" required>
 													<option value="0"><?php echo trans('select') ?></option>
@@ -110,7 +110,7 @@
 
 									<div class="col-xl-3 col-lg-6">
 										<div class="form-group">
-											<label class="control-label" for="example-input-normal"><?php echo trans('city') ?> <span class="text-danger">*</span></label>
+											<label class="control-label" for="example-input-normal"><?php echo trans('city') ?>  <span class="text-danger">*</span></label>
 											<div class="">
 												<input type="text" name="city" class="form-control" value="<?php echo html_escape($user->city); ?>" required>
 											</div>
@@ -120,7 +120,7 @@
 									<div class="col-xl-3 col-lg-6">
 										<?php if (auth('role') == 'user') : ?>
 											<div class="form-group">
-												<label class="control-label" for="example-input-normal"><?php echo trans('state') ?> <span class="text-danger">*</span></label>
+												<label class="control-label" for="example-input-normal"><?php echo trans('state') ?>  <span class="text-danger">*</span></label>
 												<div class="">
 													<input type="text" name="state" class="form-control" value="<?php echo html_escape($user->state); ?>" required>
 												</div>

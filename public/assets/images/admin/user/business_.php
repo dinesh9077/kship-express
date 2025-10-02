@@ -66,7 +66,7 @@
 
 								<div class="form-group col-md-12">
 									<label>
-										<?php echo trans('name') ?> <span class="text-danger">*</span>
+										<?php echo trans('name') ?>  <span class="text-danger">*</span>
 									</label>
 									<input type="text" class="form-control" required name="name" value="<?php echo html_escape($busines[0]['name']); ?>" required>
 								</div>
@@ -80,7 +80,7 @@
 
 								<div class="form-group col-md-12">
 									<label>
-										<?php echo trans('contact') . ' ' . trans('number') ?> <span class="text-danger">*</span>
+										<?php echo trans('contact') . ' ' . trans('number') ?>  <span class="text-danger">*</span>
 									</label>
 									<input type="text" class="form-control" name="biz_number" value="<?php echo html_escape($busines[0]['biz_number']); ?>" required>
 								</div>
@@ -165,7 +165,7 @@
 									<textarea id="ckEditor" class="form-control" name="address"><?php echo html_escape($busines[0]['address']); ?></textarea>
 								</div>
 								<div class="form-group col-md-12">
-									<label for="example-input-normal">Business Category <span class="text-danger">*</span></label>
+									<label for="example-input-normal">Business Category  <span class="text-danger">*</span></label>
 									<select class="selectfield textfield--grey single_select col-sm-12 single_select" name="category" required style="width: 100%">
 										<option value="">
 											<?php echo trans('select-business-category') ?>
@@ -183,7 +183,7 @@
 
 								<div class="form-group col-md-12">
 									<label for="example-input-normal">
-										<?php echo trans('country') ?> <span class="text-danger">*</span>
+										<?php echo trans('country') ?>  <span class="text-danger">*</span>
 									</label>
 									<select class="selectfield textfield--grey single_select col-sm-12 single_select" id="country" name="country" style="width: 100%" required <?php echo (isset($page_title) && $page_title == "Edit") ? "disabled" : '' ?>>
 										<option value="">

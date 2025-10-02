@@ -44,7 +44,7 @@
 										<form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/tax/add_type') ?>" role="form" novalidate>
 
 											<div class="form-group">
-												<label><?php echo trans('name') ?> <span class="text-danger">*</span></label>
+												<label><?php echo trans('name') ?>  <span class="text-danger">*</span></label>
 												<input type="text" class="form-control" required name="name" value="<?php echo html_escape($type[0]['name']); ?>">
 											</div>
 
@@ -138,7 +138,7 @@
 										<form id="cat-form" method="post" enctype="multipart/form-data" class="validate-form" action="<?php echo base_url('admin/tax/add') ?>" role="form" novalidate>
 
 											<div class="form-group">
-												<label class="col-sm-2 control-label p-0" for="example-input-normal"><?php echo trans('tax') ?> <span class="text-danger">*</span></label>
+												<label class="col-sm-2 control-label p-0" for="example-input-normal"><?php echo trans('tax') ?>  <span class="text-danger">*</span></label>
 												<select class="form-control single_select" style="width: 100%" name="type" required>
 													<option value=""><?php echo trans('select') ?></option>
 													<?php foreach ($types as $type) : ?>
@@ -150,12 +150,12 @@
 											</div>
 
 											<div class="form-group">
-												<label><?php echo trans('tax-name') ?> <span class="text-danger">*</span></label>
+												<label><?php echo trans('tax-name') ?>  <span class="text-danger">*</span></label>
 												<input type="text" class="form-control" required name="name" value="<?php echo html_escape($tax[0]['name']); ?>">
 											</div>
 
 											<div class="form-group">
-												<label><?php echo trans('tax-rate') ?> (%)<span class="text-danger">*</span></label>
+												<label><?php echo trans('tax-rate') ?> (%) <span class="text-danger">*</span></label>
 												<input type="text" class="form-control" required name="rate" value="<?php echo html_escape($tax[0]['rate']); ?>">
 												<p><?php echo trans('tax-rate-info') ?></p>
 											</div>

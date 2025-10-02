@@ -215,7 +215,7 @@
 								<div class="col-md-4">
 									<div class="form-group">
 										<label>
-											<?php echo trans('start-date') ?> <span class="text-danger">*</span>
+											<?php echo trans('start-date') ?>  <span class="text-danger">*</span>
 										</label>
 										<input type="text" class="form-control datepicker"
 											value="<?php echo html_escape($invoice[0]['recurring_start']) ?>"
@@ -1111,7 +1111,7 @@
 							<h3>Contact</h3>
 							<div class="form-group">
 								<label>
-									<?php echo trans('customer-name') ?> <span class="text-danger">*</span>
+									<?php echo trans('customer-name') ?>  <span class="text-danger">*</span>
 								</label>
 								<input type="text" class="form-control" required name="name">
 							</div>

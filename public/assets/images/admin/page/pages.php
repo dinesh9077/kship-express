@@ -36,12 +36,12 @@
           </div>
 
           <div class="form-group">
-            <label>English page Name <span class="text-danger">*</span></label>
+            <label>English page Name  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="name" value="<?php echo html_escape($page[0]['name']); ?>" >
           </div>
 
           <div class="form-group">
-            <label>Arabic page Name <span class="text-danger">*</span></label>
+            <label>Arabic page Name  <span class="text-danger">*</span></label>
             <input type="text" class="form-control" required name="ar_name" value="<?php echo html_escape($page[0]['ar_name']); ?>" >
           </div>
 

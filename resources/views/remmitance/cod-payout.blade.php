@@ -130,15 +130,15 @@
                 <input type="hidden" name="id" id="id"> 
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Reference No <span class="text-danger">*</span></label>
+                        <label>Reference No  <span class="text-danger">*</span></label>
                         <input type="text" name="reference_no" id="reference_no" class="form-control" required>
                     </div> 
                     <div class="form-group">
-                        <label>Payout Date <span class="text-danger">*</span></label>
+                        <label>Payout Date  <span class="text-danger">*</span></label>
                         <input type="date" name="payout_date" id="payout_date" class="form-control" required>
                     </div>
 					<div class="form-group">
-                        <label>Note <span class="text-danger">*</span></label>
+                        <label>Note  <span class="text-danger">*</span></label>
                         <input type="text" name="remarks" id="remarks" class="form-control" required>
                     </div>
                 </div>
