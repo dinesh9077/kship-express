@@ -41,9 +41,13 @@
 			
 			// Base query
 			$query = CourierWarehouse::with('user:id,name');
-
+			 	
 			if ($role === "user") {
 				$query->where('user_id', $userId);
+			}
+			if($request->get('shipment'))
+			{
+				$query->where('warehouse_status', 1);
 			}
  
 			if (!empty($search)) { 
