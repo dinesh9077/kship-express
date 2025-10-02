@@ -137,7 +137,7 @@
 					</div>
 				</div>
 				
-				<div class="text-align-start mb-4">
+				<div class="text-right mb-4">
 					<button class="new-submit-btn " id="customer_submit"> Submit </button>
 				</div>
 			</div>

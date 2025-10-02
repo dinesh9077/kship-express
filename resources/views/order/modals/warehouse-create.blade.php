@@ -18,14 +18,14 @@
 							</small>
 						</h4> 
 					</div> 
-                    <div class="col-xl-4 col-md-4 col-sm-12">
+                
                     <div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Company Name </label>
 							<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" required> 
 						</div>
 					</div> 
-					<div class="col-xl-4 col-md-4 col-sm-12">
+					
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Contact Name </label>
@@ -44,40 +44,39 @@
 							<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
 						</div>
 					</div> 
-				 
-					<div class="col-xl-4 col-md-4 col-sm-12">
+			
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Warehouse Name </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" maxlength="18" name="warehouse_name" id="warehouse_name" placeholder="Warehouse Name" required> 
 						</div>
 					</div>
-					<div class="col-xl-12 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Address </label>
-							<textarea class="default" type="text" data-id="0" autocomplete="off" name="address" id="address" placeholder="Address" required></textarea>
+							<textarea class="default" type="text" data-id="0" autocomplete="off" style="height: 48px;" name="address" id="address" placeholder="Address" required></textarea>
 						</div>
 					</div> 
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Zip code </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code" id="zip_code" placeholder="Zip code" onkeyup="autoFetchCountry(this)" required> 
 						</div>
 					</div>  
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> Country </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" name="country" id="country" placeholder="Country" required> 
 						</div>
 					</div>
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> State </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" name="state" id="state" placeholder="State" required> 
 						</div>
 					</div>
 					
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> City </label>
 							<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" required> 
@@ -85,7 +84,7 @@
 					</div>
 										
 										
-					<div class="col-xl-6 col-md-4 col-sm-12">
+					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="first-name"> Status </label>
 							<select autocomplete="off" name="warehouse_status" id="warehouse_status" > 
@@ -95,8 +94,6 @@
 						</div>
 					</div>  
 				</div>
-                <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
-                    <button type="submit" class="btn new-submit-popup-btn">Submit</button>
                 <div class="modal-footer" style="border-top: 0px; padding-top: 0px;">
                     <button type="submit" class="btn new-submit-popup-btn">Submit</button>
 				</div>

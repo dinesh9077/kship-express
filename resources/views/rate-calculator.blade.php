@@ -138,7 +138,7 @@
 											</div>  
 										</div>  
 										@if(config('permission.rate_calculator.add'))
-										<div class="de-flex-clas mt-4">
+										<div class="de-flex-clas mt-4 text-right">
 											<button type="submit" class="new-submit-btn"> Calculate </button>
 											<button type="button" class="new-submit-btn-1" onClick="window.location.reload();"> Reset </button>
 										</div>

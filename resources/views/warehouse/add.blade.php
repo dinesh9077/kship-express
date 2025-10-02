@@ -136,7 +136,7 @@
 											</div>
 										</div> 
 									</div>
-									<div class="mt-3">
+									<div class="mt-3 text-right">
                    
 										<button class="new-submit-btn" type="submit" id="customer_submit"> Submit </button>
 				</div>

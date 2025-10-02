@@ -319,40 +319,40 @@
                             <p class="my-2"></p>
                             <div id="dimenstionDetails">
 								<div class="row">
-									   <div class="col-lg-2 col-sm-6 col-md-6">
+									   <div class="col-lg col-sm-6 col-md-6">
                                     <div class="from-group my-2">
                                         <label for="packaging-type"> Total Weight {{-- <span class="text-danger">*</span> --}}</label>
                                         <input type="text" id="total_weight" placeholder="Total Weight." value="0" name="total_weight" readonly>
                                     </div>
                                 </div> 
-									<div class="col-lg-2 col-sm-6 col-md-6">
+									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> No Of Box {{-- <span class="text-danger">*</span> --}}</label>
 											<input type="text" data-id="0" name="no_of_box[]" id="no_of_box_0" class="no_of_box" placeholder="No Of Box" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 										</div> 
 									</div>
-									<div class="col-lg-2 col-sm-6 col-md-6">
+									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Weight Per Box(KG) {{-- <span class="text-danger">*</span> --}}</label>
 											<input type="text" data-id="0" name="weight[]" id="weight_0" class="weight" placeholder="Weight (KG)" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 										</div> 
 									</div>
 
-									<div class="col-lg-2 col-sm-6 col-md-6">
+									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Length {{-- <span class="text-danger">*</span> --}}</label>
 											<input type="text" name="length[]" id="length" placeholder="Length" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 										</div>
 									</div>
 
-									<div class="col-lg-2 col-sm-6 col-md-6">
+									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Width {{-- <span class="text-danger">*</span> --}}</label>
 											<input type="text" name="width[]" id="width" placeholder="Width" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 										</div>
 									</div>
 
-									<div class="col-lg-2 col-sm-6 col-md-6">
+									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Height {{-- <span class="text-danger">*</span> --}}</label>
 											<input type="text" name="height[]" id="height" placeholder="Height" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
@@ -363,7 +363,7 @@
                         </div> 
                     </div> 
 					
-					<div class="main-rowx-1">
+					<div class="main-rowx-1 text-right">
                         <!--<div class="main-order-001">
                             <div class="main-vender">
                                 <h5> Upload Documents </h5>
@@ -556,37 +556,37 @@
     $(`#add_more_product`).click(function()
 	{ 
         var html = `<div class="row align-items-end mt-2 removeProductRows"> 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Product Category {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" placeholder="Product Category" name="product_category[]" id="product_category" required>
 				</div>
 			</div> 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Product Name {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" placeholder="Product Name" name="product_name[]" id="product_name" required>
 				</div>
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> SKU Number {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" placeholder="SKU Number" name="sku_number[]" id="sku_number" required>
 				</div>
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> HSN No {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" placeholder="HSN No" name="hsn_number[]" id="hsn_number" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
-			<div class="col-lg-1 col-md-6">
+			<div class="col-lg col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Amount {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" data-id="${i}" id="totalAmount_${i}" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>  
-			<div class="col-lg-1 col-md-6">
+			<div class="col-lg col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Quantity {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="number" data-id="${i}" id="quantity_${i}" name="quantity[]" class="quantity" id="quantity" value="" placeholder="Quantity" oninput="allowOnlyNumbers(this)" required>
@@ -667,34 +667,34 @@
 	function noOfBoxDimenstion(rowId)
 	{ 
 		let html = `<div class="row mt-2" id="removeDimension${rowId}">
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> No Of Box {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" data-id="${rowId}" name="no_of_box[]" id="no_of_box_${rowId}" class="no_of_box" placeholder="No Of Box" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div> 
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Weight Per Box(KG) {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" data-id="${rowId}" name="weight[]" id="weight_${rowId}" class="weight" placeholder="Weight (KG)" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div> 
 			</div>
 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Length {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" name="length[]" id="length" placeholder="Length" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Width {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" name="width[]" id="width" placeholder="Width" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 
-			<div class="col-lg-3 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Height {{-- <span class="text-danger">*</span> --}}</label>
 					<input type="text" name="height[]" id="height" placeholder="Height" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>

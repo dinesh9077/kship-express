@@ -14,7 +14,8 @@
                         <div class="main-disolay-felx" style="margin-top: 0 !important;">
 							@if(config('permission.shipping_company.add'))	
 								<div class="main-btn0main-1">
-									<button  class="btn btn-primary btn-main-1" onclick="createShipping(event)">  Create Shipping Company </button>
+									<button  class="btn btn-primary btn-main-1" onclick="createShipping(event)"> 
+<span class="mdi mdi-plus"></span> Create Shipping Company </button>
 								</div>
 							@endif
         				</div>
@@ -91,7 +92,8 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel"> Create Shipping Company </h5>
+                <h5 class="modal-title" id="exampleModalLabel">
+<span class="mdi mdi-plus"></span> Create Shipping Company </h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
 				</button>

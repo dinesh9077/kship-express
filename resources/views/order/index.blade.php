@@ -117,7 +117,7 @@
 
 											<div class="col-lg-2 col-sm-6">
 												<div class="main-selet-11">
-													<button type="button" id="searchAllFilter" class="btn-main-1">Search</button>
+													<button type="button" id="searchAllFilter" class="btn-main-1 search_data search-btn-remi">Search</button>
 												</div>
 											</div>
 										</div>   

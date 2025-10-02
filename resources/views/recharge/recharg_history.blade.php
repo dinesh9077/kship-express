@@ -35,21 +35,21 @@
 	align-items: center;
 	gap: 15px;
 	}
-	
 	.table-custom-serch .input-main {
-	min-width: 100px;
-	}
-	.table-custom-serch .input-main { 
-	border: none;
-	border-radius: 3px;
+	min-width: 500px;
+}
+.table-custom-serch .input-main { 
+	    border: 1px solid #dcdcdc;
+	border-radius: 10px;
 	padding: 7px;
 	margin-left: 3px;
 	font-weight: 400;
 	font-size: 14px;
 	color: #000;
-	background-color: #25252547;
-	
-	} 
+	background-color: white;
+	padding: 10px 20px;
+ 
+}
 
 	
 .btn-blues{
@@ -86,8 +86,7 @@ border-radius: 10px;
 						<div class="main-data-teble-1 table-responsive">
 							<div class="page-heading-main justify-content-between align-items-end  mb-0">
 								<div class="left-head-deta">
-									<a href="javascript:;" class="btn btn-blus" id="excelExport"> XLXS</a>
-									<a href="javascript:;" class="btn btn-warning" id="pdfExport"> PDF</a>
+									
 									<div class="custom-entry">
 										<p>Show</p>
 										<select id="page_length">
@@ -107,6 +106,10 @@ border-radius: 10px;
 									<div class="table-custom-serch">
 										<input class="input-main" type="search" id="search_table"  placeholder="Search">
 									</div> 
+									<div>
+										<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
+										<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+									</div>
 								</div>
 							</div> 
 							<table id="recharge-datatable" class="" style="width:100%">
@@ -134,7 +137,7 @@ border-radius: 10px;
 <div class="modal fade apprevod_request" tabindex="-1" role="dialog" aria-labelledby="myLargeModalLabel" aria-hidden="true">
 	<div class="modal-dialog modal-lg model-width-1">
 		<div class="modal-content">
-			<div class="modal-header head-00re pb-0" style="border: none;">
+			<div class="modal-header head-00re pb-3" style="border-bottom: 1px solid #dcdcdc;">
 				<h5 class="modal-title" id="exampleModalLabel"> Action Recharge Request </h5>
 				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 					<span aria-hidden="true">&times;</span>
@@ -160,8 +163,8 @@ border-radius: 10px;
 						</div>
 					</div>
 				</div>
-				<div class="modal-footer" style="justify-content: center;"> 
-					<button type="submit" class="btn btn-primary btn-main-1"> Submit </button>
+				<div class="modal-footer" style="justify-content: center; padding-top : 0px; border-top : 0px;"> 
+					<button type="submit" class="btn new-submit-popup-btn"> Submit </button>
 				</div>
 			</form>
 		</div>

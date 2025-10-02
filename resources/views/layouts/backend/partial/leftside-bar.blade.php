@@ -33,12 +33,12 @@
         		<!-- <li class="head-sub">
 					<h6>Menu</h6>
 				</li> -->
-				<li class="head-sub mb-2">
+				<!-- <li class="head-sub mb-2">
 					<div class="kship-left-header-search">
 						<i class="mdi mdi-magnify"></i>
 						<input type="text" placeholder="Search">
 					</div>
-				</li>
+				</li> -->
 				@if(Auth::user()->role == "user")
 					@include('layouts.backend.partial.user-sidebar')
 				@else

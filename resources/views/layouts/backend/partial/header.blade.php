@@ -59,7 +59,37 @@
 					<h6  style=" color: white;"> Quick Actions </h6>
 				</div>
 			</a>	
+
+				<div class="dropdown-menu dropdown-menu-right dropdown-lg" style="width: 500px; max-width: 500px; border-radius : 20px; right: 0 !important;">
+				<div class="main-row-12">
+					<div class="main-anitio1 bg-bo-2" onclick="redirectSimpleUrl('{{ url('order/create') }}?weight_order=1')" style="cursor:pointer;">
+						<a href="javascript:;"><img src="{{asset('assets/images/order-1/tt-1.png')}}"></a>
+						<h5> Add an Order </h5>
+					</div> 
+				  
+					<div class="main-anitio1 bg-bo-3" onclick="redirectSimpleUrl('{{ url('rate/calculator') }}')" style="cursor:pointer;">
+						<a href="javascript:;"><img src="{{asset('assets/images/order-1/tt-2.png')}}"></a>
+						<h5> Rate Calculator </h5>
+					</div>
+					@if(Auth::user()->role == "user")
+						<div class="main-anitio1 bg-bo-1" onclick="redirectSimpleUrl('{{ url('ticket/add') }}')" style="cursor:pointer;">
+							<a href="javascript:;"><img src="{{asset('assets/images/order-1/tt-3.png')}}"></a>
+							<h5> Create a Ticket </h5>
+						</div>
+					@endif
+					<div class="main-anitio1 bg-bo-4" onclick="redirectSimpleUrl('{{ url('order') }}?weight_order=1&status=All')" style="cursor:pointer;">
+						<img src="{{ asset('assets/images/order-1/tt-4.png') }}" alt="Track Shipments">
+						<h5>Track Shipments</h5>
+					</div>
+				</div>
+				<div class="main-do-it">
+					<button class="simple-021-btn">Close Action Descriptions</button>
+				</div>
+			</div>
 		</li>
+		</li>
+
+		
 		
 		
 		<li class="dropdown notification-list mo-none">

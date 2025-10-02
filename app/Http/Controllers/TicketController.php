@@ -349,13 +349,13 @@
 					'<span class="badge badge-success">Close</span>' : 
 					'<span class="badge badge-danger">Open</span>';
 
-				$action = '<a href="'.url('ticket/view',$ticket->id).'" class="btn-main-1 text-white">View Ticket</a>'; 
+				$action = '<a href="'.url('ticket/view',$ticket->id).'"><i class="mdi mdi-eye class-pencil"></i></a>'; 
 				if ($ticket->status != 'Close') {
-					$action .= ' <a href="'.url('ticket/close',$ticket->id).'" onclick="closeTicket(this,event);" class="btn-main-1 text-white">Close Ticket</a>';
+					$action .= ' <a href="'.url('ticket/close',$ticket->id).'" onclick="closeTicket(this,event);"><i class="mdi mdi-close class-close"></i></a>';
 				}
 				 
 				if(config('permission.ticket_request.delete')){
-					$action .= ' <a href="'.url('ticket/delete',$ticket->id).'" onclick="deleteRecord(this,event);" class="btn-main-1 text-white">Delete</a>';
+					$action .= ' <a href="'.url('ticket/delete',$ticket->id).'" onclick="deleteRecord(this,event);"><i class="mdi mdi-trash-can-outline class-delete"></i></a>';
 				}
 				$data[] = [
 					'id' => $id,

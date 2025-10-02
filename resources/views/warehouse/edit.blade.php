@@ -28,31 +28,31 @@
 										</h4> 
         							</div> -->
 									<div class="row align-items-end">
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl  col-sm-12">
 											<div class="from-group my-2">
 												<label for="username"> Warehouse Name </label>
 												<input class="default" type="text" data-id="0" autocomplete="off" maxlength="18" name="warehouse_name" id="warehouse_name" placeholder="Warehouse Name" value="{{ $courierWarehouse->warehouse_name }}" required readonly> 
 											</div>
 										</div>
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl  col-sm-12">
 											<div class="from-group my-2">
 												<label for="username"> Company Name </label>
 												<input type="text" autocomplete="off" name="company_name" id="company_name" maxlength="18" placeholder="Company Name" value="{{ $courierWarehouse->company_name }}" required> 
 											</div>
 										</div> 
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl  col-sm-12">
 											<div class="from-group my-2">
 												<label for="username"> Contact Name </label>
 												<input type="text" autocomplete="off" name="contact_name" id="contact_name" placeholder="Contact Name"value="{{ $courierWarehouse->contact_name }}" required> 
 											</div>
 										</div> 
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl  col-sm-12">
 											<div class="from-group my-2">
 												<label for="username"> Contact Email </label>
 												<input type="text" autocomplete="off" name="contact_email" id="contact_email" placeholder="Contact Name" value="{{ $courierWarehouse->contact_email }}" required> 
 											</div>
 										</div>
-										<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="col-xl  col-sm-12">
 											<div class="from-group my-2">
 												<label for="first-name"> Contact Number </label>
 												<input type="text" autocomplete="off" name="contact_number" id="contact_number" placeholder="Contact Number"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" value="{{ $courierWarehouse->contact_number }}" required> 
@@ -148,7 +148,7 @@
 										</div> 
 									</div>
 
-									 <div class="mt-3">
+									 <div class="mt-3 text-right">
 										<button class="new-submit-btn" type="submit" > Submit </button>
 									</div>
 

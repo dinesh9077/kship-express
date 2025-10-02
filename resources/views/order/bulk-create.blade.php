@@ -88,12 +88,14 @@
                                 <div class="col-lg-6 col-sm-6 col-md-6">
                                     <div class="from-group my-2">
                                         <label for="packaging-type"> Upload Excel {{-- <span class="text-danger">*</span>--}}</label>
-                                        <input type="file" class="form-control" id="bulk_excel" name="bulk_excel" accept=".xlsx,.xls" required> 
+                                        <input type="file" class="form-control" id="bulk_excel" style="height: 46px;" name="bulk_excel" accept=".xlsx,.xls" required> 
                                     </div>
                                 </div>  
                             </div> 
                         </div>
-                        <button type="submit" class="new-submit-btn mt-3">Submit</button>
+						<div class="text-right">
+							<button type="submit" class="new-submit-btn mt-3">Submit</button>
+						</div>
                     </div>
                 </div>
             </form>

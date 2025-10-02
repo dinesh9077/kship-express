@@ -61,6 +61,13 @@
 #page_length{
 	padding: 5px;
 }
+
+
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    line-height: 49px !important;
+	background-color: #f3f3f3 !important;
+	border: none !important;
+}
 </style>
 
 <div class="content-page">

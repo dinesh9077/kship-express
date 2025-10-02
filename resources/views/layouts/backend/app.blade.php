@@ -135,8 +135,8 @@
 							<div id="statusMessage" class="status-message" style="text-align:center; margin-bottom:10px; display:none;"></div>
 
 							{{-- Footer --}}
-							<div class="modal-footer justify-content-center">
-								<button type="button" class="btn btn-primary btn-main-1" id="butnwallethide" onclick="initiatePayment()">
+							<div class="modal-footer justify-content-center" style="border-top: 0px; padding-top : 0px;">
+								<button type="button" class="btn new-submit-popup-btn" id="butnwallethide" onclick="initiatePayment()">
 									Continue to Payment
 								</button>
 							</div>

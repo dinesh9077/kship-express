@@ -387,7 +387,7 @@
                         </div> 
                     </div>
 					
-					<div class="main-rowx-1">
+					<div class="main-rowx-1 text-right">
 						{{-- <div class="main-order-001">
 								<div class="main-vender">
 									<h5> Upload Documents </h5>
@@ -617,37 +617,37 @@
     $(`#add_more_product`).click(function()
 	{ 
         var html = `<div class="row align-items-end mt-2 removeProductRows"> 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Product Category  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="text" placeholder="Product Category" name="product_category[]" id="product_category" required>
 				</div>
 			</div> 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Product Name  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="text" placeholder="Product Name" name="product_name[]" id="product_name" required>
 				</div>
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> SKU Number  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="text" placeholder="SKU Number" name="sku_number[]" id="sku_number" required>
 				</div>
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> HSN No  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="text" placeholder="HSN No" name="hsn_number[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="hsn_number" required>
 				</div>
 			</div>
-			<div class="col-lg-1 col-md-6">
+			<div class="col-lg col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Amount  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="text" data-id="${i}" id="totalAmount_${i}" class="totalAmount" placeholder="Total Amount" value="" name="amount[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>  
-			<div class="col-lg-1 col-md-6">
+			<div class="col-lg col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Quantity  {{--<span class="text-danger">*</span>--}}</label>
 					<input type="number" data-id="${i}" id="noofbox_${i}" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" oninput="allowOnlyNumbers(this)" required>

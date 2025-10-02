@@ -52,7 +52,7 @@
 					</div>
 				</div>
 
-				<div class="text-align-left mb-4">
+				<div class="text-right mb-4">
 					<button class="new-submit-btn" id="customer_submit"> Submit </button>
 				</div>
 			</div>

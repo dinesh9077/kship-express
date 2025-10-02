@@ -135,7 +135,7 @@
 												<input type="text" class="form-control" name="zip_code" placeholder="Zip Code" value="{{ $user->zip_code }}"> 
 											</div>
 										</div>
-										<div class="col-lg-12">
+										<div class="col-lg-12 text-right">
 											<button class="new-submit-btn mx-3" type="submit"> <i class="mdi mdi-square-edit-outline"></i> Update </button> 
 										</div>
 									</div>

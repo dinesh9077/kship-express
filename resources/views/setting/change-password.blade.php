@@ -50,7 +50,7 @@
 											<input type="password" name="new_password_confirmation" class="form-control" placeholder="Confirm Password">
 										</div>
 
-										<div class="text-center">
+										<div class="text-right">
 											<button class="new-submit-btn">Submit</button>
 										</div>
 									</div>

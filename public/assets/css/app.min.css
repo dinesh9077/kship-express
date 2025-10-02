@@ -4041,6 +4041,22 @@ h3.timeline-title {
     align-items: center;
 }
 
+.new-height-btn-plus-red{
+    padding: 14px 22px;
+    border: none;
+    background: #000000;
+    font-family: 'Poppins', sans-serif;
+    border-radius: 10px !important;
+    font-weight: 500;
+    font-size: 25px;
+    color: #fff;
+        height: 46px;
+    width: 46px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 button.btn-main-close {
     padding: 8px 15px;
     border: 1px solid #aaaaaa;
@@ -5396,17 +5412,44 @@ button.simple-021-btn {
 .main-anitio1 {
     width: 33.33%;
     text-align: center;
-    background: #201b1b1c;
     padding: 20px;
-    border-radius: 9px;
     height: 130px;
 }
 
+
+.bg-bo-1{
+    background: #E5FFEA;
+    border-radius: 20px;
+    border: 1px solid #248D37;
+}
+
+
+.bg-bo-2{
+    background: #F3F0FF;
+    border-radius: 20px;
+    border: 1px solid #3B19C4;
+}
+
+
+.bg-bo-3{
+    background: #FFF7E9;
+    border-radius: 20px;
+    border: 1px solid #CA871A;
+}
+
+.bg-bo-4{
+    background: #FFF5F9;
+    border-radius: 20px;
+    border: 1px solid #E62271;
+}
+
+
+
 .main-anitio1 h5 {
-    font-size: 14px;
+    font-size: 13px;
     font-family: 'Poppins', sans-serif;
     color: #000;
-    margin-top: 10px !important;
+    margin-top: 15px !important;
     margin: 0;
 }
 
@@ -6210,11 +6253,11 @@ button.main-btn-toda {
     padding: 7px 10px;
     width: 100%;
     height: auto;
-    padding: 11px 15px;
+    padding: 13px 15px;
     font-size: 14px;
     font-weight: 400;
     color: #000;
-    background: #25252547 !important;
+    background: #F3F3F3 !important;
     border: none !important;
 }
 
@@ -8789,6 +8832,15 @@ align-items: start;
     background: #FFE2E2;
     margin: 2px;
     color: #FF0000;
+    font-size: 18px;
+  }
+
+  .class-close{
+        padding: 5px 8.5px;
+    border-radius: 50px;
+    background: #FFF7E9;
+    margin: 2px;
+    color: #CA871A;
     font-size: 18px;
   }
 
