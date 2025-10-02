@@ -30,7 +30,7 @@
 										<div class="row" style="row-gap: 15px;">
 											<div class="col-lg-3 col-sm-6">
 												<div class="from-group">
-													<label for="pickup-pincode"> Pickup Pincode </label>
+													<label for="pickup-pincode"> Pickup Pincode <span class="text-danger">*</span></label>
 													<input type="text" name="pickup_code" id="pickup_code" maxlength="6" placeholder="Enter 6 digit pickup area pincode" required>
 													<p id="pickup_code_lable" style="display:none;"><i class="mdi mdi-map-marker"></i> Surat</p>
 												</div>
@@ -38,14 +38,14 @@
 											
 											<div class="col-lg-3 col-sm-6">
 												<div class="from-group">
-													<label for="pickup-pincode"> Delivery Pincode </label>
+													<label for="pickup-pincode"> Delivery Pincode <span class="text-danger">*</span> </label>
 													<input type="text" name="delivery_code" id="delivery_code" maxlength="6" placeholder="Enter 6 digit Delivery area pincode" required>
 													<p id="delivery_code_lable" style="display:none;"><i class="mdi mdi-map-marker"></i> Surat</p>
 												</div>
 											</div>
 											<div class="col-lg-3 col-sm-6">
 												<div class="from-group"> 
-													<label for="pickup-pincode">Payment Type</label>
+													<label for="pickup-pincode">Payment Type <span class="text-danger">*</span></label>
 													<select name="payment_type" id="payment_type" class="form-control" required>
 														<option value="COD" selected>Cash on Delivery</option>
 														<option value="PREPAID">Prepaid</option>
@@ -80,13 +80,13 @@
 											</div>
 											<div class="col-lg-3 col-sm-6">
 												<div class="from-group">
-													<label for="pickup-pincode"> Total Weight In KG </label>
+													<label for="pickup-pincode"> Total Weight In KG <span class="text-danger">*</span></label>
 													<input type="text" name="weight" id="weight" placeholder="Total Weight In KG" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required> 
 												</div>
 											</div>		
 											<div class="col-lg-3 col-sm-6">
 												<div class="from-group"> 
-													<label for="pickup-pincode">Type Of Package</label>
+													<label for="pickup-pincode">Type Of Package <span class="text-danger">*</span></label>
 													<select name="type_of_package" id="type_of_package" class="form-control" required>
 														<option value="1">B2C</option>
 														<option value="2">B2B</option>
