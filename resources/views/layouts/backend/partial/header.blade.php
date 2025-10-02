@@ -18,6 +18,19 @@
 	</div>
 	
 	<ul class="list-unstyled topnav-menu float-right mb-0">
+		<li>
+			<div class="custom-search-wrapper">
+				<div class="custom-dropdown-box">
+				<select class="custom-dropdown-select">
+					<option value="awb">AWB ID</option>
+					<option value="order">Order ID</option>
+					<option value="mobile">Mobile</option>
+				</select>
+				</div>
+				<input type="text" class="custom-search-input" placeholder="Search Order By AWB ID">
+			</div>
+		</li>
+		
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")
 			<li class="head-li moin-bord" data-toggle="modal" data-target="#rechargeWalletModal" >
 				<div class="balcnce-wa">
@@ -27,30 +40,9 @@
 				</div>
 			</li> 
 		@endif
-		<li class="dropdown notification-list mo-none" >
-			<a class="nav-link dropdown-toggle  waves-effect waves-light" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
-				<img src="{{asset('assets/images/dashbord/notification-1.png')}}">
-				<span class="badge badge-danger rounded-circle noti-icon-badge notifycount" ></span>
-			</a>
-			<div class="dropdown-menu dropdown-menu-right dropdown-lg">
-				
-				<!-- item-->
-				<div class="dropdown-item noti-title">
-					<h5 class="m-0">
-						<span class="float-right">
-							<a href="{{ route('notification.clear-all') }}" class="text-dark">
-								<small>Clear All</small>
-							</a>
-						</span>Notification
-					</h5>
-				</div> 
-				<div class="slimscroll noti-scroll notifymsg">  
-				</div>  
-				<!-- All-->
-				<a href="javascript:void(0);" class="dropdown-item text-center text-primary notify-item notify-all"> 
-				</a> 
-			</div>
-		</li>
+
+		
+	
 		
 		<li class="dropdown notification-list mo-none-991" >
 			<a class="nav-link waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
@@ -87,6 +79,31 @@
 				</div>
 			</div>
 		</li>
+		
+
+		<li class="dropdown notification-list mo-none" >
+			<a class="nav-link dropdown-toggle  waves-effect waves-light" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
+				<img src="{{asset('assets/images/dashbord/notification-1.png')}}">
+				<span class="badge badge-danger rounded-circle noti-icon-badge notifycount" ></span>
+			</a>
+			<div class="dropdown-menu dropdown-menu-right dropdown-lg">
+				
+				<!-- item-->
+				<div class="dropdown-item noti-title">
+					<h5 class="m-0">
+						<span class="float-right">
+							<a href="{{ route('notification.clear-all') }}" class="text-dark">
+								<small>Clear All</small>
+							</a>
+						</span>Notification
+					</h5>
+				</div> 
+				<div class="slimscroll noti-scroll notifymsg">  
+				</div>  
+				<!-- All-->
+				<a href="javascript:void(0);" class="dropdown-item text-center text-primary notify-item notify-all"> 
+				</a> 
+			</div>
 		</li>
 
 		

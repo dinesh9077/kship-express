@@ -79,7 +79,7 @@
 
                                     </div>
                                     <div class="mt-5" style="width: 100%;">
-                                        <img src="{{asset('assets/images/dashbord/chat-3.png')}}" alt="" style="width: fit-content;">
+                                        <img src="{{asset('assets/images/dashbord/chat-3.png')}}" alt="" style="width: 100%;">
                                     </div>
                                     <div class="main-box-cont-dash new-amount-div mt-3 ">
                                         <h5> Today's Invoice Amount </h5>

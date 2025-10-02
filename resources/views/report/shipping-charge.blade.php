@@ -46,7 +46,7 @@
 						</div>
 						<div class="col-lg-2 col-sm-6">
 							<div class="main-selet-11">
-								<button class="btn-main-1 search_user">Search</button>
+								<button class="btn-main-1 search_user search-btn-remi">Search</button>
 							</div>
 						</div>
 					</div> 
