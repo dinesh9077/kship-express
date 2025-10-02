@@ -209,7 +209,11 @@
 		public function login(Request $request)
 		{
 			$credentials = $request->only('email', 'password');
-			
+			$user = User::where('email', $request->email)->first();
+			if($user->role != "user")
+			{
+				return $this->errorResponse('Invalid credentials', 401);
+			}
 			if (!Auth::attempt($credentials)) {
 				return $this->errorResponse('Invalid credentials', 401);
 			}
