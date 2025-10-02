@@ -164,7 +164,7 @@
 			try {
 				DB::beginTransaction(); // Start transaction
 
-				$user_id = Auth::id();
+				$user = Auth::user();
 				$data = $request->except('_token', 'profile_image');
 
 				if ($request->hasFile('profile_image')) {
@@ -183,10 +183,13 @@
 				}
 
 				// Update user profile
-				User::whereId($user_id)->update($data);
-
+				$user->update($data); 
+				$user->profile_image = $user->profile_image
+				? url('storage/profile/' . $user->profile_image)
+				: asset('assets/images/profile-logo.png');
+ 
 				DB::commit(); // Commit transaction
-				return $this->successResponse($data, 'Your profile has been updated successfully.');	 
+				return $this->successResponse($user, 'Your profile has been updated successfully.');	 
 
 			} catch (\Exception $e) {
 				DB::rollBack();

@@ -191,35 +191,64 @@
 									<img src="{{asset('assets/images/dashbord/vo-4.png')}}">
 									<h5> Package Details </h5>
 								</div>
-								@if($order->orderItems->isNotEmpty())
-									@foreach($order->orderItems as $orderItem)
-										<div class="row" style="padding-bottom: 10px;">
-											<div class="col-lg-3 col-md-6 ship-col">
-												<div class="mani-00-tetxt">
-													<p> Weight (in Kg) </p>
-													<h5> {{ $orderItem->dimensions['weight'] ?? 0 }} </h5>
-												</div>
-											</div> 
-											<div class="col-lg-3 col-md-6 ship-col">
-												<div class="mani-00-tetxt">
-													<p> Length (in cm) </p>
-													<h5> {{ $orderItem->dimensions['length'] ?? 0 }} </h5>
-												</div>
-											</div>  
-											<div class="col-lg-3 col-md-6 ship-col">
-												<div class="mani-00-tetxt">
-													<p> Height (in cm) </p>
-													<h5> {{ $orderItem->dimensions['height'] ?? 0 }} </h5>
-												</div>
-											</div> 
-											<div class="col-lg-3 col-md-6 ship-col">
-												<div class="mani-00-tetxt">
-													<p> Width (in cm) </p>
-													<h5> {{ $orderItem->dimensions['width'] ?? 0 }} </h5>
-												</div>
-											</div>  
-										</div>
-									@endforeach
+								@if($order->weight_order == 1)
+									<div class="row" style="padding-bottom: 10px;">
+										<div class="col-lg-3 col-md-6 ship-col">
+											<div class="mani-00-tetxt">
+												<p> Weight (in Kg) </p>
+												<h5> {{ $order->weight ?? 0 }} </h5>
+											</div>
+										</div> 
+										<div class="col-lg-3 col-md-6 ship-col">
+											<div class="mani-00-tetxt">
+												<p> Length (in cm) </p>
+												<h5> {{ $order->length ?? 0 }} </h5>
+											</div>
+										</div>  
+										<div class="col-lg-3 col-md-6 ship-col">
+											<div class="mani-00-tetxt">
+												<p> Height (in cm) </p>
+												<h5> {{ $order->height ?? 0 }} </h5>
+											</div>
+										</div> 
+										<div class="col-lg-3 col-md-6 ship-col">
+											<div class="mani-00-tetxt">
+												<p> Width (in cm) </p>
+												<h5> {{ $order->width ?? 0 }} </h5>
+											</div>
+										</div>  
+									</div>
+								@else
+									@if($order->orderItems->isNotEmpty())
+										@foreach($order->orderItems as $orderItem)
+											<div class="row" style="padding-bottom: 10px;">
+												<div class="col-lg-3 col-md-6 ship-col">
+													<div class="mani-00-tetxt">
+														<p> Weight (in Kg) </p>
+														<h5> {{ $orderItem->dimensions['weight'] ?? 0 }} </h5>
+													</div>
+												</div> 
+												<div class="col-lg-3 col-md-6 ship-col">
+													<div class="mani-00-tetxt">
+														<p> Length (in cm) </p>
+														<h5> {{ $orderItem->dimensions['length'] ?? 0 }} </h5>
+													</div>
+												</div>  
+												<div class="col-lg-3 col-md-6 ship-col">
+													<div class="mani-00-tetxt">
+														<p> Height (in cm) </p>
+														<h5> {{ $orderItem->dimensions['height'] ?? 0 }} </h5>
+													</div>
+												</div> 
+												<div class="col-lg-3 col-md-6 ship-col">
+													<div class="mani-00-tetxt">
+														<p> Width (in cm) </p>
+														<h5> {{ $orderItem->dimensions['width'] ?? 0 }} </h5>
+													</div>
+												</div>  
+											</div>
+										@endforeach
+									@endif
 								@endif
 							</div>
 						</div>
