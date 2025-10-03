@@ -154,7 +154,7 @@
 				<div class="container-fluid">
 					<div class="row">
 						<div class="col-md-12">
-							{{date('Y')}} &copy; Developed By <a href="https://softieons.com/">Softieons</a>
+							{{date('Y')}} &copy; Powered By <a href="https://softieons.com/">Kashish India</a>
 						</div>
 						
 					</div>

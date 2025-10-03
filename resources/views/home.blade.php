@@ -47,8 +47,6 @@
                                 <div class="row">
                                     <div class="col-12 mt-3">
                                         <div class="main-box-10-1 border-c-1">
-                                            <!-- <img class="main-dash-bord" src="{{asset('assets/images/dashbord/order-dash.png')}}"> -->
-
                                             <div class="main-box-cont-dash">
                                                 <h5> Total Wallet Amount </h5>
                                                 <h3> ₹{{ $overallWalletAmount ?? 0 }} </h3>
@@ -238,8 +236,8 @@
     <div style="margin: 10px;">
 
 
-    <div style="display: flex; justify-content : space-between; align-items: center; padding : 9px 20px; background : #5640B0; border-radius: 10px;">
-        <h6 style="font-size: 20px; color : white; font-weight : 500; ">Recent Orders</h6>
+    <div style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
+        <h6 style="font-size: 18px; color : white; font-weight : 500; ">Recent Orders</h6>
         <a href="#" style="font-size: 16px; color : white; font-weight : 300;text-decoration: underline !important; ">View Details</a>
     </div>
 

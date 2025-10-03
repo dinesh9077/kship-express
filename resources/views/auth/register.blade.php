@@ -41,7 +41,7 @@
         @media(max-width : 1700px) {
             .login-container {
                 max-width: 1600px;
-                margin: 100px;
+                margin: 50px;
             }
         }
 
@@ -122,10 +122,11 @@
             padding: 50px 100px;
         }
 
-      
-
-
-
+		@media(max-width : 1600px){
+			 .login-left {
+            padding: 50px 30px;
+        }
+		}
         .login-left h5 {
             font-weight: 600;
             margin: 20px 0;
@@ -241,6 +242,10 @@
 		.from-group input{
 			border-radius: 50px !important;
 		}
+
+		.main-login-21 .from-group {
+			    margin: 15px 0px !important;
+		}
     </style>
 </head>
 
@@ -351,7 +356,7 @@
 					<p class="sin-up"> Do you already have an account? <a href="{{ route('login') }}" style="color: #5640B0; width : fit-content;"> Sign in </a> </p>
 
 
-            <p class="text-center" style="color : #3f3f3fff; font-weight : 500; margin-top : 10px; font-size : 18px;">Developed By <span style="color: #000000ff;"> Softieons</span> </a></p>
+            <!-- <p class="text-center" style="color : #3f3f3fff; font-weight : 500; margin-top : 10px; font-size : 18px;">Developed By <span style="color: #000000ff;"> Softieons</span> </a></p> -->
         </div>
 
         <div class="modal fade" id="otpModal" tabindex="-1" aria-labelledby="otpModalLabel" aria-hidden="true">
