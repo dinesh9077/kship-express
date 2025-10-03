@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -25,7 +26,7 @@
 
         .login-container {
             max-width: 1800px;
-            margin: 100px auto;
+            margin: 50px auto;
             /* background: #fff; */
             border-radius: 12px;
             overflow: hidden;
@@ -43,7 +44,7 @@
         @media(max-width : 1700px) {
             .login-container {
                 max-width: 1600px;
-                margin: 100px;
+                margin: 50px;
             }
         }
 

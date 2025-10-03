@@ -9,13 +9,13 @@
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <h4>App Banners</h4>
-                                <a href="{{ route('app.banner.create') }}" class="btn btn-primary">Add New Banner</a>
+                                <a href="{{ route('app.banner.create') }}" class="btn btn-main-1"><span class="mdi mdi-plus"></span>Add New Banner</a>
                             </div>
                             <div class="card-body">
                                 @if (session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -39,13 +39,13 @@
                                                 <td><span class="badge badge-{{ $banner->status == 1 ? 'success' : 'danger'}}">{{ $banner->status == 1 ? 'Active' : 'In-active' }}</td>
                                                 <td>
                                                     <a href="{{ route('app.banner.edit', $banner->id) }}"
-                                                        class="btn btn-sm btn-info">Edit</a>
+                                                       ><i class="mdi mdi-pencil class-pencil"></i></a>
                                                     <form action="{{ route('app.banner.delete', $banner->id) }}"
                                                         method="POST" style="display:inline-block;">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            onclick="return confirm('Are you sure?')">Delete</button>
+                                                        <button type="submit" style="border: none; background : none !important;"
+                                                            onclick="return confirm('Are you sure?')"><i class="mdi mdi-trash-can-outline class-delete"></i></button>
                                                     </form>
                                                 </td>
                                             </tr>
