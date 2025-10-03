@@ -125,7 +125,7 @@
 
     						<div class="col-lg-2 col-sm-6">
     							<div class="main-selet-11">
-    								<button class="btn-main-1 search-btn-remi">Search</button>
+    								<button class="btn-main-1 search_data search-btn-remi">Search</button>
 								</div>
 							</div>
 						</div>
@@ -241,7 +241,11 @@
 		]  
 	});
 	
-	$('.search_user').click(function (){
+	$('.search_data').click(function (){
+		dataTable.draw();	
+	});
+	
+	$('#search_table').keyup(function (){
 		dataTable.draw();	
 	});
 	

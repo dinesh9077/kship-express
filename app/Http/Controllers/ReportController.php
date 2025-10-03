@@ -15,8 +15,8 @@
 	use Maatwebsite\Excel\Facades\Excel;
 	use Barryvdh\DomPDF\Facade\Pdf;
 	use Illuminate\Support\Facades\Storage; 
-	use App\Exports\BillingInvoiceExport; 
-
+	use App\Exports\BillingInvoiceExport;
+	use Carbon\Carbon;
 	class ReportController extends Controller
 	{ 
 		public function __construct()
@@ -27,9 +27,13 @@
 		public function index(Request $request)
 		{ 
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
-			$status = $request->query('status', 'New'); 
-			
-			return view('report.order', compact('status', 'users'));
+			$status = $request->query('status', 'New');
+			$couriers = Order::select('courier_name')
+			->distinct()
+			->orderBy('courier_name')
+			->pluck('courier_name', 'courier_name')
+			->toArray(); 
+			return view('report.order', compact('status', 'users', 'couriers'));
 		}
  
     	public function reportOrderAjax(Request $request)
@@ -62,6 +66,10 @@
   
 			if ($request->filled('user_id')) {
 				$query->where('user_id', $request->user_id);
+			}
+  
+			if ($request->filled('courier_name')) {
+				$query->where('courier_name', $request->courier_name);
 			}
 
 			if ($request->filled('fromdate') && $request->filled('todate')) {
@@ -330,6 +338,7 @@
 						  ->orwhere('mobile', 'LIKE', "%{$search}%");
 						}) 
 					  ->orWhere('awb_number', 'LIKE', "%{$search}%")
+					  ->orWhere('order_date', 'LIKE', "%{$search}%")
 					  ->orWhere('courier_name', 'LIKE', "%{$search}%")
 					  ->orWhere('status_courier', 'LIKE', "%{$search}%")
 					  ->orWhere('id', 'LIKE', "%{$search}%")
@@ -357,6 +366,7 @@
 				// Prepare data row
 				$data[] = [
 					'id' => $i,
+					'order_date' => $order->order_date,
 					'seller_details' => "<div class='main-cont1-2'><p>" . 
 					(isset($order->user) ? "{$order->user->name} ({$order->user->company_name})" : "N/A") . 
 					"</p><p>" . ($order->user->email ?? "N/A") . "</p><p>" . ($order->user->mobile ?? "N/A") . "</p></div>",
@@ -399,11 +409,33 @@
 			$id = Auth::user()->id;
 
 			$query = Billing::with(['user'])
-				->when(in_array($role, ['user']), fn($q) => $q->where('billings.user_id', $id))
-				->when(!in_array($role, ['user']) && $request->user_id, fn($q) => $q->where('billings.user_id', $request->user_id))
-				->when($request->fromdate && $request->todate, fn($q) => $q->whereBetween('billings.created_at', [$request->fromdate, $request->todate]))
-				->when($request->fromdate && !$request->todate, fn($q) => $q->whereDate('billings.created_at', $request->fromdate))
-				->when($request->todate && !$request->fromdate, fn($q) => $q->whereDate('billings.created_at', $request->todate));
+			->when(
+				in_array($role, ['user']),
+				fn($q) =>
+				$q->where('billings.user_id', $id)
+			)
+			->when(
+				!in_array($role, ['user']) && $request->user_id,
+				fn($q) =>
+				$q->where('billings.user_id', $request->user_id)
+			)
+			// ✅ From + To date (inclusive, full-day range)
+			->when($request->fromdate && $request->todate, function ($q) use ($request) {
+				$from = Carbon::parse($request->fromdate)->startOfDay();
+				$to = Carbon::parse($request->todate)->endOfDay();
+				return $q->whereBetween('billings.created_at', [$from, $to]);
+			})
+			// ✅ Only From date (single-day filter)
+			->when($request->fromdate && !$request->todate, function ($q) use ($request) {
+				$from = Carbon::parse($request->fromdate)->startOfDay();
+				$to = Carbon::parse($request->fromdate)->endOfDay();
+				return $q->whereBetween('billings.created_at', [$from, $to]);
+			})
+			// ✅ Only To date (everything up to that day inclusive)
+			->when($request->todate && !$request->fromdate, function ($q) use ($request) {
+				$to = Carbon::parse($request->todate)->endOfDay();
+				return $q->where('billings.created_at', '<=', $to);
+			});
 
 			// Get all records for accurate reverse balance calculation
 			$allRecords = $query->orderBy("billings.id", 'asc')->get();

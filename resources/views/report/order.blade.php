@@ -108,17 +108,27 @@
     				<div class="main-filter-weight">
     					<div class="row row-re reportOrderForm">  
     						@if(Auth::user()->role != "user")                  
+								<div class="col-lg-2 col-sm-6">
+									<div class="main-selet-11">
+										<select name="user" class="select2" id="user_id"  >
+											<option value="" >All Users</option> 
+											@foreach ($users as $user)
+											<option value="{{ $user->id }}">{{ $user->name }}</option>
+											@endforeach
+										</select>
+									</div>
+								</div>
+    						@endif
 							<div class="col-lg-2 col-sm-6">
 								<div class="main-selet-11">
-									<select name="user" class="select2" id="user_id"  >
-										<option value="" >All Users</option> 
-										@foreach ($users as $user)
-										<option value="{{ $user->id }}">{{ $user->name }}</option>
+									<select name="courier_name" class="select2" id="courier_name"  >
+										<option value="" >Select Courier Name</option> 
+										@foreach ($couriers as $courier)
+											<option value="{{ $courier }}">{{ $courier }}</option>
 										@endforeach
 									</select>
 								</div>
 							</div>
-    						@endif
     						<div class="col-lg-2 col-sm-6">
     							<div class="main-selet-11">
     								<input type="text" class="form-control new-height-fcs-rmi datepicker" name="fromdate" value="{{ request('fromdate') }}" id="fromdate" placeholder="From Date">
@@ -244,6 +254,7 @@
     			d.user_id = $('.reportOrderForm #user_id').val();
     			d.fromdate = $('.reportOrderForm #fromdate').val();
     			d.todate = $('.reportOrderForm #todate').val();
+    			d.courier_name = $('.reportOrderForm #courier_name').val();
     		}
     	},
     
@@ -283,9 +294,9 @@
 		}, 400); // Adjust the debounce delay (in milliseconds) as per your preference
 	}); 
 	
-	$('.search_user').click(function() { 
+	$('.search_data').click(function() { 
 		dataTable.draw();  
-	}); 
+	});
 	
 	
 	function redirectUrl() {

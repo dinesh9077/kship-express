@@ -141,10 +141,7 @@ border-radius: 10px;
 								<p>entries</p>
 							</div>
 						</div>
-						<div class="right-head-deta">
-							<div class="table-custom-serch">
-								<input class="input-main" type="search" id="search_table"  placeholder="Search">
-							</div> 
+						<div class="right-head-deta"> 
 							<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
 							<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
 						</div>

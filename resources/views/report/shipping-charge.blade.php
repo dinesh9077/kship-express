@@ -57,11 +57,12 @@
 							<thead>
 								<tr>
 									<th> Sr.No</th>
+									<th> Date</th> 
 									<th> Seller Details </th>
 									<th> Order details </th>
 									<th> Shipping details</th>
 									<th> Charge </th>
-									<th> Shipping charges</th> 
+									<th> Shipping charges</th>  
 								</tr>
 							</thead> 
 						</table>
@@ -119,6 +120,7 @@
 		},
 		"columns": [
 		{ "data": "id" }, 
+		{ "data": "order_date" }, 
 		{ "data": "seller_details" }, 
 		{ "data": "order_details" }, 
 		{ "data": "shippings" }, 
