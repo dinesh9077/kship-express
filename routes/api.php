@@ -44,9 +44,10 @@
 		
 		Route::get('notification',   [CommonController::class, 'notification']);  
 		Route::get('notification/clear',   [CommonController::class, 'notificationClearAll']);  
-		Route::get('dashboard',   [CommonController::class, 'dashboard']);   
+		Route::get('dashboard',   [CommonController::class, 'dashboard']);
+		Route::get('banners', [CommonController::class, 'banners']);
 		Route::post('rate-calculator',   [CommonController::class, 'rateCalculator']);  
-		
+
 		Route::group(['prefix'=>'warehouse'], function(){ 
 			Route::post('/list', [WarehouseController::class, 'index']);    
 			Route::post('/create', [WarehouseController::class, 'storeWarehouse']);  

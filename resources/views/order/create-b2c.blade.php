@@ -282,7 +282,12 @@
                                 <h5 class="new-title-b2c-order"> Package Details </h5>
                             </div>
                             <div class="row" >
-                              
+								<div class="col-lg-3 col-sm-6 col-md-6">
+                                    <div class="from-group my-2">
+                                        <label for="packaging-type"> Total Weight <span class="text-danger">*</span></label>
+                                        <input type="text" id="total_weight" placeholder="Total Weight." value="0" name="total_weight" readonly>
+                                    </div>
+                                </div>
 								<div class="col-lg-3 col-sm-6 col-md-6" style="display:none;">
                                     <div class="from-group my-2">
                                         <label for="packaging-type"> Dimensions </label>
@@ -294,14 +299,7 @@
                             </div>
                             <p class="my-2"></p>
                             <div id="dimenstionDetails">
-								<div class="row">
-								<div class="col-lg col-sm-6 col-md-6">
-                                    <div class="from-group my-2">
-                                        <label for="packaging-type"> Total Weight <span class="text-danger">*</span></label>
-                                        <input type="text" id="total_weight" placeholder="Total Weight." value="0" name="total_weight" readonly>
-                                    </div>
-                                </div> 
-
+								<div class="row"> 
 									<div class="col-lg col-sm-6 col-md-6">
 										<div class="from-group my-2">
 											<label for="packaging-type"> Weight (KG) <span class="text-danger">*</span></label>

@@ -137,16 +137,11 @@
 			}
 			if(config('permission.clients.edit'))
 			{
-				$actionButtons .= '<a href="'.url('users/commission', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="User Commission"> <i class="mdi mdi-percent"></i> </a>'; 
+				$actionButtons .= '<a href="'.url('users/commission', $value->id).'?kyc_status='.$value->kyc_status.'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="User Commission"> <i class="mdi mdi-percent"></i> </a>'; 
 			}
 			return $actionButtons;
 		} 
-		
-		public function userCommission($userId)
-		{
-			return view('users.commission');
-		}
-		
+		 
 		public function createUser()
 		{ 
 			return view('users.create');

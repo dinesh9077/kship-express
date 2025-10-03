@@ -168,7 +168,7 @@
 											Pending Clients
 										</a>
 									</li>    
-									<li class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '1' ? 'mm-active' : '' }}">
+									<li class="{{ (request()->is('users') || request()->is('users/edit*') || request()->is('users/commission*')) && request('kyc_status') == '1' ? 'mm-active' : '' }}">
 										<a href="{{ route('users') }}?kyc_status=1" class="{{ (request()->is('users') || request()->is('users/edit*')) && request('kyc_status') == '1' ? 'active' : '' }}">
 											Approve Clients
 										</a>
@@ -299,6 +299,7 @@
 								@endif   
 								@if(config('permission.general_setting.view'))
 									<li><a href="{{route('courier.commission')}}"> Courier Commission </a></li>
+									<li><a href="{{route('app.banner.index')}}"> App Banner </a></li>
 								@endif
 								{{--<li><a href="{{route('lable.preferance')}}"> Label Preferance </a></li>--}} 
 							</ul>

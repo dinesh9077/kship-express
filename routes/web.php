@@ -101,13 +101,16 @@
 		Route::get('/cancel/{id}', [App\Http\Controllers\WarehouseController::class, 'cancelPickupRequest'])->name('pickup.request.cancel');  
 	});
 	
+	Route::get('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'index'])->name('courier.commission')->middleware('permission:general_setting.view');
+	Route::post('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'update'])->name('courier.commission.store');
+	Route::get('users/commission/{userId}', [App\Http\Controllers\CourierCommissionController::class, 'userCommission']);
+	Route::post('user-courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'userCommissionUpdate'])->name('users.courier.commission.store');
+	
 	//User
 	Route::group(['prefix'=>'users'], function(){ 
 		Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('users')->middleware('permission:clients.view');  
 		Route::post('/ajax', [App\Http\Controllers\UserController::class, 'ajaxUser'])->name('users.ajax');  
-		Route::get('/create', [App\Http\Controllers\UserController::class, 'createUser'])->name('users.create')->middleware('permission:clients.add');  
-		Route::get('/commission/{userId}', [App\Http\Controllers\UserController::class, 'userCommission']);
-		
+		Route::get('/create', [App\Http\Controllers\UserController::class, 'createUser'])->name('users.create')->middleware('permission:clients.add');    
 		Route::post('/store', [App\Http\Controllers\UserController::class, 'storeUser'])->name('users.store');  
 		Route::get('/edit/{id}', [App\Http\Controllers\UserController::class, 'editUser'])->middleware('permission:clients.edit');
 		Route::post('/update/{id}', [App\Http\Controllers\UserController::class, 'updateUser'])->name('users.update');  
@@ -323,5 +326,12 @@
 		Route::post('/descripencies/remark/store', [App\Http\Controllers\WeightController::class, 'remarkStore'])->name('weight.remark.store');  
 	});
 
-	Route::get('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'index'])->name('courier.commission')->middleware('permission:general_setting.view');
-	Route::post('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'update'])->name('courier.commission.store')->middleware('permission:general_setting.view');
+	// App Banner CRUD
+	Route::prefix('app-banner')->name('app.banner.')->middleware('permission:general_setting.view')->group(function () {
+		Route::get('/', [App\Http\Controllers\AppBannerController::class, 'index'])->name('index');
+		Route::get('/create', [App\Http\Controllers\AppBannerController::class, 'create'])->name('create');
+		Route::post('/store', [App\Http\Controllers\AppBannerController::class, 'store'])->name('store');
+		Route::get('/edit/{id}', [App\Http\Controllers\AppBannerController::class, 'edit'])->name('edit');
+		Route::post('/update/{id}', [App\Http\Controllers\AppBannerController::class, 'update'])->name('update');
+		Route::delete('/delete/{id}', [App\Http\Controllers\AppBannerController::class, 'destroy'])->name('delete');
+	});

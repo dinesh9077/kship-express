@@ -9,6 +9,7 @@
 	use App\Models\UserWallet;
 	use App\Models\ShippingCompany;
 	use App\Models\Notification;
+	use App\Models\AppBanner;
 	use App\Models\Order;  
 	use Illuminate\Support\Facades\Hash;
 	use Carbon\Carbon; 
@@ -344,5 +345,17 @@
 			} catch (\Exception $e) {
 				return $this->errorResponse($e->getMessage());
 			}
+		}
+
+		public function banners()
+		{
+			$banners = AppBanner::where('status', 1)->get();
+			foreach($banners as $banner)
+			{
+				$banner->banner_image = $banner->banner_image
+				? url('storage/' . $banner->banner_image)
+				: $banner->banner_image;
+			}
+			return $this->successResponse($banners, 'detail fetched successfully.');
 		}
 	}

@@ -806,34 +806,34 @@
 	function noOfBoxDimenstion(rowId)
 	{ 
 		let html = `<div class="row mt-2" id="removeDimension${rowId}">
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> No Of Box  <span class="text-danger">*</span></label>
 					<input type="text" data-id="${rowId}" name="no_of_box[]" id="no_of_box_${rowId}" class="no_of_box" placeholder="No Of Box" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div> 
 			</div>
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Weight Per Box(KG)  <span class="text-danger">*</span></label>
 					<input type="text" data-id="${rowId}" name="weight[]" id="weight_${rowId}" class="weight" placeholder="Weight (KG)" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div> 
 			</div>
 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Length  <span class="text-danger">*</span></label>
 					<input type="text" name="length[]" id="length" placeholder="Length" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 
-			<div class="col-lg-2 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Width  <span class="text-danger">*</span></label>
 					<input type="text" name="width[]" id="width" placeholder="Width" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>
 				</div>
 			</div>
 
-			<div class="col-lg-3 col-sm-6 col-md-6">
+			<div class="col-lg col-sm-6 col-md-6">
 				<div class="from-group my-2">
 					<label for="packaging-type"> Height  <span class="text-danger">*</span></label>
 					<input type="text" name="height[]" id="height" placeholder="Height" value="" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" required>

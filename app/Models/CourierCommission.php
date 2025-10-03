@@ -16,4 +16,9 @@ class CourierCommission extends Model
         'type',
         'value',
     ];
+
+    public function userCommissions()
+    {
+        return $this->hasMany(UserCourierCommission::class, 'courier_commission_id', 'id');
+    }
 }
