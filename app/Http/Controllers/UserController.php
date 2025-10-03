@@ -24,11 +24,13 @@
 			if (auth()->user()->role === 'user') {
 				abort(403, 'Permission denied');
 			} 
+			
 			if(isset($_GET['task_id']))
 			{
 				Notification::whereId($_GET['notify_id'])->update(['read_at'=>1]);
-			}
+			} 
 			$user_id = (isset($_GET['task_id']))?$_GET['task_id']:''; 
+			
 			$kycStatus = request('kyc_status', 0);
 			return view('users.index', compact('user_id', 'kycStatus'));
 		}
@@ -133,9 +135,18 @@
 			{
 				$actionButtons .= '<a href="'.url('users/delete', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Delete User" onClick="deleteRecord(this,event);"> <i class="mdi mdi-trash-can-outline"></i> </a>'; 
 			}
+			if(config('permission.clients.edit'))
+			{
+				$actionButtons .= '<a href="'.url('users/commission', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="User Commission"> <i class="mdi mdi-percent"></i> </a>'; 
+			}
 			return $actionButtons;
 		} 
-		 
+		
+		public function userCommission($userId)
+		{
+			return view('users.commission');
+		}
+		
 		public function createUser()
 		{ 
 			return view('users.create');

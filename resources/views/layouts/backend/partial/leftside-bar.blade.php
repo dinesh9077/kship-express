@@ -294,9 +294,12 @@
 								@if(config('permission.general_setting.view'))	
 									<li><a href="{{route('general-setting')}}"> General Setting </a></li> 
 								@endif		
-								@if(config('permission.shipping_company.view'))	
+								@if(config('permission.shipping_company.view')) 
 									<li><a href="{{route('shipping.company')}}"> Shipping Companies </a></li> 
-								@endif	
+								@endif   
+								@if(config('permission.general_setting.view'))
+									<li><a href="{{route('courier.commission')}}"> Courier Commission </a></li>
+								@endif
 								{{--<li><a href="{{route('lable.preferance')}}"> Label Preferance </a></li>--}} 
 							</ul>
 						</li> 

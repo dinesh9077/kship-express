@@ -1,3 +1,4 @@
+ 
 <?php
 	
 	use Illuminate\Support\Facades\Route; 
@@ -105,6 +106,8 @@
 		Route::get('/', [App\Http\Controllers\UserController::class, 'index'])->name('users')->middleware('permission:clients.view');  
 		Route::post('/ajax', [App\Http\Controllers\UserController::class, 'ajaxUser'])->name('users.ajax');  
 		Route::get('/create', [App\Http\Controllers\UserController::class, 'createUser'])->name('users.create')->middleware('permission:clients.add');  
+		Route::get('/commission/{userId}', [App\Http\Controllers\UserController::class, 'userCommission']);
+		
 		Route::post('/store', [App\Http\Controllers\UserController::class, 'storeUser'])->name('users.store');  
 		Route::get('/edit/{id}', [App\Http\Controllers\UserController::class, 'editUser'])->middleware('permission:clients.edit');
 		Route::post('/update/{id}', [App\Http\Controllers\UserController::class, 'updateUser'])->name('users.update');  
@@ -318,4 +321,7 @@
 		Route::get('/descripencies/accepted/{id}', [App\Http\Controllers\WeightController::class, 'weightAccepted']);
 		Route::get('/descripencies/remark/{id}', [App\Http\Controllers\WeightController::class, 'weightRemark']);
 		Route::post('/descripencies/remark/store', [App\Http\Controllers\WeightController::class, 'remarkStore'])->name('weight.remark.store');  
-	}); 
+	});
+
+	Route::get('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'index'])->name('courier.commission')->middleware('permission:general_setting.view');
+	Route::post('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'update'])->name('courier.commission.store')->middleware('permission:general_setting.view');

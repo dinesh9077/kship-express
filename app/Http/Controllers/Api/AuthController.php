@@ -230,7 +230,17 @@
 		public function user(Request $request)
 		{
 			$user = $request->user();
-
+			$user->load('userKyc');
+			if($user->userKyc)
+			{
+				$userkyc = $user->userKyc;
+				$user->userKyc->pancard_image = $userkyc->pancard_image ? url('storage/kyc/' . $userkyc->user_id . '/' . $userkyc->pancard_image) : null;
+				$user->userKyc->aadhar_front = $userkyc->aadhar_front ? url('storage/kyc/' . $userkyc->user_id . '/' . $userkyc->aadhar_front) : null;
+				$user->userKyc->aadhar_back = $userkyc->aadhar_back ? url('storage/kyc/' . $userkyc->user_id . '/' . $userkyc->aadhar_back) : null;
+				$user->userKyc->gst_image = $userkyc->gst_image ? url('storage/kyc/' . $userkyc->user_id . '/' . $userkyc->gst_image) : null;
+				$user->userKyc->bank_passbook = $userkyc->bank_passbook ? url('storage/kyc/' . $userkyc->user_id . '/' . $userkyc->bank_passbook) : null;
+			}
+			
 			$user->profile_image = $user->profile_image
 				? url('storage/profile/' . $user->profile_image)
 				: asset('assets/images/profile-logo.png');

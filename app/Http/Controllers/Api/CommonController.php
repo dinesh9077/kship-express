@@ -8,6 +8,7 @@
 	use App\Models\User;
 	use App\Models\UserWallet;
 	use App\Models\ShippingCompany;
+	use App\Models\Notification;
 	use App\Models\Order;  
 	use Illuminate\Support\Facades\Hash;
 	use Carbon\Carbon; 
@@ -98,8 +99,49 @@
 			];
 			
 			return $this->successResponse($data, 'detail fetched successfully.');
+		}
+	public function notification()
+	{
+		$user = Auth::user();
+		$query = Notification::where('read_at', 0)->where('role', $user->role);
+
+		if ($user->role == "user") {
+			$query->where('user_id', $user->id);
+		}
+
+		// clone query so we don’t run it twice
+		$notifications = (clone $query)->latest()->get();
+		$count = $query->count(); // runs SELECT COUNT(*)
+
+		$data = [
+			'notifications' => $notifications,
+			'count' => $count
+		];
+
+		return $this->successResponse($data, 'detail fetched successfully.');
+	}
+
+
+	public function notificationClearAll()
+		{
+			DB::beginTransaction();
+			try {
+				$user = Auth::user();
+				$query = Notification::where('role', $user->role);
+
+				if ($user->role !== "admin") {
+					$query->where('user_id', $user->id);
+				}
+
+				$query->update(['read_at' => 1]);
+				DB::commit();
+				return $this->successResponse([], 'Notifications have been successfully cleared.'); 
+			} catch (\Exception $e) {
+				DB::rollBack();
+			return $this->errorResponse( 'Something went wrong.'); 
+			}
 		} 
-		
+
 		public function rateCalculator(Request $request)
 		{
 			$user = Auth::user();

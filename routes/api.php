@@ -41,7 +41,9 @@
 
 		Route::post('wallet/store', [CommonController::class, 'rechargeWalletStore']); 
 		Route::post('wallet/update', [CommonController::class, 'rechargeWalletRazorpay']);
-
+		
+		Route::get('notification',   [CommonController::class, 'notification']);  
+		Route::get('notification/clear',   [CommonController::class, 'notificationClearAll']);  
 		Route::get('dashboard',   [CommonController::class, 'dashboard']);   
 		Route::post('rate-calculator',   [CommonController::class, 'rateCalculator']);  
 		

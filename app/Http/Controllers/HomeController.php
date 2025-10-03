@@ -100,7 +100,7 @@
 		} 
 		
 		public function notification()
-		{		
+		{
 			$user = Auth::user();
 			$query = Notification::where('read_at', 0)->where('role', $user->role);
 
@@ -108,10 +108,12 @@
 				$query->where('user_id', $user->id);
 			}
 
-			$notifications = $query->latest()->get();
+			// clone query so we don’t run it twice
+			$notifications = (clone $query)->latest()->get();
+			$count = $query->count(); // runs SELECT COUNT(*)
 			$view = view('notification', compact('notifications'))->render();
 
-			return response()->json(['view' => $view, 'count' => $notifications->count()]);
+			return response()->json(['view' => $view, 'count' => $count]);
 		}
 
 		public function notificationClearAll()

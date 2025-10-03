@@ -241,7 +241,7 @@
 
                                     <div class="col-lg col-md-6">
                                         <div class="from-group my-2">
-                                            <label for="packaging-type"> Quantity<span class="text-danger">*</span> --}}</label>
+                                            <label for="packaging-type"> Quantity<span class="text-danger">*</span> </label>
                                             <input type="number" data-id="0" id="noofbox_0" name="quantity[]" class="noofbox" id="quantity" value="" placeholder="Quantity" required oninput="allowOnlyNumbers(this)">
                                         </div>
                                     </div>
