@@ -43,7 +43,7 @@
                                         </div>
                                         <input type="hidden" name="commissions[{{ $i }}][id]" value="{{ $commission['id'] ?? '' }}">
                                         <div class="col-md-2">
-                                            <input type="text" name="commissions[{{ $i }}][courier_id]" class="form-control" placeholder="Courier ID" value="{{ $commission['courier_id'] ?? '' }}" required>
+                                            <input type="text" name="commissions[{{ $i }}][courier_id]" class="form-control" placeholder="Courier ID" value="{{ $commission['courier_id'] ?? '' }}">
                                         </div>
                                         <div class="col-md-2">
                                             <input type="text" name="commissions[{{ $i }}][courier_name]" class="form-control" placeholder="Courier Name" value="{{ $commission['courier_name'] ?? '' }}" required>
@@ -57,13 +57,15 @@
                                         <div class="col-md-2">
                                             <input type="number" step="0.01" name="commissions[{{ $i }}][value]" class="form-control" placeholder="Value" value="{{ $commission['value'] ?? '' }}" required>
                                         </div>
-                                        <div class="col-md-2">
-                                            @if($i == 0)
-                                                <button type="button" class="btn btn-success add-row">+</button>
+                                       <div class="col-md-2">
+                                            @if($loop->last)
+                                                <!-- Only last row gets Add button -->
+                                                <button type="button" class="btn btn-success add-row">+</button> 
                                             @else
+                                                <!-- All other rows get only Remove button -->
                                                 <button type="button" class="btn btn-danger remove-row">-</button>
                                             @endif
-                                        </div>
+                                        </div> 
                                     </div>
                                     @endforeach
                                 </div>
@@ -124,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
         </div>
         <input type="hidden" name="commissions[${idx}][id]" value="">
         <div class="col-md-2">
-          <input type="text" name="commissions[${idx}][courier_id]" class="form-control" placeholder="Courier ID" required>
+          <input type="text" name="commissions[${idx}][courier_id]" class="form-control" placeholder="Courier ID" >
         </div>
         <div class="col-md-2">
           <input type="text" name="commissions[${idx}][courier_name]" class="form-control" placeholder="Courier Name" required>
