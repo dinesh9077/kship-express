@@ -193,7 +193,7 @@
 					//'id' => $i,
 
 					// Order + Admin info
-					'order_id' => '#' . $order->id
+					'order_id' => '#' . $order->order_prefix
 						. ($role === "admin" ? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>" : ''),
 
 					// Seller details
@@ -2130,5 +2130,61 @@
 				DB::rollBack(); 
 				return redirect()->back()->with('error', 'An error occurred. Please try again.');
 			}
-		} 
+		}
+ 		public function searchAwbAndOrderId(Request $request)
+		{
+			try {
+				$query = $request->get('query');
+				$searchType = $request->get('search_type', 'order_id');
+
+				if (empty($query)) {
+					return response()->json([
+						'results' => []
+					]);
+				}
+
+				$orders = Order::query()
+					->when($searchType === 'order_prefix', function ($q) use ($query) {
+						return $q->where('order_prefix', 'LIKE', "%{$query}%");
+					})
+					->when($searchType === 'awb_number', function ($q) use ($query) {
+						return $q->where('awb_number', 'LIKE', "%{$query}%");
+					})
+					->with(['customer:id,first_name,last_name'])
+					->select([
+						'id',
+						'awb_number',
+						'status_courier',
+						'customer_id',
+						'created_at',
+						'weight_order'
+					])
+					->orderBy('created_at', 'desc')
+					->limit(10)
+					->get()
+					->map(function ($order) {
+						return [
+							'id' => $order->id,
+							'awb_number' => $order->awb_number,
+							'status_courier' => $order->status_courier,
+							'customer_name' => $order->customer
+								? $order->customer->first_name . ' ' . $order->customer->last_name
+								: 'N/A',
+							'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+							'weight_order' => $order->weight_order
+						];
+					});
+
+				return response()->json([
+					'results' => $orders
+				]);
+
+			} catch (\Exception $e) {
+				\Log::error('Order search error: ' . $e->getMessage());
+				return response()->json([
+					'error' => 'An error occurred while searching orders',
+					'results' => []
+				], 500);
+			}
+		}
 	}

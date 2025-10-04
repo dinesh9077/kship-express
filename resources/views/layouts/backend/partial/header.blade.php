@@ -1,6 +1,44 @@
 <style>
     .dropdown-item {
 		  padding: 10px 15px !important;
+	} 
+	.search-container {
+		position: relative;
+	}
+	.search-results-dropdown {
+		display: none;
+		position: absolute;
+		top: 100%;
+		left: 0;
+		right: 0;
+		background: white;
+		border: 1px solid #ddd;
+		border-radius: 4px;
+		max-height: 300px;
+		overflow-y: auto;
+		z-index: 1000;
+		box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+	}
+	.search-result-item {
+		padding: 10px 15px;
+		border-bottom: 1px solid #eee;
+		cursor: pointer;
+	}
+	.search-result-item:hover {
+		background-color: #f5f5f5;
+	}
+	.search-result-item .order-id {
+		font-weight: bold;
+		color: #333;
+	}
+	.search-result-item .order-details {
+		font-size: 0.9em;
+		color: #666;
+	}
+	.no-results {
+		padding: 10px 15px;
+		color: #666;
+		text-align: center;
 	}
     
 </style>
@@ -21,29 +59,31 @@
 		<li>
 			<div class="custom-search-wrapper">
 				<div class="custom-dropdown-box">
-				<select class="custom-dropdown-select">
-					<option value="awb">AWB ID</option>
-					<option value="order">Order ID</option>
-					<option value="mobile">Mobile</option>
-				</select>
+					<select class="custom-dropdown-select" id="searchType">
+						<option value="awb_number">AWB Number</option>
+						<option value="order_prefix">Order ID</option> 
+					</select>
 				</div>
-				<input type="text" class="custom-search-input" placeholder="Search Order By AWB ID">
+				<div class="search-container">
+					<input type="text" 
+						class="custom-search-input" 
+						id="orderSearch"
+						placeholder="Search Order By AWB Number & Order Id"
+						autocomplete="off">
+					<div id="searchResults" class="search-results-dropdown"></div>
+				</div>
 			</div>
-		</li>
+		</li> 
 		
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")
 			<li class="head-li moin-bord" data-toggle="modal" data-target="#rechargeWalletModal" >
 				<div class="balcnce-wa">
 					<img src="{{asset('assets/images/dashbord/wallet-1.png')}}" style="    width: auto;padding: 13px 12px;background: black;border-radius: 10px 0px 0px 10px;">
-					<h6 style="margin-right : 10px;"> {{ config('setting.currency') }} {{ Helper::decimal_number(Auth::user()->wallet_amount) }} </h6>
-					<!-- <i class="fe-refresh-ccw" style="color: #000000ff;"></i> -->
+					<h6 style="margin-right : 10px;"> {{ config('setting.currency') }} {{ Helper::decimal_number($authUser->wallet_amount) }} </h6>
 				</div>
 			</li> 
 		@endif
-
-		
-	
-		
+ 
 		<li class="dropdown notification-list mo-none-991" >
 			<a class="nav-link waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
 				<div class="balcnce-wa new-q-action-bg">

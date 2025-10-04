@@ -339,7 +339,7 @@
 						@endphp
 						<tr class="odd new-tbs-white">
 							<td class="sorting_1">1</td>
-							<td>#{{ $order->id }}<br>
+							<td>#{{ $order->order_prefix }}<br>
 								@if($user->role === "admin")
 									<p>{{ $order->user->name ?? 'N.A' }}</p>
 								@endif
