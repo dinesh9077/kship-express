@@ -30,7 +30,7 @@
 	align-items: center;
 	gap: 8px;
 }
-..right-head-deta {
+.right-head-deta {
 	display: flex;
 	align-items: center;
 	gap: 15px;
@@ -51,6 +51,19 @@
 	min-width: 200px;
 	}
 	}
+
+	.table-custom-serch .input-main { 
+	    border: 1px solid #dcdcdc;
+	border-radius: 10px;
+	padding: 7px;
+	margin-left: 3px;
+	font-weight: 400;
+	font-size: 14px;
+	color: #000;
+	background-color: white;
+	padding: 10px 20px;
+ 
+}
 
 .custom-entry p {
 	margin: 0;
