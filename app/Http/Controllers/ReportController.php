@@ -32,6 +32,7 @@
 			->distinct()
 			->orderBy('courier_name')
 			->pluck('courier_name', 'courier_name')
+			->filter()
 			->toArray(); 
 			return view('report.order', compact('status', 'users', 'couriers'));
 		}
