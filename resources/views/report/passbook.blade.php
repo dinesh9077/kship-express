@@ -36,9 +36,23 @@
 	gap: 15px;
 }
 
+@media(max-width : 575px){
+	.right-head-deta {
+	flex-direction: column;
+}
+}
+
 .table-custom-serch .input-main {
 	min-width: 500px;
 }
+
+@media(max-width : 991px){
+		.table-custom-serch .input-main {
+	min-width: 200px;
+	}
+	}
+
+
 .table-custom-serch .input-main { 
 	    border: 1px solid #dcdcdc;
 	border-radius: 10px;
@@ -145,8 +159,10 @@ border-radius: 10px;
 							<div class="table-custom-serch">
 								<input class="input-main" type="search" id="search_table"  placeholder="Search">
 							</div> 
-							<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
-							<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+							<div>
+								<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
+								<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+							</div>
 						</div>
 					</div> 
 					<div class="main-data-teble-1 table-responsive">

@@ -34,10 +34,25 @@
 	display: flex;
 	align-items: center;
 	gap: 15px;
-	}
-	.table-custom-serch .input-main {
+}
+
+@media(max-width : 575px){
+	.right-head-deta {
+	flex-direction: column;
+}
+}
+
+.table-custom-serch .input-main {
 	min-width: 500px;
 }
+
+@media(max-width : 991px){
+		.table-custom-serch .input-main {
+	min-width: 200px;
+	}
+	}
+
+
 .table-custom-serch .input-main { 
 	    border: 1px solid #dcdcdc;
 	border-radius: 10px;
