@@ -91,10 +91,11 @@
 			])
 			->select('id', 'order_prefix', 'user_id', 'customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
 			->when($user->role === "user", fn($q) => $q->where('orders.user_id', $user->id))
+			->where('status_courier',  'New')
 			->latest()
 			->limit(10)
 			->get();
-			
+
 			$data = [ 
 				'todayRecharge'         	=> $todayRecharge,
 				'overallWalletAmount'   	=> $overallWalletAmount,
