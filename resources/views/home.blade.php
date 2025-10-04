@@ -8,6 +8,39 @@
     background-color: white !important;
     border-radius: 10px;
 }
+
+    /* Container */
+    .welcome-card {
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
+      position: relative;
+      border-radius: 15px;
+      box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
+    }
+
+    /* Slider */
+    .welcome-slider {
+      display: flex;
+      width: 100%;
+      height: 100%;
+      transition: transform 0.8s ease-in-out;
+    }
+
+    /* Single Slide */
+    .welcome-slide {
+      min-width: 100%;
+      height: 100%;
+    }
+
+    /* Image Style */
+    .welcome-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+
 </style>
 
 
@@ -23,15 +56,24 @@
 
                         <div class="row new-re">
                             <div class="col-lg-8 col-md-12">
-                                <div class="welcome-card">
-                                    <div>
-                                        <img src="{{asset('assets/images/dashbord/dashboard-images.png')}}" alt="">
-                                    </div>
-                                    <div>
-                                        <h5 class="welcome-title">Welcome <span style="color : #316BFF; margin-left : 5px;">KSHIP!</span></h5>
-                                        <p class="welcome-des">Hooray!! You are one step closer to dispatching your shipment.</p>
-                                    </div>
-                                </div>
+                                 <div class="welcome-card">
+    <div class="welcome-slider" id="slider">
+      <!-- Slide 1 -->
+      <div class="welcome-slide">
+        <img src="{{asset('assets/images/dashbord/dashboard-images.png')}}" alt="Slide 1">
+      </div>
+
+      <!-- Slide 2 -->
+      <div class="welcome-slide">
+        <img src="{{asset('assets/images/dashbord/another-image.png')}}" alt="Slide 2">
+      </div>
+
+      <!-- Slide 3 -->
+      <div class="welcome-slide">
+        <img src="{{asset('assets/images/dashbord/third-image.png')}}" alt="Slide 3">
+      </div>
+    </div>
+  </div>
                             </div>
                             <div class="col-lg-4 col-md-12 new-margin-dashes">
                                 <div class="help-card">
@@ -47,8 +89,6 @@
                                 <div class="row">
                                     <div class="col-12 mt-3">
                                         <div class="main-box-10-1 border-c-1">
-                                            <!-- <img class="main-dash-bord" src="{{asset('assets/images/dashbord/order-dash.png')}}"> -->
-
                                             <div class="main-box-cont-dash">
                                                 <h5> Total Wallet Amount </h5>
                                                 <h3> ₹{{ $overallWalletAmount ?? 0 }} </h3>
@@ -238,8 +278,8 @@
     <div style="margin: 10px;">
 
 
-    <div style="display: flex; justify-content : space-between; align-items: center; padding : 9px 20px; background : #5640B0; border-radius: 10px;">
-        <h6 style="font-size: 20px; color : white; font-weight : 500; ">Recent Orders</h6>
+    <div style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
+        <h6 style="font-size: 18px; color : white; font-weight : 500; ">Recent Orders</h6>
         <a href="#" style="font-size: 16px; color : white; font-weight : 300;text-decoration: underline !important; ">View Details</a>
     </div>
 
@@ -832,6 +872,17 @@
     </div> 
 </div>   -->
 
+<script>
+	  let index = 0;
+    const slides = document.querySelectorAll(".welcome-slide");
+    const total = slides.length;
+    const slider = document.getElementById("slider");
+
+    setInterval(() => {
+      index = (index + 1) % total;
+      slider.style.transform = `translateX(-${index * 100}%)`;
+    }, 3000); // 3 second auto change
+</script>
 
 @endsection
 @push('js')

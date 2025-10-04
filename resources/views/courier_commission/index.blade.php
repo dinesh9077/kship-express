@@ -33,7 +33,7 @@
 
                                     @foreach($commissions as $i => $commission)
                                     <div class="row mb-3 courier-commission-item">
-                                        <div class="col-md-2">
+                                        <div class="col">
                                             <select name="commissions[{{ $i }}][shipping_company]" class="form-control" required>
                                                 <option value="">Select Shipping Company</option>
                                                 @foreach($shippingCompanies as $shippingCompany)
@@ -42,35 +42,37 @@
                                             </select>
                                         </div>
                                         <input type="hidden" name="commissions[{{ $i }}][id]" value="{{ $commission['id'] ?? '' }}">
-                                        <div class="col-md-2">
+                                        <div class="col">
                                             <input type="text" name="commissions[{{ $i }}][courier_id]" class="form-control" placeholder="Courier ID" value="{{ $commission['courier_id'] ?? '' }}">
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col">
                                             <input type="text" name="commissions[{{ $i }}][courier_name]" class="form-control" placeholder="Courier Name" value="{{ $commission['courier_name'] ?? '' }}" required>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col">
                                             <select name="commissions[{{ $i }}][type]" class="form-control" required>
                                                 <option value="fix" {{ ($commission['type'] ?? '')=='fix' ? 'selected' : '' }}>Fix</option>
                                                 <option value="percentage" {{ ($commission['type'] ?? '')=='percentage' ? 'selected' : '' }}>Percentage</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col">
                                             <input type="number" step="0.01" name="commissions[{{ $i }}][value]" class="form-control" placeholder="Value" value="{{ $commission['value'] ?? '' }}" required>
                                         </div>
-                                       <div class="col-md-2">
+                                       <div class="col-">
                                             @if($loop->last)
                                                 <!-- Only last row gets Add button -->
-                                                <button type="button" class="btn btn-success add-row">+</button> 
+                                                <button type="button" class="btn  new-height-btn-plus add-row" style="height: 43px; width : 43px;">+</button> 
                                             @else
                                                 <!-- All other rows get only Remove button -->
-                                                <button type="button" class="btn btn-danger remove-row">-</button>
+                                                <button type="button" class="btn  new-height-btn-plus remove-row" style="height: 43px; width : 43px; background: #FFE2E2;    color: #FF0000;">-</button>
                                             @endif
                                         </div> 
                                     </div>
                                     @endforeach
                                 </div>
+                                <div class="text-right">
+                                  <button type="submit" class="new-submit-btn">Save</button>
+                                </div>
 
-                                <button type="submit" class="btn btn-primary">Save</button>
                             </form>
                         </div>
                     </div>
@@ -116,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const newRow = document.createElement('div');
       newRow.className = 'row mb-3 courier-commission-item';
       newRow.innerHTML = `
-        <div class="col-md-2">
+        <div class="col">
           <select name="commissions[${idx}][shipping_company]" class="form-control" required>
             <option value="">Select Shipping Company</option>
                 @foreach($shippingCompanies as $shippingCompany)
@@ -125,23 +127,23 @@ document.addEventListener('DOMContentLoaded', function () {
           </select>
         </div>
         <input type="hidden" name="commissions[${idx}][id]" value="">
-        <div class="col-md-2">
+        <div class="col">
           <input type="text" name="commissions[${idx}][courier_id]" class="form-control" placeholder="Courier ID" >
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <input type="text" name="commissions[${idx}][courier_name]" class="form-control" placeholder="Courier Name" required>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <select name="commissions[${idx}][type]" class="form-control" required>
             <option value="fix">Fix</option>
             <option value="percentage">Percentage</option>
           </select>
         </div>
-        <div class="col-md-2">
+        <div class="col">
           <input type="number" step="0.01" name="commissions[${idx}][value]" class="form-control" placeholder="Value" value="0" required>
         </div>
-        <div class="col-md-2">
-          <button type="button" class="btn btn-danger remove-row">-</button>
+        <div class="col-">
+          <button type="button" class="btn new-height-btn-plus remove-row" style="height: 43px; width : 43px; background: #FFE2E2;    color: #FF0000;">-</button>
         </div>
       `;
       list.appendChild(newRow);

@@ -4743,6 +4743,8 @@ div[role="progressbar"]::before {
     position: relative;
 }
 
+
+
 .main-box-cont-dash h5 {
     font-family: 'Poppins', sans-serif;
     margin: 0;
@@ -4783,7 +4785,7 @@ div[role="progressbar"]::before {
 
 @media(max-width : 1500px){
     .main-roow-1 {
-    padding: 10px 20px;
+    padding: 1px 3px;
     }
 }
 
@@ -4813,6 +4815,12 @@ div[role="progressbar"]::before {
 	margin-top: 10px;
 	/* border: 1px solid var(--secondary-color); */
 	height: 94%;
+}
+
+@media(max-width : 1500px){
+    .main012 {
+    padding: 12px 9px;
+    }
 }
 
 .main012 h4 {
@@ -6740,7 +6748,7 @@ Media Query
     }
     
     .main-box-cont-dash {
-        padding-top: 16px;
+        padding-top: 4px;
     }
 }
 
@@ -6806,7 +6814,7 @@ Media Query
     }
 
     .main012 h4 {
-        font-size: 14px;
+        font-size: 12px;
     }
 
     .main012 h5 {
@@ -7063,7 +7071,7 @@ Media Query
     }
 
     .main-box-cont-dash h5 {
-        font-size: 14px;
+        font-size: 13px;
     }
 
     .main-box-cont-dash h6,
@@ -8220,11 +8228,11 @@ table.dataTable.no-footer td a {
     }
 
     .main-box-10-1 {
-        padding: 20px;
+        padding: 10px;
     }
 
     .main-box-10-1 h3 {
-        font-size: 16px;
+        font-size: 13px;
     }
 
    
@@ -8561,14 +8569,21 @@ td .btn.btn-icon.waves-effect.waves-light.action-icon {
 
     .welcome-card {
       background: #fff;
-      padding:30px;
+      /* padding:30px; */
       border-radius: 10px;
       display: flex;
       gap: 15px;
       align-items: center;
       height: 100%;
       
+      
     }
+       @media(max-width : 1500px){
+    .welcome-card {
+/* padding:15px; */
+    }
+    }
+
 
     @media(max-width : 575px){
     .welcome-card {
@@ -8652,24 +8667,54 @@ align-items: start;
     } 
     }
 
-    .border-c-1{
+   
+  .border-c-1{
         height: 140px;
         border-left: 2px solid #484BFF;
     }
+    
     .border-c-2{
         height: 185px;
         border-left: 2px solid #C46900;
     }
+
+    @media(max-width : 1400px){
+    .border-c-2{
+        height: 155px;
+        border-left: 2px solid #C46900;
+    }
+
+    }
+
+
     .border-c-3{
         border-left: 2px solid #B829FF;
         height: 348px;
         padding: 30px 40px ;
     }
 
+     @media(max-width : 1400px){
+       .border-c-3{
+        border-left: 2px solid #B829FF;
+        height: 305px;
+        padding: 30px 40px ;
+       }
+    }
+
+    
+    
+
+    @media(max-width : 1400px){
+          .border-c-1{
+        height: 125px;
+        border-left: 2px solid #484BFF;
+    }
+    }
+
     @media(max-width : 1399px){
  .border-c-3{
     
-        padding: 30px 20px ;
+        padding: 10px;
     }
     }
 
@@ -8683,6 +8728,15 @@ align-items: start;
         height: 185px;
     }
 
+      @media(max-width : 1400px){
+          .border-c-4{
+         height: 125px;
+    }
+    .border-c-5{
+        height: 155px;
+    }
+    }
+
     .chart-1{
         position: absolute;
         bottom: 0px;
@@ -8694,6 +8748,23 @@ align-items: start;
         right: 40px;
     }
 
+    @media(max-width : 1400px){
+          .chart-2{
+        position: absolute;
+        bottom: 3px;
+        right: 18px;
+    }
+    }
+
+
+    
+    @media(max-width : 1100px){
+         .chart-2{
+        position: absolute;
+        bottom: 40px;
+        right: 40px;
+    }
+    }
  
 
     .new-amount-div{
@@ -8968,6 +9039,13 @@ color : white !important;
     border: 1px solid #ddd;
   }
 
+  @media(max-width : 767px){
+     .custom-search-wrapper {
+    display: none;
+
+  }
+  }
+
   .custom-dropdown-box {
     background: black;
     padding: 10px 15px;
@@ -9008,4 +9086,9 @@ color : white !important;
   .blue-ng-login-page{
     background-color: #5640B0;
     height: auto;
+  }
+
+  .card-header {
+    background-color: white !important;
+
   }

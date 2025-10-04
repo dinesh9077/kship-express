@@ -1,3 +1,30 @@
+<style>
+    .table thead th {
+        border-bottom: 0px !important;
+    }
+    .table td, .table th {
+        border-top: 0px !important;
+    }
+
+    .table-striped tbody tr{
+           box-shadow: 0 0 10px rgb(0, 0, 0, 0.09) !important;
+    background: transparent !important;
+    border-radius: 10px !important;
+    }
+
+    .table-spacing {
+    border-collapse: separate !important;
+    border-spacing: 0 15px; 
+}
+
+.table-spacing tbody tr {
+    background: #fff; /* row ko white background dena zaroori hai warna gap transparent dikhega */
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+  
+</style>
+
 @extends('layouts.backend.app')
 @section('title', 'App Banner')
 @section('content')
@@ -8,14 +35,14 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h4>App Banners</h4>
-                                <a href="{{ route('app.banner.create') }}" class="btn btn-primary">Add New Banner</a>
+                                <h4 class="new-title-b2c-order">App Banners</h4>
+                                <a href="{{ route('app.banner.create') }}" class="btn btn-main-1"><span class="mdi mdi-plus"></span>Add New Banner</a>
                             </div>
                             <div class="card-body">
                                 @if (session('success'))
                                     <div class="alert alert-success">{{ session('success') }}</div>
                                 @endif
-                                <table class="table table-bordered table-striped">
+                                <table class="table table-striped table-spacing">
                                     <thead>
                                         <tr>
                                             <th>#</th>
@@ -27,7 +54,7 @@
                                     </thead>
                                     <tbody>
                                         @forelse($banners as $banner)
-                                            <tr>
+                                            <tr style="   border-bottom: 0px !important;">
                                                 <td>{{ $loop->iteration }}</td>
                                                 <td>{{ $banner->title }}</td>
                                                 <td>
@@ -39,13 +66,13 @@
                                                 <td><span class="badge badge-{{ $banner->status == 1 ? 'success' : 'danger'}}">{{ $banner->status == 1 ? 'Active' : 'In-active' }}</td>
                                                 <td>
                                                     <a href="{{ route('app.banner.edit', $banner->id) }}"
-                                                        class="btn btn-sm btn-info">Edit</a>
+                                                       ><i class="mdi mdi-pencil class-pencil"></i></a>
                                                     <form action="{{ route('app.banner.delete', $banner->id) }}"
                                                         method="POST" style="display:inline-block;">
                                                         @csrf
                                                         @method('DELETE')
-                                                        <button type="submit" class="btn btn-sm btn-danger"
-                                                            onclick="return confirm('Are you sure?')">Delete</button>
+                                                        <button type="submit" style="border: none; background : none !important;"
+                                                            onclick="return confirm('Are you sure?')"><i class="mdi mdi-trash-can-outline class-delete"></i></button>
                                                     </form>
                                                 </td>
                                             </tr>

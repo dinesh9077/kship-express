@@ -8,7 +8,7 @@
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h4>Edit Banner</h4>
+                                <h4 class="new-title-b2c-order">Edit Banner</h4>
                             </div>
                             <div class="card-body">
                                 @if ($errors->any())
@@ -24,12 +24,20 @@
                                     enctype="multipart/form-data">
                                     @csrf
                                     <div class="form-group mb-3">
-                                        <label for="title">Title</label>
+                                        <label for="title"  style=" font-size: 15px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    color: #484848;
+    width: 100%;">Title</label>
                                         <input type="text" name="title" class="form-control"
                                             value="{{ old('title', $banner->title) }}" required>
                                     </div>
                                     <div class="form-group mb-3">
-                                        <label for="banner_image">Banner Image</label>
+                                        <label for="banner_image"  style=" font-size: 15px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    color: #484848;
+    width: 100%;">Banner Image</label>
                                         <input type="file" name="banner_image" class="form-control">
                                         @if ($banner->banner_image)
                                             <img src="{{ asset('storage/' . $banner->banner_image) }}" alt="Banner"
@@ -37,14 +45,24 @@
                                         @endif
                                     </div>
                                     <div class="form-group mb-3">
-                                        <label for="banner_image">Status</label>
-                                        <select type="file" name="status" class="form-control" required>
+                                        <label for="banner_image"  style=" font-size: 15px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    color: #484848;
+    width: 100%;">Status</label>
+                                        <select type="file" name="status" class="form-control" required style="    height: 49px;
+    background: #f3f3f3;
+    border: none;
+    border-radius: 10px;">
                                                 <option value="1" {{  $banner->status == 1 ? 'selected' : '' }}>Active</option>
                                                 <option value="0" {{  $banner->status == 0 ? 'selected' : '' }}>Inactive</option>
                                         </select>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">Update</button>
-                                    <a href="{{ route('app.banner.index') }}" class="btn btn-secondary">Cancel</a>
+                                    <div style="float: right;">
+
+                                        <button type="submit" class="new-submit-btn">Update</button>
+                                        <a href="{{ route('app.banner.index') }}" class="new-submit-btn-1">Cancel</a>
+                                    </div>
                                 </form>
                             </div>
                         </div>
