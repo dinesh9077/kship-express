@@ -32,8 +32,9 @@
 			$search = $request->input('search') ?? '';
 			 
 			$currentDate = now()->toDateString(); 
-			$role = Auth::user()->role;
-			$userId = Auth::id();
+			$user = Auth::user();
+			$role = $user->role;
+			$userId = $user->id;
 
 			// Base query with necessary joins
 			$query = Order::with(['user', 'warehouse', 'customer', 'customerAddress', 'orderItems']);
@@ -95,7 +96,21 @@
 							->limit($limit)
 							->get();
 
-			return $this->successResponse($orders, 'list fetched successfully.');
+			$couriers = Order::select('courier_name')
+				->distinct()
+				->orderBy('courier_name');
+			if ($user->role == 'user') {
+				$couriers = $couriers->where('user_id', $user->id);
+			}
+			$couriers = $couriers->pluck('courier_name', 'courier_name')
+			->filter()
+			->toArray();
+
+			$data = [
+				'couriers' => $couriers,
+				'orders' => $orders
+			];
+			return $this->successResponse($data, 'list fetched successfully.');
 		}
 		
 		function reportOrderExport(Request $request)
