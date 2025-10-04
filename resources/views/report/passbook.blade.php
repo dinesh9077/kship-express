@@ -266,7 +266,6 @@ border-radius: 10px;
 		debounceTimer = setTimeout(function() {
 			dataTable.draw(); 
 		}, 400); // Adjust the debounce delay (in milliseconds) as per your preference
-	}); 
-	
+	});  
 </script>
 @endpush
