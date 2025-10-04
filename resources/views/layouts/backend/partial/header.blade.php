@@ -6,41 +6,59 @@
 		position: relative;
 	}
 	.search-results-dropdown {
-		display: none;
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		background: white;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		max-height: 300px;
-		overflow-y: auto;
-		z-index: 1000;
-		box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-	}
-	.search-result-item {
-		padding: 10px 15px;
-		border-bottom: 1px solid #eee;
-		cursor: pointer;
-	}
-	.search-result-item:hover {
-		background-color: #f5f5f5;
-	}
-	.search-result-item .order-id {
-		font-weight: bold;
-		color: #333;
-	}
-	.search-result-item .order-details {
-		font-size: 0.9em;
-		color: #666;
-	}
-	.no-results {
-		padding: 10px 15px;
-		color: #666;
-		text-align: center;
-	}
-    
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	max-height: 300px;
+	overflow-y: auto;
+	background-color: #ffffff; /* ✅ solid white background */
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	z-index: 99999; /* ✅ keep it on top of everything */
+	display: none;
+	color: #333;
+}
+
+.search-result-item {
+	padding: 10px 15px;
+	border-bottom: 1px solid #eee;
+	background-color: #fff; /* ✅ ensure each item is solid */
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+	background-color: #f2f2f2;
+}
+
+.search-result-item .order-id strong {
+	color: #007bff;
+}
+
+.search-result-item .awb-number {
+	color: #666;
+	font-size: 13px;
+	margin-left: 5px;
+}
+
+.search-result-item .order-details {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	font-size: 13px;
+	color: #444;
+	margin-top: 4px;
+}
+
+.no-results {
+	padding: 10px 15px;
+	color: #888;
+	text-align: center;
+	background: #fff;
+}
+ 
 </style>
 <!-- Topbar Start -->
 <div class="navbar-custom">
@@ -56,7 +74,7 @@
 	</div>
 	
 	<ul class="list-unstyled topnav-menu float-right mb-0">
-		<li>
+		<li >
 			<div class="custom-search-wrapper">
 				<div class="custom-dropdown-box">
 					<select class="custom-dropdown-select" id="searchType">
@@ -70,7 +88,7 @@
 						id="orderSearch"
 						placeholder="Search Order By AWB Number & Order Id"
 						autocomplete="off">
-					<div id="searchResults" class="search-results-dropdown"></div>
+					<div id="searchResults" class="search-results-dropdown "></div>
 				</div>
 			</div>
 		</li> 

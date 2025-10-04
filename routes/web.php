@@ -206,7 +206,7 @@
 		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'orderAjax'])->name('order.ajax');   
 		
 		 
-		Route::get('/search', [App\Http\Controllers\OrderController::class, 'searchAwbAndOrderId'])->name('order.search');
+		Route::get('/search', [App\Http\Controllers\OrderController::class, 'searchByAwb'])->name('order.search');
 
 		Route::get('/details/{id}', [App\Http\Controllers\OrderController::class,'orderDetails']);  
 		

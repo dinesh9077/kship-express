@@ -2131,11 +2131,11 @@
 				return redirect()->back()->with('error', 'An error occurred. Please try again.');
 			}
 		}
- 		public function searchAwbAndOrderId(Request $request)
+ 		public function searchByAwb(Request $request)
 		{
 			try {
 				$query = $request->get('query');
-				$searchType = $request->get('search_type', 'order_id');
+				$searchType = $request->get('search_type', 'order_prefix');
 
 				if (empty($query)) {
 					return response()->json([
