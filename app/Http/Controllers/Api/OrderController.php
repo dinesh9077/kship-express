@@ -704,6 +704,11 @@
 			$charge = $user->charge;
 			$charge_type = $user->charge_type;
 			
+			if($role != "admin" && $user->kyc_status == 0)
+			{ 
+				return $this->errorResponse('Your order cannot be placed until your KYC is approved.');
+			} 
+			
 			$order = Order::with(['warehouse', 'customerAddress', 'orderItems'])->find($orderId);
 			if (!$order) {
 				return $this->errorResponse('Order not found');  
@@ -819,6 +824,11 @@
 				$order = Order::with(['warehouse', 'customer', 'customerAddress', 'orderItems', 'user'])->findOrFail($requestData['order_id']);
 				$user = $order->user;
 				
+				if($user->role != "admin" && $user->kyc_status == 0)
+				{ 
+					return $this->errorResponse('Your order cannot be placed until your KYC is approved.');
+				} 
+
 				$walletAmount = $user->wallet_amount;
 					
 				if ($user->role == "user") {

@@ -70,8 +70,9 @@
 				$order = 'id';
 			}
 			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
+			$user = Auth::user();
+			$role = $user->role;
+			$id = $user->id;
 			
 			// Build the query for orders
 			$query = Order::with([
@@ -1483,7 +1484,7 @@
 				{
 					$msg .= "The AWB number is <span>{$awb_number}</span></h5>";
 				}
-				
+				 
 				return response()->json([
 					'status' => 'success',
 					'msg' => $msg,
