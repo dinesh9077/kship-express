@@ -36,15 +36,19 @@
 			$userId = Auth::id();
 
 			// Base query with necessary joins
-			$query = Order::with(['user:id,name,email,mobile,company_name', 'warehouse', 'customer', 'customerAddress', 'orderItems']);
+			$query = Order::with(['user', 'warehouse', 'customer', 'customerAddress', 'orderItems']);
 
 			// Apply filters
 			if (in_array($role, ["user"])) {
 				$query->where('user_id', $userId);
 			}
-  
+
 			if ($request->filled('user_id')) {
 				$query->where('user_id', $request->user_id);
+			}
+
+			if ($request->filled('courier_name')) {
+				$query->where('courier_name', $request->courier_name);
 			}
 
 			if ($request->filled('fromdate') && $request->filled('todate')) {
@@ -53,35 +57,35 @@
 				$query->whereDate('order_date', $request->fromdate);
 			} elseif ($request->filled('todate')) {
 				$query->whereDate('order_date', $request->todate);
-			}else {
+			} else {
 				$query->whereDate('order_date', $currentDate);
 			}
 
 			// Apply search filter
-			if ($search) { 
+			if ($search) {
 				$query->where(function ($q) use ($search) {
 					$q->where('created_at', 'LIKE', "%{$search}%")
-					  ->orWhereHas('customer', function($q) use ($search){
-						  $q->where('first_name', 'LIKE', "%{$search}%")
-						  ->orwhere('last_name', 'LIKE', "%{$search}%") 
-						  ->orwhere('mobile', 'LIKE', "%{$search}%");
+						->orWhereHas('customer', function ($q) use ($search) {
+							$q->where('first_name', 'LIKE', "%{$search}%")
+								->orwhere('last_name', 'LIKE', "%{$search}%")
+								->orwhere('mobile', 'LIKE', "%{$search}%");
 						})
-					  ->orWhereHas('user', function($q) use ($search){
-						  $q->where('name', 'LIKE', "%{$search}%")
-						  ->orwhere('email', 'LIKE', "%{$search}%")
-						  ->orwhere('company_name', 'LIKE', "%{$search}%")
-						  ->orwhere('mobile', 'LIKE', "%{$search}%");
+						->orWhereHas('user', function ($q) use ($search) {
+							$q->where('name', 'LIKE', "%{$search}%")
+								->orwhere('email', 'LIKE', "%{$search}%")
+								->orwhere('company_name', 'LIKE', "%{$search}%")
+								->orwhere('mobile', 'LIKE', "%{$search}%");
 						})
-					  ->orWhereHas('warehouse', function($q) use ($search){
-						  $q->where('contact_name', 'LIKE', "%{$search}%")
-						  ->orwhere('contact_number', 'LIKE', "%{$search}%")
-						  ->orwhere('warehouse_name', 'LIKE', "%{$search}%");
-						})  
-					  ->orWhere('awb_number', 'LIKE', "%{$search}%")
-					  ->orWhere('courier_name', 'LIKE', "%{$search}%")
-					  ->orWhere('status_courier', 'LIKE', "%{$search}%")
-					  ->orWhere('id', 'LIKE', "%{$search}%")
-					  ->orWhere('order_prefix', 'LIKE', "%{$search}%");
+						->orWhereHas('warehouse', function ($q) use ($search) {
+							$q->where('contact_name', 'LIKE', "%{$search}%")
+								->orwhere('contact_number', 'LIKE', "%{$search}%")
+								->orwhere('warehouse_name', 'LIKE', "%{$search}%");
+						})
+						->orWhere('awb_number', 'LIKE', "%{$search}%")
+						->orWhere('courier_name', 'LIKE', "%{$search}%")
+						->orWhere('status_courier', 'LIKE', "%{$search}%")
+						->orWhere('id', 'LIKE', "%{$search}%")
+						->orWhere('order_prefix', 'LIKE', "%{$search}%");
 				});
 			}
  
@@ -105,11 +109,33 @@
 			$id = Auth::user()->id;
 
 			$query = Billing::with(['user'])
-				->when(in_array($role, ['user']), fn($q) => $q->where('billings.user_id', $id))
-				->when(!in_array($role, ['user']) && $request->user_id, fn($q) => $q->where('billings.user_id', $request->user_id))
-				->when($request->fromdate && $request->todate, fn($q) => $q->whereBetween('billings.created_at', [$request->fromdate, $request->todate]))
-				->when($request->fromdate && !$request->todate, fn($q) => $q->whereDate('billings.created_at', $request->fromdate))
-				->when($request->todate && !$request->fromdate, fn($q) => $q->whereDate('billings.created_at', $request->todate));
+			->when(
+				in_array($role, ['user']),
+				fn($q) =>
+				$q->where('billings.user_id', $id)
+			)
+			->when(
+				!in_array($role, ['user']) && $request->user_id,
+				fn($q) =>
+				$q->where('billings.user_id', $request->user_id)
+			)
+			// ✅ From + To date (inclusive, full-day range)
+			->when($request->fromdate && $request->todate, function ($q) use ($request) {
+				$from = Carbon::parse($request->fromdate)->startOfDay();
+				$to = Carbon::parse($request->todate)->endOfDay();
+				return $q->whereBetween('billings.created_at', [$from, $to]);
+			})
+			// ✅ Only From date (single-day filter)
+			->when($request->fromdate && !$request->todate, function ($q) use ($request) {
+				$from = Carbon::parse($request->fromdate)->startOfDay();
+				$to = Carbon::parse($request->fromdate)->endOfDay();
+				return $q->whereBetween('billings.created_at', [$from, $to]);
+			})
+			// ✅ Only To date (everything up to that day inclusive)
+			->when($request->todate && !$request->fromdate, function ($q) use ($request) {
+				$to = Carbon::parse($request->todate)->endOfDay();
+				return $q->where('billings.created_at', '<=', $to);
+			});
 
 			// Get all records for accurate reverse balance calculation
 			$allRecords = $query->orderBy("billings.id", 'asc')->get();
@@ -283,6 +309,8 @@
 					})
 					->orWhere('user_wallets.amount', 'LIKE', "%{$search}%")
 					->orWhere('user_wallets.created_at', 'LIKE', "%{$search}%")
+					->orWhere('user_wallets.order_id', 'LIKE', "%{$search}%")
+					->orWhere('user_wallets.txn_number', 'LIKE', "%{$search}%")
 					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$search}%");
 				});
 			} 

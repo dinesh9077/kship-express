@@ -53,7 +53,7 @@
 			$totalData = (clone $query)->count();
 
 			// Search filter
-			$searchValue = $request->input('search.value');
+			$searchValue = $request->input('search') ?? $request->input('search.value') ?? '';
 			if (!empty($searchValue)) {
 				$query->where(function ($q) use ($searchValue) {
 					$q->whereHas('user', function ($q2) use ($searchValue) {
@@ -61,6 +61,8 @@
 					})
 					->orWhere('user_wallets.amount', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.created_at', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.txn_number', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%");
 				});
 			}
