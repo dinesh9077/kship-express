@@ -1495,18 +1495,20 @@
 		}
 		public function searchByAwb(Request $request)
 		{
+			$user = Auth::user(); 
+			$userId = $user->id;	
+
 			try {
 				$query = $request->get('query');
-				if (empty($query)) {
-					return response()->json([
-						'results' => []
-					]);
+				if (empty($query)) { 
+					return $this->errorResponse('Required Param fired is empprt.');
 				}
 
 				$orders = Order::where(function ($q) use ($query) {
 					$q->where('order_prefix', 'LIKE', "%{$query}%")
 						->orWhere('awb_number', 'LIKE', "%{$query}%");
 				})
+				->where('user_id', $userId)
 				->with(['customer:id,first_name,last_name'])
 				->select([
 					'id',
@@ -1532,18 +1534,11 @@
 						'created_at' => $order->created_at->format('Y-m-d H:i:s'),
 						'weight_order' => $order->weight_order
 					];
-				});
-
-				return response()->json([
-					'results' => $orders
-				]);
-
-			} catch (\Exception $e) {
-				\Log::error('Order search error: ' . $e->getMessage());
-				return response()->json([
-					'error' => 'An error occurred while searching orders',
-					'results' => []
-				], 500);
+				}); 
+			 
+				return $this->successResponse($orders, 'order fetched successfully.'); 
+			} catch (\Exception $e) { 
+				return $this->errorResponse('An error occurred while searching orders'); 
 			}
 		}
 	}
