@@ -23,7 +23,7 @@
 											$userCommision = $commission->userCommissions->first();
 										@endphp
 										<div class="row mb-3 courier-commission-item">
-											<div class="col-md-2">
+											<div class="col">
 												<select name="commissions[{{ $i }}][shipping_company]" class="form-control" required>
 													<option value="">Select Shipping Company</option>
 													@foreach($shippingCompanies as $shippingCompany)
@@ -32,26 +32,26 @@
 												</select>
 											</div>
 											<input type="hidden" name="commissions[{{ $i }}][id]" value="{{ $commission->id ?? '' }}">
-											<div class="col-md-2">
+											<div class="col">
 												<input type="text" name="commissions[{{ $i }}][courier_id]" class="form-control" placeholder="Courier ID" value="{{ $commission->courier_id ?? '' }}">
 											</div>
-											<div class="col-md-2">
+											<div class="col">
 												<input type="text" name="commissions[{{ $i }}][courier_name]" class="form-control" placeholder="Courier Name" value="{{ $commission->courier_name ?? '' }}" required>
 											</div>
-											<div class="col-md-2">
+											<div class="col">
 												<select name="commissions[{{ $i }}][type]" class="form-control" required>
 													<option value="fix" {{ (($userCommision->type ?? $commission->type ?? '') == 'fix') ? 'selected' : '' }}>Fix</option>
 													<option value="percentage" {{ (($userCommision->type ?? $commission->type ?? '') == 'percentage') ? 'selected' : '' }}>Percentage</option>
 												</select> 
 											</div>
-											<div class="col-md-2">
+											<div class="col">
 												<input type="number" step="0.01" name="commissions[{{ $i }}][value]" class="form-control" placeholder="Value" value="{{ $userCommision->value ?? $commission->value ?? '' }}" required>
 											</div> 
 										</div>
                                     @endforeach
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="submit" style="float: right;" class="new-submit-btn mt-3">Save</button>
                             </form>
                         </div>
                     </div>
