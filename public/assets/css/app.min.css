@@ -4777,7 +4777,7 @@ div[role="progressbar"]::before {
 }
 
 .main-roow-1 {
-    padding: 20px;
+    padding: 28px;
     border-radius:10px;
     background: #fff;
     box-shadow: 0 0 13px  rgba(0, 0, 0, 0.1);
@@ -7718,6 +7718,14 @@ body.sidebar-enable::after {
     padding: 19px 10px;
 }
 
+@media(max-width : 1600px){
+    .dataTable.no-footer tr td {
+    padding: 11px 10px;
+    font-size: 11px;
+}
+
+}
+
 .head-li.moin-bord {
     cursor: pointer;
 }
@@ -8715,6 +8723,7 @@ align-items: start;
  .border-c-3{
     
         padding: 10px;
+        padding: 10px;
     }
     }
 
@@ -8748,7 +8757,7 @@ align-items: start;
         right: 40px;
     }
 
-    @media(max-width : 1400px){
+   @media(max-width : 1600px){
           .chart-2{
         position: absolute;
         bottom: 3px;
@@ -9048,7 +9057,7 @@ color : white !important;
 
   .custom-dropdown-box {
     background: black;
-    padding: 10px 15px;
+    /* padding: 10px 15px; */
     display: flex;
     border-radius: 10px;
     align-items: center;
@@ -9088,7 +9097,34 @@ color : white !important;
     height: auto;
   }
 
+  
   .card-header {
     background-color: white !important;
 
   }
+
+  @media(max-width : 1600px){
+.main-cont1-2 p {
+    font-size: 11px;
+
+}
+
+p.prepaid {
+    font-size: 11px;
+    margin-bottom: 0px;
+}
+
+.dataTable.no-footer tr th {
+    font-size: 13px;
+}
+p.cod {
+    font-size: 11px; 
+}
+}
+
+@media(max-width : 1100px){
+    .dataTable.no-footer tr td {
+    padding: 10px 10px;
+}
+}
+

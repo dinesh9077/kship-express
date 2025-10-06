@@ -6,19 +6,24 @@
 		position: relative;
 	}
 	.search-results-dropdown {
-	position: absolute;
-	top: 100%;
-	left: 0;
-	width: 100%;
-	max-height: 300px;
-	overflow-y: auto;
-	background-color: #ffffff; /* ✅ solid white background */
-	border: 1px solid #ccc;
-	border-radius: 6px;
-	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-	z-index: 99999; /* ✅ keep it on top of everything */
-	display: none;
-	color: #333;
+    position: absolute;
+    top: 100%; /* appear below the input */
+    left: 0;
+    width: 100%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    z-index: 9999; /* ensures it’s above header and other elements */
+}
+
+.custom-search-input {
+    width: 100%;
+    padding: 10px 40px 10px 43px;
+    border-radius: 6px;
+    outline: none;
 }
 
 .search-result-item {
@@ -58,6 +63,16 @@
 	text-align: center;
 	background: #fff;
 }
+
+.custom-search-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #777;
+  font-size: 18px;
+  pointer-events: none; /* so click passes to input */
+}
  
 </style>
 <!-- Topbar Start -->
@@ -74,18 +89,18 @@
 	</div>
 	
 	<ul class="list-unstyled topnav-menu float-right mb-0">
-		<li >
-			<div class="custom-search-wrapper"> 
-				<div class="search-container">
-					<input type="text" 
-						class="custom-search-input" 
-						id="orderSearch"
-						placeholder="Search Order By AWB Number & Order Id"
-						autocomplete="off"> 
-				</div>
-			</div>
-			<div id="searchResults" class="search-results-dropdown" style="position:static;z-index:1;"></div>
-		</li> 
+		<li style="position: relative;">
+<div class="custom-search-wrapper">
+  <input type="text" 
+    class="custom-search-input" 
+    id="orderSearch"
+    placeholder="Search Order By AWB Number & Order Id"
+    autocomplete="off"> 
+  <i class="fa fa-search search-icon"></i> <!-- Font Awesome icon -->
+</div>
+    <div id="searchResults" class="search-results-dropdown"></div>
+</li>
+ 
 		
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")
 			<li class="head-li moin-bord" data-toggle="modal" data-target="#rechargeWalletModal" >
