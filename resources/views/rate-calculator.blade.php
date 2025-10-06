@@ -132,7 +132,7 @@
 												<div class="col-lg-1 col-sm-6" id="hideB2c" style="display:none;">
 													<div class="from-group my-2">
 														<label for="packaging-type" class="text-white">. </label>
-														<button type="button" class="btn btn-primary btn-main-1 d-002" onclick="addMoreDimension(this, event)"> + </button>
+														<button type="button" class=" new-height-btn-plus" onclick="addMoreDimension(this, event)"> + </button>
 													</div>
 												</div>
 											</div>  
@@ -260,7 +260,7 @@
 		<div class="col-lg-1 col-sm-6">
 		<div class="from-group my-2">
 		<label for="packaging-type" class="text-white">. </label>
-		<button type="button" class="btn btn-danger btn-main-1 d-002"  onclick="removeDimenionRow(this)"> <i class="mdi mdi-trash-can"></i> </button> 
+		<button type="button" class=" new-height-btn-plus"  onclick="removeDimenionRow(this)"> <i class="mdi mdi-trash-can"></i> </button> 
 		</div>
 		</div>
 		</div>`;
