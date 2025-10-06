@@ -204,7 +204,10 @@
 	{ 
 		Route::get('/', [App\Http\Controllers\OrderController::class, 'index'])->name('order')->middleware('permission:order.view');   
 		Route::post('/ajax', [App\Http\Controllers\OrderController::class, 'orderAjax'])->name('order.ajax');   
+		
 		 
+		Route::get('/search', [App\Http\Controllers\OrderController::class, 'searchByAwb'])->name('order.search');
+
 		Route::get('/details/{id}', [App\Http\Controllers\OrderController::class,'orderDetails']);  
 		
 		Route::get('/create', [App\Http\Controllers\OrderController::class,'orderCreate'])->name('order.create')->middleware('permission:order.add'); 

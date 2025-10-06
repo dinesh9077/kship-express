@@ -24,16 +24,93 @@
 		<link href="{{asset('assets/libs/jquery-toast/jquery.toast.min.css')}}" rel="stylesheet" type="text/css" />
 		<link href="{{asset('assets/libs/sweetalert2/sweetalert2.min.css')}}" rel="stylesheet" type="text/css" />
 		<style>
+			/* Search Container Styles */
+			.custom-search-wrapper {
+				position: relative;
+				min-width: 400px;
+			}
+
+			.search-input-container {
+				position: relative;
+				flex: 1;
+			}
+
+			/* Search Results Styles */
+			#searchResults {
+				position: absolute;
+				top: calc(100% + 5px);
+				left: 0;
+				right: 0;
+				background: white;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+				z-index: 9999;
+				max-height: 400px;
+				overflow-y: auto;
+				display: none;
+			}
+
+			.search-result-item {
+				padding: 10px 15px;
+				border-bottom: 1px solid #eee;
+				cursor: pointer;
+				transition: background-color 0.2s;
+			}
+
+			.search-result-item:hover {
+				background-color: #f5f5f5;
+			}
+
+			.search-result-item .order-id {
+				font-weight: bold;
+				color: #333;
+				margin-bottom: 5px;
+			}
+
+			.search-result-item .awb-number {
+				color: #666;
+				margin-left: 10px;
+				font-size: 0.9em;
+			}
+
+			.search-result-item .order-details {
+				display: flex;
+				justify-content: space-between;
+				font-size: 0.9em;
+				color: #666;
+			}
+
+			.search-result-item .status {
+				padding: 2px 6px;
+				border-radius: 3px;
+				font-size: 0.85em;
+			}
+
+			.searching {
+				padding: 15px;
+				text-align: center;
+				color: #666;
+			}
+
+			.no-results {
+				padding: 15px;
+				text-align: center;
+				color: #666;
+				font-style: italic;
+			}
+
+			/* Original Styles */
 			.select2-container .select2-selection--single {
-			height:100% !important;
+				height:100% !important;
 			}
 			.select2-container--default .select2-selection--single .select2-selection__arrow
 			{ 
-			height:42px !important;
+				height:42px !important;
 			}
 			.select2-container--default .select2-selection--single .select2-selection__rendered 
 			{ 
-			line-height: 42px !important;
+				line-height: 42px !important;
 			}
 			p.cod {
 			text-transform: capitalize;
@@ -590,6 +667,126 @@
 				showMessage("Error: " + err.message, "error");
 			}
 		} 
+
+		$(document).ready(function() {
+			let searchTimeout;
+			const searchInput = $('#orderSearch');
+			const searchResults = $('#searchResults'); 
+
+			// Handle input changes
+			searchInput.on('input', function() {
+				clearTimeout(searchTimeout);
+				const query = $(this).val().trim();
+				
+				if (query.length < 2) {
+					searchResults.hide();
+					return;
+				}
+
+				// Show loading state immediately
+				searchResults.html('<div class="searching">Searching...</div>').show();
+
+				searchTimeout = setTimeout(() => {
+					performSearch(query);
+				}, 300);
+			});
+
+			// Handle click outside
+			$(document).on('click', function(e) {
+				if (!$(e.target).closest('.search-input-container').length) {
+					searchResults.hide();
+				}
+			});
+
+			// Handle input focus
+			searchInput.on('focus', function() {
+				if ($(this).val().trim().length >= 2) {
+					searchResults.show();
+				}
+			});
+
+			// Close results when clicking outside
+			$(document).on('click', function(e) {
+				if (!$(e.target).closest('.search-container').length) {
+					searchResults.hide();
+				}
+			});
+
+			// Perform the search
+			function performSearch(query) {
+                console.log('Searching for:', query); // Debug log
+				$.ajax({
+					url: '{{ route("order.search") }}',
+					method: 'GET',
+					data: {
+						query: query 
+					},
+					beforeSend: function() {
+						searchResults.html('<div class="searching">Searching...</div>').show();
+					},
+					success: function(response) {
+						console.log('Search response:', response); // Debug log
+						if (response.results && response.results.length > 0) {
+							displayResults(response.results);
+						} else {
+							searchResults.html('<div class="no-results">No orders found</div>').show();
+						}
+					},
+					error: function(xhr, status, error) {
+						console.error('Search failed:', {xhr, status, error}); // Enhanced error logging
+						searchResults.html('<div class="no-results">Search failed. Please try again.</div>').show();
+					}
+				});
+			}
+
+			// Display search results
+			function displayResults(results) {
+				console.log('Displaying results:', results); // Debug log
+				if (!Array.isArray(results)) {
+					console.error('Results is not an array:', results);
+					searchResults.html('<div class="no-results">Invalid results format</div>').show();
+					return;
+				}
+
+				const resultsHtml = results.map(order => {
+					console.log('Processing order:', order); // Debug log
+					const statusClass = order.status_courier ? order.status_courier.toLowerCase().replace(/\s+/g, '-') : 'unknown';
+					return `
+						<div class="search-result-item" data-order-id="${order.id}" onclick="window.location.href='{{ url('order/details') }}/${order.id}?weight_order=${order.weight_order}&status=All'">
+							<div class="order-id">
+								<strong>#${order.order_prefix}</strong>
+								${order.awb_number ? `<span class="awb-number">AWB: ${order.awb_number}</span>` : ''}
+							</div>
+							<div class="order-details">
+								<span class="status status-${statusClass}">
+									${order.status_courier.toUpperCase() || 'N/A'}
+								</span>
+								<span class="customer">
+									<i class="fe-user"></i> ${order.customer_name || 'N/A'}
+								</span>
+								<span class="date">
+									<i class="fe-clock"></i> ${order.created_at}
+								</span>
+							</div>
+						</div>
+					`;
+				}).join('');
+
+				if (resultsHtml) {
+					searchResults.html(resultsHtml);
+					searchResults.css('display', 'block !important'); // Force display block
+				} else {
+					searchResults.html('<div class="no-results">No results to display</div>');
+					searchResults.css('display', 'block !important'); // Force display block
+				}
+			}
+
+			// Handle result click
+			$(document).on('click', '.search-result-item', function() {
+				const orderId = $(this).data('order-id');
+				window.location.href = `{{ url('order/details') }}/${orderId}?weight_order=1&status=All`;
+			});
+		});
 	</script>
 	@stack('js')
 </body> 

@@ -70,8 +70,9 @@
 				$order = 'id';
 			}
 			
-			$role = Auth::user()->role;
-			$id = Auth::user()->id;
+			$user = Auth::user();
+			$role = $user->role;
+			$id = $user->id;
 			
 			// Build the query for orders
 			$query = Order::with([
@@ -192,7 +193,7 @@
 					//'id' => $i,
 
 					// Order + Admin info
-					'order_id' => '#' . $order->id
+					'order_id' => '#' . $order->order_prefix
 						. ($role === "admin" ? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>" : ''),
 
 					// Seller details
@@ -1483,7 +1484,7 @@
 				{
 					$msg .= "The AWB number is <span>{$awb_number}</span></h5>";
 				}
-				
+				 
 				return response()->json([
 					'status' => 'success',
 					'msg' => $msg,
@@ -2129,5 +2130,58 @@
 				DB::rollBack(); 
 				return redirect()->back()->with('error', 'An error occurred. Please try again.');
 			}
-		} 
+		}
+ 		public function searchByAwb(Request $request)
+		{
+			try {
+				$query = $request->get('query');
+				if (empty($query)) {
+					return response()->json([
+						'results' => []
+					]);
+				}
+
+				$orders = Order::where(function ($q) use ($query) {
+					$q->where('order_prefix', 'LIKE', "%{$query}%")
+						->orWhere('awb_number', 'LIKE', "%{$query}%");
+				})
+					->with(['customer:id,first_name,last_name'])
+					->select([
+						'id',
+						'order_prefix',
+						'awb_number',
+						'status_courier',
+						'customer_id',
+						'created_at',
+						'weight_order'
+					])
+					->orderBy('created_at', 'desc')
+					->limit(10)
+					->get()
+					->map(function ($order) {
+						return [
+							'id' => $order->id,
+							'order_prefix' => $order->order_prefix,
+							'awb_number' => $order->awb_number,
+							'status_courier' => $order->status_courier,
+							'customer_name' => $order->customer
+								? $order->customer->first_name . ' ' . $order->customer->last_name
+								: 'N/A',
+							'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+							'weight_order' => $order->weight_order
+						];
+					});
+
+				return response()->json([
+					'results' => $orders
+				]);
+
+			} catch (\Exception $e) {
+				\Log::error('Order search error: ' . $e->getMessage());
+				return response()->json([
+					'error' => 'An error occurred while searching orders',
+					'results' => []
+				], 500);
+			}
+		}
 	}

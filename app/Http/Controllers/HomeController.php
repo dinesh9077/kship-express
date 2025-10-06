@@ -80,6 +80,22 @@
 				->when(!$isAdmin, fn($q) => $q->where('id', $user->id))
 				->sum('wallet_amount');
 
+			// Build the query for orders
+			$recentOrders = Order::with([
+				'customer:id,first_name,last_name,mobile,email',
+				'customerAddress:id,address',
+				'warehouse:id,warehouse_name,contact_name,contact_number,company_name',
+				'user:id,name,company_name,email,mobile',
+				'orderItems:id,order_id,product_category,product_name,sku_number,hsn_number,amount,quantity,dimensions',
+			])
+			->select('id', 'order_prefix', 'user_id', 'customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
+			->when($user->role === "user", fn($q) => $q->where('orders.user_id', $user->id))
+			->where('status_courier', 'New')
+			->latest()
+			->limit(10)
+			->get();	 
+			
+			$banners = DB::table('app_banners')->where('status', 1)->get();
 			return view('home', [
 				'user'                  => $user,
 				'todayRecharge'         => $todayRecharge,
@@ -96,6 +112,8 @@
 				'tadaysInvoiceAmount'   => $orderStats->tadaysInvoiceAmount,
 				'totalCodAmount'        => $orderStats->totalCodAmount,
 				'tadaysCodAmount'       => $orderStats->tadaysCodAmount,
+				'recentOrders'      	=> $recentOrders,
+				'banners'      			=> $banners,
 			]);
 		} 
 		

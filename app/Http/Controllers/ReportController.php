@@ -26,12 +26,17 @@
 		
 		public function index(Request $request)
 		{ 
+			$user = Auth::user();	
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
 			$status = $request->query('status', 'New');
 			$couriers = Order::select('courier_name')
 			->distinct()
-			->orderBy('courier_name')
-			->pluck('courier_name', 'courier_name')
+			->orderBy('courier_name');
+			if($user->role == 'user'){
+				$couriers = $couriers->where('user_id', $user->id);
+			}
+			$couriers = $couriers->pluck('courier_name', 'courier_name')
+			->filter()
 			->toArray(); 
 			return view('report.order', compact('status', 'users', 'couriers'));
 		}

@@ -156,9 +156,9 @@ border-radius: 10px;
 							</div>
 						</div>
 						<div class="right-head-deta">
-							<div class="table-custom-serch">
+							{{-- <div class="table-custom-serch">
 								<input class="input-main" type="search" id="search_table"  placeholder="Search">
-							</div> 
+							</div>  --}}
 							<div>
 								<a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
 								<a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
@@ -285,7 +285,6 @@ border-radius: 10px;
 		debounceTimer = setTimeout(function() {
 			dataTable.draw(); 
 		}, 400); // Adjust the debounce delay (in milliseconds) as per your preference
-	}); 
-	
+	});  
 </script>
 @endpush

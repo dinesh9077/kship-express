@@ -483,7 +483,7 @@
 								confirmButtonText: "Recharge"
 							}).then((walletResult) => {
 								if (walletResult.value) {
-									$('.recharge').modal('show');
+									$('#rechargeWalletModal').modal('show');
 								}
 							});
 						} else {

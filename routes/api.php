@@ -65,7 +65,9 @@
 		{ 
 			Route::post('/list', [OrderController::class, 'index']);    
 			Route::get('/filter', [OrderController::class, 'filterList']);    
-			 
+			
+			Route::post('search-by-awb',   [OrderController::class, 'searchByAwb']);
+
 			Route::get('/details/{id}', [OrderController::class,'orderDetails']);  
 			
 			Route::post('/create', [OrderController::class,'orderStore']);  

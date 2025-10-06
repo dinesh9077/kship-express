@@ -704,6 +704,11 @@
 			$charge = $user->charge;
 			$charge_type = $user->charge_type;
 			
+			if($role != "admin" && $user->kyc_status == 0)
+			{ 
+				return $this->errorResponse('Your order cannot be placed until your KYC is approved.');
+			} 
+			
 			$order = Order::with(['warehouse', 'customerAddress', 'orderItems'])->find($orderId);
 			if (!$order) {
 				return $this->errorResponse('Order not found');  
@@ -819,6 +824,11 @@
 				$order = Order::with(['warehouse', 'customer', 'customerAddress', 'orderItems', 'user'])->findOrFail($requestData['order_id']);
 				$user = $order->user;
 				
+				if($user->role != "admin" && $user->kyc_status == 0)
+				{ 
+					return $this->errorResponse('Your order cannot be placed until your KYC is approved.');
+				} 
+
 				$walletAmount = $user->wallet_amount;
 					
 				if ($user->role == "user") {
@@ -1482,5 +1492,58 @@
 				DB::rollBack(); 
 				return $this->errorResponse('An error occurred. Please try again.'); 
 			}
-		} 
+		}
+		public function searchByAwb(Request $request)
+		{
+			try {
+				$query = $request->get('query');
+				if (empty($query)) {
+					return response()->json([
+						'results' => []
+					]);
+				}
+
+				$orders = Order::where(function ($q) use ($query) {
+					$q->where('order_prefix', 'LIKE', "%{$query}%")
+						->orWhere('awb_number', 'LIKE', "%{$query}%");
+				})
+				->with(['customer:id,first_name,last_name'])
+				->select([
+					'id',
+					'order_prefix',
+					'awb_number',
+					'status_courier',
+					'customer_id',
+					'created_at',
+					'weight_order'
+				])
+				->orderBy('created_at', 'desc')
+				->limit(10)
+				->get()
+				->map(function ($order) {
+					return [
+						'id' => $order->id,
+						'order_prefix' => $order->order_prefix,
+						'awb_number' => $order->awb_number,
+						'status_courier' => $order->status_courier,
+						'customer_name' => $order->customer
+							? $order->customer->first_name . ' ' . $order->customer->last_name
+							: 'N/A',
+						'created_at' => $order->created_at->format('Y-m-d H:i:s'),
+						'weight_order' => $order->weight_order
+					];
+				});
+
+				return response()->json([
+					'results' => $orders
+				]);
+
+			} catch (\Exception $e) {
+				\Log::error('Order search error: ' . $e->getMessage());
+				return response()->json([
+					'error' => 'An error occurred while searching orders',
+					'results' => []
+				], 500);
+			}
+		}
 	}

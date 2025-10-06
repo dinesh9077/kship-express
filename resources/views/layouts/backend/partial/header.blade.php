@@ -1,6 +1,9 @@
 <style>
     .dropdown-item {
 		  padding: 10px 15px !important;
+	} 
+	.search-container {
+		position: relative;
 	}
 
 	.custom-dropdown-select {
@@ -15,6 +18,60 @@
 }
 
     
+	.search-results-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	width: 100%;
+	max-height: 300px;
+	overflow-y: auto;
+	background-color: #ffffff; /* ✅ solid white background */
+	border: 1px solid #ccc;
+	border-radius: 6px;
+	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+	z-index: 99999; /* ✅ keep it on top of everything */
+	display: none;
+	color: #333;
+}
+
+.search-result-item {
+	padding: 10px 15px;
+	border-bottom: 1px solid #eee;
+	background-color: #fff; /* ✅ ensure each item is solid */
+	cursor: pointer;
+	transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+	background-color: #f2f2f2;
+}
+
+.search-result-item .order-id strong {
+	color: #007bff;
+}
+
+.search-result-item .awb-number {
+	color: #666;
+	font-size: 13px;
+	margin-left: 5px;
+}
+
+.search-result-item .order-details {
+	display: flex;
+	gap: 10px;
+	align-items: center;
+	font-size: 13px;
+	color: #444;
+	margin-top: 4px;
+}
+
+.no-results {
+	padding: 10px 15px;
+	color: #888;
+	text-align: center;
+	background: #fff;
+}
+ 
 </style>
 <!-- Topbar Start -->
 <div class="navbar-custom">
@@ -30,32 +87,28 @@
 	</div>
 	
 	<ul class="list-unstyled topnav-menu float-right mb-0">
-		<li>
-			<div class="custom-search-wrapper">
-				<div class="custom-dropdown-box">
-				<select class="custom-dropdown-select">
-					<option value="awb">AWB ID</option>
-					<option value="order">Order ID</option>
-					<option value="mobile">Mobile</option>
-				</select>
+		<li >
+			<div class="custom-search-wrapper"> 
+				<div class="search-container">
+					<input type="text" 
+						class="custom-search-input" 
+						id="orderSearch"
+						placeholder="Search Order By AWB Number & Order Id"
+						autocomplete="off"> 
 				</div>
-				<input type="text" class="custom-search-input" placeholder="Search Order By AWB ID">
 			</div>
-		</li>
+			<div id="searchResults" class="search-results-dropdown" style="position:static;z-index:1;"></div>
+		</li> 
 		
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")
 			<li class="head-li moin-bord" data-toggle="modal" data-target="#rechargeWalletModal" >
 				<div class="balcnce-wa">
 					<img src="{{asset('assets/images/dashbord/wallet-1.png')}}" style="    width: auto;padding: 13px 12px;background: black;border-radius: 10px 0px 0px 10px;">
-					<h6 style="margin-right : 10px;"> {{ config('setting.currency') }} {{ Helper::decimal_number(Auth::user()->wallet_amount) }} </h6>
-					<!-- <i class="fe-refresh-ccw" style="color: #000000ff;"></i> -->
+					<h6 style="margin-right : 10px;"> {{ config('setting.currency') }} {{ Helper::decimal_number($authUser->wallet_amount) }} </h6>
 				</div>
 			</li> 
 		@endif
-
-		
-	
-		
+ 
 		<li class="dropdown notification-list mo-none-991" >
 			<a class="nav-link waves-effect" data-toggle="dropdown" href="#" role="button" aria-haspopup="false" aria-expanded="false">
 				<div class="balcnce-wa new-q-action-bg">
