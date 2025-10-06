@@ -123,7 +123,7 @@
 														<input type="text" name="height[]" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" id="height" placeholder="0.00" value="0.00"> 
 													</div>
 												</div>
-												<div class="col-lg-3 col-sm-6">
+												<div class="col-lg-2 col-sm-6">
 													<div class="from-group">
 														<label for="pickup-pincode"> Width </label>
 														<input type="text" name="width[]" id="width" oninput="$(this).val($(this).val().replace(/[^0-9.]/g, ''));" placeholder="0.00" value="0.00"> 
