@@ -671,8 +671,7 @@
 		$(document).ready(function() {
 			let searchTimeout;
 			const searchInput = $('#orderSearch');
-			const searchResults = $('#searchResults');
-			const searchType = $('#searchType');
+			const searchResults = $('#searchResults'); 
 
 			// Handle input changes
 			searchInput.on('input', function() {
@@ -720,8 +719,7 @@
 					url: '{{ route("order.search") }}',
 					method: 'GET',
 					data: {
-						query: query,
-						search_type: searchType.val()
+						query: query 
 					},
 					beforeSend: function() {
 						searchResults.html('<div class="searching">Searching...</div>').show();
@@ -756,12 +754,12 @@
 					return `
 						<div class="search-result-item" data-order-id="${order.id}" onclick="window.location.href='{{ url('order/details') }}/${order.id}?weight_order=${order.weight_order}&status=All'">
 							<div class="order-id">
-								<strong>#${order.id}</strong>
+								<strong>#${order.order_prefix}</strong>
 								${order.awb_number ? `<span class="awb-number">AWB: ${order.awb_number}</span>` : ''}
 							</div>
 							<div class="order-details">
 								<span class="status status-${statusClass}">
-									${order.status_courier || 'N/A'}
+									${order.status_courier.toUpperCase() || 'N/A'}
 								</span>
 								<span class="customer">
 									<i class="fe-user"></i> ${order.customer_name || 'N/A'}

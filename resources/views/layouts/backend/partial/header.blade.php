@@ -75,22 +75,16 @@
 	
 	<ul class="list-unstyled topnav-menu float-right mb-0">
 		<li >
-			<div class="custom-search-wrapper">
-				<div class="custom-dropdown-box">
-					<select class="custom-dropdown-select" id="searchType">
-						<option value="awb_number">AWB Number</option>
-						<option value="order_prefix">Order ID</option> 
-					</select>
-				</div>
+			<div class="custom-search-wrapper"> 
 				<div class="search-container">
 					<input type="text" 
 						class="custom-search-input" 
 						id="orderSearch"
 						placeholder="Search Order By AWB Number & Order Id"
-						autocomplete="off">
-					<div id="searchResults" class="search-results-dropdown "></div>
+						autocomplete="off"> 
 				</div>
 			</div>
+			<div id="searchResults" class="search-results-dropdown" style="position:static;z-index:1;"></div>
 		</li> 
 		
 		@if(Auth::user()->role != "admin" && Auth::user()->role != "staff")

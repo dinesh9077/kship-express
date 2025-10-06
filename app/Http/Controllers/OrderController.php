@@ -2135,24 +2135,20 @@
 		{
 			try {
 				$query = $request->get('query');
-				$searchType = $request->get('search_type', 'order_prefix');
-
 				if (empty($query)) {
 					return response()->json([
 						'results' => []
 					]);
 				}
 
-				$orders = Order::query()
-					->when($searchType === 'order_prefix', function ($q) use ($query) {
-						return $q->where('order_prefix', 'LIKE', "%{$query}%");
-					})
-					->when($searchType === 'awb_number', function ($q) use ($query) {
-						return $q->where('awb_number', 'LIKE', "%{$query}%");
-					})
+				$orders = Order::where(function ($q) use ($query) {
+					$q->where('order_prefix', 'LIKE', "%{$query}%")
+						->orWhere('awb_number', 'LIKE', "%{$query}%");
+				})
 					->with(['customer:id,first_name,last_name'])
 					->select([
 						'id',
+						'order_prefix',
 						'awb_number',
 						'status_courier',
 						'customer_id',
@@ -2165,6 +2161,7 @@
 					->map(function ($order) {
 						return [
 							'id' => $order->id,
+							'order_prefix' => $order->order_prefix,
 							'awb_number' => $order->awb_number,
 							'status_courier' => $order->status_courier,
 							'customer_name' => $order->customer
