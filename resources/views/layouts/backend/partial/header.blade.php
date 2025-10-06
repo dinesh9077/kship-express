@@ -5,19 +5,6 @@
 	.search-container {
 		position: relative;
 	}
-
-	.custom-dropdown-select {
-  background-color: #000000ff; /* Change this to your desired color */
-  color: #fff; /* Text color */
-  border: none; /* Optional: remove default border */
-  padding: 11px 12px;
-  border-radius: 6px;
-  appearance: none; /* Removes default arrow (optional) */
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-    
 	.search-results-dropdown {
 	position: absolute;
 	top: 100%;
