@@ -210,6 +210,11 @@
 		{
 			$credentials = $request->only('email', 'password');
 			$user = User::where('email', $request->email)->first();
+			if(!$user)
+			{
+				return $this->errorResponse('Invalid credentials', 401);
+			}
+
 			if($user->role != "user")
 			{
 				return $this->errorResponse('Invalid credentials', 401);
