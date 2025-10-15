@@ -327,7 +327,7 @@
                     </tr>
                 </thead>
                 <tbody>
-					@foreach($recentOrders as $order)
+					@foreach($recentOrders as $key => $order)
 						@php
 							$isCOD   = strtolower($order->order_type) === "cod";
 							$amount  = $isCOD ? $order->cod_amount : $order->invoice_amount;
@@ -338,7 +338,7 @@
 							$address   = optional($order->customerAddress)->address;
 						@endphp
 						<tr class="odd new-tbs-white">
-							<td class="sorting_1">1</td>
+							<td class="sorting_1">{{ $key + 1 }}</td>
 							<td>#{{ $order->order_prefix }}<br>
 								@if($user->role === "admin")
 									<p>{{ $order->user->name ?? 'N.A' }}</p>

@@ -1357,9 +1357,11 @@
 				if ($shippingCompany->id == 1) 
 				{    
 					$existStatus = $courierWarehouse->created ?? [];
-					 
-					if ($existStatus && isset($existStatus['shipMozo']) && $existStatus['shipMozo'] == 0) 
-					{ 	 
+
+					if (
+						(isset($existStatus['shipMozo']) && $existStatus['shipMozo'] == 0)
+						|| empty($existStatus->shipping_id)
+					) { 	 
 						$data = $this->shipMozo->createWarehouse($courierWarehouse, $shippingCompany);  
 						if ($data['success'] || (isset($data['response']['result']) && $data['response']['result'] == 1)){
 							$existingCreated = $courierWarehouse->created ?? [];  
@@ -1373,7 +1375,7 @@
 							$courierWarehouse->api_response  = $data['response'];
 							$courierWarehouse->save(); 
 						} 
-					}
+					} 
 					 
 					$response = $this->shipMozo->pushOrder($order, $requestData, $shippingCompany);
 					 
