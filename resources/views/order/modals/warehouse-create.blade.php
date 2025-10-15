@@ -99,10 +99,8 @@
 				</div>
 			</form>
 		</div>
-	</div>
-	
-	<script> 
-		
+	</div> 
+	<script>  
 		$(document).ready(function ()
 		{
 			const $warehouseForm = $("#warehouseForm");
@@ -155,16 +153,16 @@
 			});
 		}); 
 		
-		let zipTimeout;
+		var zipTimeouts;
 	
 		function autoFetchCountry(obj)
 		{
-			clearTimeout(zipTimeout); // Clear previous timeout
+			clearTimeout(zipTimeouts); // Clear previous timeout
 			
 			const zip_code = $(obj).val().trim();  
 			
 			if (/^\d{6}$/.test(zip_code)) { // Validate: Exactly 6 digits
-				zipTimeout = setTimeout(() => {
+				zipTimeouts = setTimeout(() => {
 					$.ajax({
 						type: 'GET',
 						url: `https://api.postalpincode.in/pincode/${zip_code}`, // Using Template Literal

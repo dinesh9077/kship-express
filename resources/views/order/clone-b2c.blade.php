@@ -450,6 +450,39 @@
 	var customerId = @json($order->customer_id);
 	var customerAddressId = @json($order->customer_address_id);
 	
+	let zipTimeout; 
+	$('#cust_zip_code').on('input', function () {
+		clearTimeout(zipTimeout); // Clear previous timeout
+
+		const zip_code = $(this).val().trim(); // Trim whitespace
+
+		if (/^\d{6}$/.test(zip_code)) { // Validate: Exactly 6 digits
+			zipTimeout = setTimeout(() => {
+				$.ajax({
+					type: 'GET',
+					url: `https://api.postalpincode.in/pincode/${zip_code}`, // Using Template Literal
+					success: function (response) {
+						if (response[0]?.Status === "Success" && response[0].PostOffice?.length) {
+							const { District: city, State: state, Country: country } = response[0].PostOffice[0];
+
+							$("#cust_city").val(city || '');
+							$("#cust_state").val(state || '');
+							$("#cust_country").val(country || '');
+						} else {
+							$("#cust_city").val('');
+							$("#cust_state").val('');
+							$("#cust_country").val('');
+							console.warn("Invalid or missing pincode data.");
+						}
+					},
+					error: function (xhr, status, error) { 
+						console.error("API Error:", error);
+					}
+				});
+			}, 500); // Debounce API request by 500ms
+		}
+	});
+
 	$('#orderForm #order_type').on('input', function () {
 		const orderType = $(this).val().toLowerCase(); // Ensure case consistency
 	 
