@@ -51,7 +51,7 @@
 					$user->kyc_status = 1;
 					$user->save();
 				}
-				return $this->successResponse([], 'Your PAN details have been verified successfully.'); 
+				return $this->successResponse($userKyc->refresh(), 'Your PAN details have been verified successfully.'); 
 
 			} catch (\Throwable $e) {
 				return $this->errorResponse('Something went wrong while verifying PAN: ' . $e->getMessage());	 
@@ -120,7 +120,7 @@
 					$user->kyc_status = 1;
 					$user->save();
 				}
-				return $this->successResponse([], 'Your Aadhar details have been verified successfully.'); 
+				return $this->successResponse($userKyc->refresh(), 'Your Aadhar details have been verified successfully.'); 
 
 			} catch (\Throwable $e) {
 				return $this->errorResponse('Something went wrong while verifying Aadhar: ' . $e->getMessage()); 
