@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserKyc extends Model
 {
-    use HasFactory; 
+    use HasFactory;
+	// Fillable fields
 	protected $fillable = [
 		'user_id',
 		'pancard',
@@ -30,6 +31,18 @@ class UserKyc extends Model
 		'aadhar_text',
 		'bank_text',
 		'gst_text',
+		'aadhar_full_name',
+		'pan_full_name'
+	];
+
+	// Cast boolean fields properly
+	protected $casts = [
+		'pancard_status' => 'boolean',
+		'aadhar_status' => 'boolean',
+		'gst_status' => 'boolean',
+		'bank_status' => 'boolean',
+		'pancard_text' => 'array',
+		'aadhar_text' => 'array',
 	];
 		
 	public function user()

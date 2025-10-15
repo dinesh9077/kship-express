@@ -40,9 +40,7 @@
         								<th> Name </th>
         								<th> Email </th>
         								<th> Pancard Status </th>
-        								<th> Aadhar Status </th>
-        								<th> GST Status </th>
-        								<th> Bank Status </th>
+        								<th> Aadhar Status </th> 
         								<th> Created At </th>
         								<th> Action </th>
         							</tr>
@@ -89,9 +87,7 @@
 		{ "data": "name" }, 
 		{ "data": "email" }, 
 		{ "data": "pancard_status" }, 
-		{ "data": "aadhar_status" }, 
-		{ "data": "gst_status" },
-		{ "data": "bank_status" }, 
+		{ "data": "aadhar_status" },   
 		{ "data": "created_at" },   
 		{ "data": "action" }
 		]

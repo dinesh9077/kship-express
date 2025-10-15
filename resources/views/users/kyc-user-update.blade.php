@@ -44,37 +44,43 @@
 										@endif
 									</div>
 
-								</div>
-								@if($userkyc->pancard_status == 2)
-									<span>Reason : {{ $userkyc->pancard_text }}</span>
-								@endif
+								</div> 
 								<div class="main-rowx-1 mt-3">
 									<div class="main-row main-data-teble-1">
-										<div class="row">
+										<div class="row"> {{-- make row flex aligned --}}
 											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Pancard Number  <span class="text-danger">*</span> </label>
-													<input type="text" autocomplete="off" name="pancard" id="pancard" placeholder="Pancard Number" required value="{{ $userkyc->pancard }}" style="height : 48px;" >
+												<div class="form-group my-2">
+													<label for="username"> Pancard Number <span class="text-danger">*</span> </label>
+													<input type="text" autocomplete="off" name="pancard" id="pancard"
+														placeholder="Pancard Number"
+														value="{{ $userkyc->pancard }}"
+														class="form-control"
+														style="height: 48px;"
+														{{ $userkyc->pancard_status ? 'readonly' : 'required' }}>
 												</div>
 											</div>
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Pancard Image  <span class="text-danger">*</span> </label>
-													<input type="file" name="pancard_image" id="pancard_image"  style="height : 48px;" {{ empty($userkyc->pancard_image) ? 'required' : '' }}>
-													@if(!empty($userkyc->pancard_image))
-														<img src="{{ url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->pancard_image) }}" style="height: 150px;width: 300px;margin-top: 10px;">
-													@endif
+											@if($userkyc->pan_full_name)
+												<div class="col-lg-4 col-md-6">
+													<div class="form-group my-2">
+														<label for="username"> Pancard Holder Name <span class="text-danger">*</span> </label>
+														<input type="text" autocomplete="off" 
+															value="{{ $userkyc->pan_full_name }}"
+															class="form-control"
+															style="height: 48px;"
+															readonly>
+													</div>
 												</div>
-											</div>
+											@endif
+											@if(!$userkyc->pancard_status)
+												<div class="col-lg-4 col-md-6 d-flex justify-content-start my-2">
+													<button type="submit" class="btn btn-primary btn-main-1"  style="height: 48px;">
+														Submit
+													</button>
+												</div>
+											@endif
 										</div>
 									</div>
-								</div>
-								
-								@if($userkyc->pancard_status != 1)
-									<div class="text-align-end">
-										<button class="btn-main-1" id="customer_submit"> Submit </button>
-									</div>
-								@endif
+								</div> 
 							</div>
 						</form>
 					</div>
@@ -84,191 +90,119 @@
 			<div class="main-rowx-1">
 				<div class="main-order-001">
 					<div class="content">
-						<form method="post" class="customer_form" action="{{ route('users.aadhar.update') }}" enctype="multipart/form-data">
+						<form id="aadharForm" method="post" class="customer_form" action="{{ route('users.aadhar.update') }}" enctype="multipart/form-data">
 							@csrf
-							<div class=""> 
-								<div class="header-11">
-									<div class="sel-main">
-										<h4 class="p-0 m-0">AADHAR KYC REQUEST </h4>
-										@if($userkyc->aadhar_status == 0)
-											<span class="badge badge-warning">Pending</span>
-										@elseif($userkyc->aadhar_status == 1)
-											<span class="badge badge-success">Approved</span>
-										@else
-											<span class="badge badge-danger">Rejected</span>
-										@endif
-									</div>
-								</div>
-								@if($userkyc->aadhar_status == 2)
-									<span>Reason : {{ $userkyc->aadhar_text }}</span>
-								@endif
-								<div class="main-rowx-1 mt-3">
-									<div class="main-row main-data-teble-1">
-										<div class="row">
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Aadhar Number <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="aadhar" id="aadhar" placeholder="Aadhar Number" required value="{{ $userkyc->aadhar }}"  maxlength="12" style="height : 48px;">
-												</div>
-											</div>
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Aadhar Front Image <span class="text-danger">*</span></label>
-													<input type="file" style="height: 48px;" name="aadhar_front" id="aadhar_front" {{ empty($userkyc->aadhar_front) ? 'required' : '' }}>
-													@if(!empty($userkyc->aadhar_front))
-														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->aadhar_front)}}" style="height: 150px;width: 300px;margin-top: 10px;">
-													@endif
-												</div>
-											</div>
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Aadhar Back Image <span class="text-danger">*</span></label>
-													<input type="file" name="aadhar_back" style="height: 48px;" id="aadhar_back" {{ empty($userkyc->aadhar_back) ? 'required' : '' }}>
-													@if(!empty($userkyc->aadhar_back))
-														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->aadhar_back)}}" style="height: 150px;width: 300px;margin-top: 10px;">
-													@endif
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								@if($userkyc->aadhar_status != 1)
-									<div class="text-align-end">
-										<button class="btn-main-1" id="customer_submit"> Submit </button>
-									</div>
-								@endif
-							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-			<div class="main-rowx-1">
-				<div class="main-order-001">
-					<div class="content">
-						<form method="post" class="customer_form" action="{{ route('users.gst.update') }}" enctype="multipart/form-data">
-							@csrf
-							<div class="">
-								<div class="header-11">
-									<div class="sel-main">
-										<h4 class="p-0 m-0">GST KYC REQUEST </h4>
-										@if($userkyc->gst_status == 0)
-											<span class="badge badge-warning">Pending</span>
-										@elseif($userkyc->gst_status == 1)
-											<span class="badge badge-success">Approved</span>
-										@else
-											<span class="badge badge-danger">Rejected</span>
-										@endif
-									</div>
 
+							<div class="header-11">
+								<div class="sel-main">
+									<h4 class="p-0 m-0">AADHAR KYC REQUEST</h4>
+									@if($userkyc->aadhar_status == 0)
+										<span class="badge badge-warning">Pending</span>
+									@elseif($userkyc->aadhar_status == 1)
+										<span class="badge badge-success">Approved</span>
+									@else
+										<span class="badge badge-danger">Rejected</span>
+									@endif
 								</div>
-								@if($userkyc->gst_status == 2)
-									<span>Reason : {{$userkyc->gst_text}}</span>
-								@endif
-								<div class="main-rowx-1 mt-3">
-									<div class="main-row main-data-teble-1">
-										<div class="row">
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> GST Number <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="gst" id="gst" placeholder="GST Number" required value="{{ $userkyc->gst }}" >
-												</div>
-											</div>
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> GST Image <span class="text-danger">*</span></label>
-													<input type="file" name="gst_image" style="height: 48px;" id="gst_image" {{ empty($userkyc->gst_image) ? 'required' : '' }}>
-													@if(!empty($userkyc->gst_image))
-														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->gst_image)}}" style="height: 150px;width: 300px;margin-top: 10px;">
-													@endif
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								@if($userkyc->gst_status != 1)
-									<div class="text-align-end">
-										<button class="btn-main-1" id="customer_submit"> Submit </button>
-									</div>
-								@endif
 							</div>
-						</form>
-					</div>
-				</div>
-			</div>
-			<div class="main-rowx-1">
-				<div class="main-order-001">
-					<div class="content">
-						<form method="post" class="customer_form" action="{{ route('users.bank.update') }}" enctype="multipart/form-data">
-							@csrf
-							<div class="">
-								<div class="header-11">
-									<div class="sel-main">
-										<h4 class="p-0 m-0">BANK KYC REQUEST </h4>
-										@if($userkyc->bank_status == 0)
-											<span class="badge badge-warning">Pending</span>
-										@elseif($userkyc->bank_status == 1)
-											<span class="badge badge-success">Approved</span>
-										@else
-											<span class="badge badge-danger">Rejected</span>
-										@endif
-									</div>
-								</div>
-								@if($userkyc->bank_status == 2)
-									<span>Reason : {{ $userkyc->bank_text }}</span>
-								@endif
-								<div class="main-rowx-1 mt-3">
-									<div class="main-row main-data-teble-1">
-										<div class="row">
-											
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Bank Name <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="bank_name" id="aadhar" placeholder="Bank Name" required value="{{ $userkyc->bank_name }}">
-												</div>
-											</div>
-											<div class="col-lg-4 col-md-6">
-												<div class="from-group my-2">
-													<label for="username"> Account Holder Name <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="account_holder_name" id="account_holder_name" placeholder="Account Holder Name" required value="{{ $userkyc->account_holder_name }}">
-												</div>
-											</div>
-  
-											<div class="col-lg-4 col-md-6 ">
-												<div class="from-group my-2">
-													<label for="username"> Account Number  <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="account_number" id="account_number" placeholder="Account Number" required value="{{ $userkyc->account_number }}">
-												</div>
-											</div>
 
-											<div class="col-lg-4 col-md-6 mt-2">
-												<div class="from-group my-2">
-													<label for="username"> IFSC Code  <span class="text-danger">*</span></label>
-													<input type="text" autocomplete="off" name="ifsc_code" id="ifsc_code" placeholder="IFSC Code" required value="{{ $userkyc->ifsc_code }}">
-												</div>
-											</div>
-											<div class="col-lg-4 col-md-6 mt-2">
-												<div class="from-group my-2">
-													<label for="username"> Bank Passbook  <span class="text-danger">*</span></label>
-													<input type="file" name="bank_passbook" style="height: 48px;" id="bank_passbook" {{ empty($userkyc->bank_passbook) ? 'required' : '' }}>
-													@if(!empty($userkyc->bank_passbook))
-														<img src="{{url('storage/kyc/'.$userkyc->user_id.'/'.$userkyc->bank_passbook)}}" style="height: 150px;width: 300px;margin-top: 10px;">
-													@endif
-												</div>
-											</div>
-										</div>
+							<div class="row align-items-end">
+								<div class="col-lg-4 col-md-6">
+									<div class="form-group my-2">
+										<label>Aadhar Number <span class="text-danger">*</span></label>
+										<input type="text" autocomplete="off" name="aadhar" id="aadhar"
+											value="{{ $userkyc->aadhar }}"
+											maxlength="12"
+											class="form-control"
+											placeholder="Enter Aadhar Number"
+											style="height: 48px;"
+											{{ $userkyc->aadhar_status ? 'readonly' : 'required' }}>
 									</div>
 								</div>
-								@if($userkyc->bank_status != 1)
-									<div class="text-align-end">
-										<button class="btn-main-1" id="customer_submit"> Submit </button>
+
+								@if($userkyc->aadhar_full_name)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2">
+											<label>Aadhar Holder Name</label>
+											<input type="text" class="form-control" value="{{ $userkyc->aadhar_full_name }}" readonly style="height: 48px;">
+										</div>
 									</div>
 								@endif
+
+								@if(!$userkyc->aadhar_status)
+									<div class="col-lg-4 col-md-6 my-2 d-flex align-items-end">
+										<button type="button" id="sendOtpBtn" class="btn btn-primary btn-main-1" style="height: 48px;">
+											Send OTP
+										</button>
+									</div>
+								@endif
+							</div>
+
+							{{-- Hidden OTP Section (will show after OTP sent) --}}
+							<div id="otpSection" class="row mt-3 d-none">
+								<div class="col-lg-4 col-md-6">
+									<div class="form-group">
+										<label>Enter OTP <span class="text-danger">*</span></label>
+										<input type="text" name="otp" id="otp" class="form-control" maxlength="6" placeholder="Enter OTP" required>
+									</div>
+								</div>
+
+								<input type="hidden" name="request_id" id="request_id">
+								<div class="col-lg-4 col-md-6 my-2 d-flex align-items-end">
+									<button type="submit" class="btn btn-primary btn-main-1" style="height: 48px;">
+										Verify OTP
+									</button>
+								</div>	 
 							</div>
 						</form>
 					</div>
 				</div>
 			</div>
+ 
 		</div>
 	</div>
 </div>
-@endsection 
+@endsection
+@push('js')
+<script>
+	$(document).ready(function() {
+		$('#sendOtpBtn').on('click', function(e) {
+			e.preventDefault();
+
+			let aadhar = $('#aadhar').val().trim();
+			if (aadhar.length !== 12) {
+				toastrMsg("warning", 'Please enter a valid 12-digit Aadhar number.'); 
+				return;
+			}
+
+			// Disable button to prevent multiple clicks
+			$('#sendOtpBtn').prop('disabled', true).text('Sending...');
+
+			$.ajax({
+				url: "{{ route('users.aadhar.sendOtp') }}", // 👈 your route for OTP
+				type: "POST",
+				data: {
+					_token: "{{ csrf_token() }}",
+					aadhar: aadhar
+				},
+				success: function(res) {
+					if (res.status === 'success') {
+						toastrMsg(res.status, res.msg);
+						$('#sendOtpBtn').prop('disabled', false).text('Send OTP').hide();
+						$('#otpSection').removeClass('d-none');
+						$('#request_id').val(res.request_id);
+					} else {
+						toastrMsg(res.status, res.msg || 'Failed to send OTP.'); 
+					}
+				},
+				error: function(xhr) {
+					toastrMsg("error", 'Something went wrong while sending OTP.');  
+				},
+				complete: function() {
+					$('#sendOtpBtn').prop('disabled', false).text('Send OTP');
+				}
+			});
+		});
+	});
+</script>
+@endpush

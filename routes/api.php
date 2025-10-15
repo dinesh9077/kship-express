@@ -90,6 +90,7 @@
 		Route::group(['prefix'=>'user-kyc'], function()
 		{
 			Route::post('/pancard/update', [UserKycController::class, 'kycUserPancardUpdate']);
+			Route::post('/aadhar/send-otp', [UserKycController::class, 'kycUserAadharOtp']);
 			Route::post('/aadhar/update', [UserKycController::class, 'kycUserAadharUpdate']);  
 			Route::post('/gst/update', [UserKycController::class, 'kycUserGSTUpdate']);
 			Route::post('/bank/update', [UserKycController::class, 'kycUserBankUpdate']);  

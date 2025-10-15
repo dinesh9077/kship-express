@@ -3,30 +3,128 @@
 	namespace App\Http\Controllers\Api;
 	
 	use Illuminate\Http\Request;
-	use App\Http\Controllers\Controller;
-	use App\Models\User;
-	use App\Models\Role;
-	use App\Models\Permission;
-	use App\Models\Billing;
-	use App\Models\UserKyc;
-	use App\Models\Notification;
-	use App\Models\UserWallet;
-	use DB,Auth,File,Hash;
+	use App\Http\Controllers\Controller; 
+	use App\Models\UserKyc; 
+	use DB,Auth,File;
 	use Illuminate\Support\Facades\Http;
 	use App\Traits\ApiResponse;   
 	
 	class UserKycController extends Controller
 	{
-		use ApiResponse;  
-		  
+		use ApiResponse;
+
 		public function kycUserPancardUpdate(Request $request)
 		{
-			return $this->kycUserDocumentUpdate($request, 'pancard_image', 'pancard');
+			$user = Auth::user();
+
+			try {
+				$response = Http::withHeaders([
+					'Content-Type' => 'application/json',
+				])->post('https://api.quickekyc.com/api/v1/pan/pan', [
+					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
+					'id_number' => $request->input('pancard'),
+				]);
+
+				if ($response->failed()) {
+					return $this->errorResponse('PAN verification failed. Please try again later.'); 
+				}
+
+				$data = $response->json();
+
+				if (!isset($data['status']) || strtolower($data['status']) !== 'success') {
+					return $this->errorResponse($data['message'] ?? 'PAN verification unsuccessful. Please check your details.'); 
+				}
+
+				// Update or create KYC record
+				$userKyc = UserKyc::updateOrCreate(
+					['user_id' => $user->id],
+					[
+						'pancard' => $data['data']['pan_number'],
+						'pan_full_name' => $data['data']['full_name'],
+						'pancard_status' => 1,
+						'pancard_text' => $data,
+					]
+				);
+
+				// Update user's overall KYC status if both PAN and Aadhar verified
+				if ($userKyc->pancard_status && $userKyc->aadhar_status) {
+					$user->kyc_status = 1;
+					$user->save();
+				}
+				return $this->successResponse([], 'Your PAN details have been verified successfully.'); 
+
+			} catch (\Throwable $e) {
+				return $this->errorResponse('Something went wrong while verifying PAN: ' . $e->getMessage());	 
+			}
 		}
-		
+
+		public function kycUserAadharOtp(Request $request)
+		{
+			try {
+				$response = Http::withHeaders([
+					'Content-Type' => 'application/json',
+				])->post('https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp', [
+					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
+					'id_number' => $request->aadhar,
+				]);
+
+				$data = $response->json();
+
+				if ($response->failed() || (strtolower($data['status'] ?? '') !== 'success')) { 
+					return $this->errorResponse($data['message'] ?? 'Unable to send OTP. Please try again.');
+				}
+
+				return $this->successResponse(['request_id' => $data['request_id'] ?? null], 'OTP has been sent successfully to your registered mobile number linked with Aadhar.');
+			 
+			} catch (\Throwable $e) { 
+				return $this->errorResponse('Something went wrong while sending OTP.');
+			}
+		}
+
 		public function kycUserAadharUpdate(Request $request)
 		{
-			return $this->kycUserDocumentUpdate($request, ['aadhar_front', 'aadhar_back'], 'aadhar');
+			$user = Auth::user();
+
+			try {
+				$response = Http::withHeaders([
+					'Content-Type' => 'application/json',
+				])->post('https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp', [
+					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
+					'request_id' => $request->input('request_id'),
+					'otp' => $request->input('otp'),
+				]);
+
+				if ($response->failed()) {
+					return $this->errorResponse('Aadhar verification failed. Please try again later.'); 
+				}
+
+				$data = $response->json();
+
+				if (!isset($data['status']) || strtolower($data['status']) !== 'success') {
+					return $this->errorResponse($data['message'] ?? 'Aadhar verification unsuccessful. Please check your details.'); 
+				}
+
+				// Update or create KYC record
+				$userKyc = UserKyc::updateOrCreate(
+					['user_id' => $user->id],
+					[
+						'aadhar' => $data['data']['aadhaar_number'],
+						'aadhar_full_name' => $data['data']['full_name'],
+						'aadhar_status' => 1,
+						'aadhar_text' => $data,
+					]
+				);
+
+				// Update user's overall KYC status if both PAN and Aadhar verified
+				if ($userKyc->pancard_status && $userKyc->aadhar_status) {
+					$user->kyc_status = 1;
+					$user->save();
+				}
+				return $this->successResponse([], 'Your Aadhar details have been verified successfully.'); 
+
+			} catch (\Throwable $e) {
+				return $this->errorResponse('Something went wrong while verifying Aadhar: ' . $e->getMessage()); 
+			}
 		}
 		
 		public function kycUserGSTUpdate(Request $request)

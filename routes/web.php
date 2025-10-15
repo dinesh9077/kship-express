@@ -121,6 +121,7 @@
 		//KYC USER
 		Route::get('/kyc/edit', [App\Http\Controllers\UserController::class, 'kycUser'])->name('users.kyc.edit');  
 		Route::post('/kyc/pancard/update', [App\Http\Controllers\UserController::class, 'kycUserPancardUpdate'])->name('users.pancard.update');
+		Route::post('/kyc/aadhar/send-otp', [App\Http\Controllers\UserController::class, 'kycUserAadharOtp'])->name('users.aadhar.sendOtp');
 		Route::post('/kyc/aadhar/update', [App\Http\Controllers\UserController::class, 'kycUserAadharUpdate'])->name('users.aadhar.update');  
 		Route::post('/kyc/gst/update', [App\Http\Controllers\UserController::class, 'kycUserGSTUpdate'])->name('users.gst.update');
 		Route::post('/kyc/bank/update', [App\Http\Controllers\UserController::class, 'kycUserBankUpdate'])->name('users.bank.update');  
