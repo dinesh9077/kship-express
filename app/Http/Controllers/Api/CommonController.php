@@ -288,10 +288,10 @@
 			try {
 				$userId = $request->user_id;
 				$amount = $request->amount;
-				// if($amount < 200)
-				// {
-				// 	return $this->errorResponse('Enter a valid amount (min ₹200)');
-				// }
+				if($amount < 10)
+				{
+					return $this->errorResponse('Enter a valid amount (min ₹200)');
+				}
 				$response = $masterService->rechargeOrderCreate($amount);
 				if (!($response['success'] ?? false)) {
 					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
