@@ -1267,7 +1267,9 @@
 					->get()
 					->keyBy('courier_id');
 					
-					foreach($responseDetails as  $responseData){ 
+					foreach($responseDetails as  $responseData)
+					{
+						$courierLogo = $this->courierImage($responseData['image'], $responseData['id']); 
 						$totalCharges = $responseData['total_charges'];  
 						$beforeTax = $responseData['before_tax_total_charges'];  
 						$gst = $responseData['gst'];  
@@ -1297,7 +1299,7 @@
 							'shipping_company_id' => $shippingCompany->id,
 							'courier_id' 	=> $responseData['id'],
 							'shipping_company_name' => $responseData['name'],
-							'shipping_company_logo' => $responseData['image'], 
+							'shipping_company_logo' => $courierLogo, 
 							'courier_name' => $responseData['name'], 
 							'total_charges' => $totalCharges,
 							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
@@ -1319,6 +1321,34 @@
 			])->render();
 			
 			return response()->json(['status' => 'success', 'view' => $view]);
+		}
+
+		public function courierImage($imageUrl, $courierId)
+		{
+			// Build file info
+			$extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'jpg';
+			$filename = "{$courierId}.{$extension}";
+			$localPath = "courier-logo/{$filename}";
+
+			// ✅ Check if file already exists
+			if (Storage::disk('public')->exists($localPath)) {
+				// Return existing local file URL
+				return asset("storage/{$localPath}");
+			}
+
+			// Fetch image from URL
+			$response = Http::withOptions(['verify' => false])->get($imageUrl);
+
+			if (!$response->successful()) {
+				// If failed, return original image URL
+				return $imageUrl;
+			}
+
+			// Save file locally
+			Storage::disk('public')->put($localPath, $response->body());
+
+			// Return local URL
+			return asset("storage/{$localPath}");
 		}
 		
 		public function orderShipNow(Request $request)

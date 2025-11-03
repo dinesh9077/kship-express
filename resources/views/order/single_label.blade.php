@@ -16,25 +16,20 @@
 							@php 
 								$logoUrl = $order->courier_logo;
 
-								// Try to check if the signed URL is still accessible
-								if (!empty($logoUrl)) {
-									try {
-										$response = Illuminate\Support\Facades\Http::withoutVerifying()->get($logoUrl);
+								// Check if the courier_logo exists and belongs to shipping company 1
+								if (!empty($logoUrl) && $order->shipping_company_id == 1) {
+									$localPath = "courier-logo/{$order->courier_id}.png";
 
-										if ($response->status() !== 200) {
-											$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
-										}
-									} catch (\Throwable $e) {
-										// If any error, fallback
-										$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
+									// Check if local copy exists in storage
+									if (\Storage::disk('public')->exists($localPath)) { 
+										$logoUrl = asset("storage/{$localPath}");
 									}
-								} else {
-									$logoUrl = asset('storage/shipping-logo/' . ($shipping->logo ?? 'default.png'));
 								}
 
+								// Store final logo path for later use if needed
 								$order->final_logo = $logoUrl;
-
 							@endphp	
+
 							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
 						@else
 							<img src="{{ asset('storage/shipping-logo/'.$shipping->logo) }}" alt="LOGO"
