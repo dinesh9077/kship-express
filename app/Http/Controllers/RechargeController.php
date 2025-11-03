@@ -246,7 +246,7 @@
 			try{
 				$userId = $request->user_id;
 				$amount = $request->amount; 
-				$response = $masterService->rechargeOrderCreate($amount);
+				$response = $masterService->rechargeOrderCreate($amount); 
 				if (!($response['success'] ?? false)) {
 					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
 					return response()->json(['status' => 'error', 'msg' => $errorMsg]);
