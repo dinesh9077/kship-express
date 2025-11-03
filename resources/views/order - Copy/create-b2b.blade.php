@@ -150,33 +150,80 @@
 					
                     <div class="main-rowx-1">
                         <div class="main-order-001">
-							<div class="row">
-								<div class="col-lg-12"> 
-									<div class="row">
-										<div class="from-group col-6"> 
-											<label for="order-id"> Recipeint/Customer </label>
-											<div class="main-rox-input">
-												<select name="customer_id" class="control-form select2" id="customer_id" style="border-radius: 5px 0px 0px 5px" onchange="customerAddresList(this)" required>
-													<option value="">Select Recipeint/Customer</option>
-												</select>
-												<button type="button" class="new-height-btn-plus" onclick="createCustomer(this, event)"> + </button>
-											</div>
-										</div> 
-										<div class="from-group col-6">
-											<label for="order-id"> Customer Address </label>
-											<div class="main-rox-input">
-												<select name="customer_address_id" class="control-form select2" id="customer_address_id" style="border-radius: 5px 0px 0px 5px" required>
-													<option>Select Customer Address</option>
-												</select>
-												<button type="button" class="new-height-btn-plus" disabled data-toggle="tooltip" data-placement="right" title="Kindly select a customer before adding an address." onclick="createCustomerAddress(this, event)"> + </button>
-											</div>
-											<div id="warehouse_lable"></div> 
-										</div>
+							<div class="main-vender">
+								<h5  class="new-title-b2c-order"> Recipient/Customer Information </h5>
+							</div> 
+                            <div class="row"> 
+								<div class="col-lg col-sm-6">
+									<div class="from-group my-2">
+										<label for="order-id"> First Name <span class="text-danger">*</span></label>
+										<input type="text" placeholder="First Name" name="first_name" required>
+									</div>
+								</div>
+								
+								<div class="col-lg col-sm-6">
+									<div class="from-group my-2">
+										<label for="order-id"> Last Name  <span class="text-danger">*</span></label>
+										<input type="text" placeholder="Last Name" name="last_name" required>
+									</div>
+								</div>
+								<div class="col-lg col-sm-6">
+									<div class="from-group my-2">
+										<label for="order-id"> Mobile <span class="text-danger">*</span></label>
+										<input type="text" autocomplete="off" name="mobile" id="mobile" placeholder="Mobile" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required>
+									</div>
+								</div>  
+
+								<div class="col-lg col-sm-6">
+									<div class="from-group my-2">
+										<label for="order-id"> Email </label>
+										<input type="email" placeholder="Email" name="email">
+									</div>
+								</div>
+									<div class="col-lg col-sm-6">
+									<div class="from-group my-2">
+										<label for="order-id"> Zip code <span class="text-danger">*</span></label>
+										<input type="text" placeholder="Zip code" id="cust_zip_code" name="zip_code" required>
 									</div>
 								</div>
 							</div>
+							
+							<div class="row mt-3"> 
+								<div class="col-lg col-sm-6 mt-2">
+									<div class="from-group my-2">
+										<label for="order-id"> GST Number </label>
+										<input type="text" name="gst_number" id="gst_number" placeholder="Enter GST Number" pattern="^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Z]{1}[0-9A-Z]{1}$" title="Enter a valid 15-character GST Number (e.g., 22AAAAA1234A1Z5)"> 
+									</div>
+								</div> 
+								
+								<div class="col-lg col-sm-12 mt-2">
+									<div class="from-group my-2">
+										<label for="order-id"> Address <span class="text-danger">*</span></label>
+										<textarea name="address"  style="height: 45px;" id="address" placeholder="Address" required></textarea>
+									</div>
+								</div>
+							
+								<div class="col-lg col-sm-6 mt-2">
+									<div class="from-group my-2">
+										<label for="order-id"> City <span class="text-danger">*</span></label>
+										<input type="text" placeholder="City" id="cust_city" name="city" required>
+									</div>
+								</div>
+								<div class="col-lg col-sm-6 mt-2">
+									<div class="from-group my-2">
+										<label for="order-id"> State <span class="text-danger">*</span></label>
+										<input type="text" placeholder="State" id="cust_state" name="state" required>
+									</div>
+								</div>
+								<div class="col-lg col-sm-6 mt-2">
+									<div class="from-group my-2">
+										<label for="order-id"> Country <span class="text-danger">*</span></label>
+										<input type="text" placeholder="Your Country" id="cust_country" value="india" name="country" required>
+									</div>
+								</div>  
+							</div>
 						</div>
-                    </div>
+					</div>
 
                     <div class="main-rowx-1">
                         <div class="main-order-001">
@@ -359,38 +406,38 @@
 		}
 	});
 	
-	// let zipTimeout; 
-	// $('#cust_zip_code').on('input', function () {
-	// 	clearTimeout(zipTimeout); // Clear previous timeout
+	let zipTimeout; 
+	$('#cust_zip_code').on('input', function () {
+		clearTimeout(zipTimeout); // Clear previous timeout
 
-	// 	const zip_code = $(this).val().trim(); // Trim whitespace
+		const zip_code = $(this).val().trim(); // Trim whitespace
 
-	// 	if (/^\d{6}$/.test(zip_code)) { // Validate: Exactly 6 digits
-	// 		zipTimeout = setTimeout(() => {
-	// 			$.ajax({
-	// 				type: 'GET',
-	// 				url: `https://api.postalpincode.in/pincode/${zip_code}`, // Using Template Literal
-	// 				success: function (response) {
-	// 					if (response[0]?.Status === "Success" && response[0].PostOffice?.length) {
-	// 						const { District: city, State: state, Country: country } = response[0].PostOffice[0];
+		if (/^\d{6}$/.test(zip_code)) { // Validate: Exactly 6 digits
+			zipTimeout = setTimeout(() => {
+				$.ajax({
+					type: 'GET',
+					url: `https://api.postalpincode.in/pincode/${zip_code}`, // Using Template Literal
+					success: function (response) {
+						if (response[0]?.Status === "Success" && response[0].PostOffice?.length) {
+							const { District: city, State: state, Country: country } = response[0].PostOffice[0];
 
-	// 						$("#cust_city").val(city || '');
-	// 						$("#cust_state").val(state || '');
-	// 						$("#cust_country").val(country || '');
-	// 					} else {
-	// 						$("#cust_city").val('');
-	// 						$("#cust_state").val('');
-	// 						$("#cust_country").val('');
-	// 						console.warn("Invalid or missing pincode data.");
-	// 					}
-	// 				},
-	// 				error: function (xhr, status, error) { 
-	// 					console.error("API Error:", error);
-	// 				}
-	// 			});
-	// 		}, 500); // Debounce API request by 500ms
-	// 	}
-	// });
+							$("#cust_city").val(city || '');
+							$("#cust_state").val(state || '');
+							$("#cust_country").val(country || '');
+						} else {
+							$("#cust_city").val('');
+							$("#cust_state").val('');
+							$("#cust_country").val('');
+							console.warn("Invalid or missing pincode data.");
+						}
+					},
+					error: function (xhr, status, error) { 
+						console.error("API Error:", error);
+					}
+				});
+			}, 500); // Debounce API request by 500ms
+		}
+	});
 
 	// Warehouse pickup location
 	warehousePickupLocation()
@@ -443,7 +490,7 @@
 	}
     
 	// Customer/Destination Details
-    customerDetailsList() 
+    //customerDetailsList() 
     function customerDetailsList() 
 	{ 
 		$orderForm.find('#customer_id').prop('disabled', true);

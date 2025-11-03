@@ -14,13 +14,13 @@
                     <div class="row">
                         <div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> First Name <span class="text-danger">*</span></label>
+								<label for="username"> First Name </label>
 								<input type="text" autocomplete="off" name="first_name" id="first_name" placeholder="First Name" required> 
 							</div>
 						</div> 
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="first-name"> Last Name <span class="text-danger">*</span></label>
+								<label for="first-name"> Last Name </label>
 								<input type="text" autocomplete="off" name="last_name" id="last_name" placeholder="Last Name" required> 
 							</div>
 						</div>
@@ -34,7 +34,7 @@
 						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="first-name"> Mobile <span class="text-danger">*</span></label>
+								<label for="first-name"> Mobile </label>
 								<input type="text" autocomplete="off" name="mobile" id="mobile" placeholder="Mobile"  maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
 							</div>
 						</div> 
@@ -81,34 +81,34 @@
                     <div class="row">
                         <div class="col-xl-12 col-md-12 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> Address <span class="text-danger">*</span></label>
+								<label for="username"> Address </label>
 								<textarea class="default" data-id="0" autocomplete="off" name="address[]" id="address" placeholder="Address" required></textarea> 
 							</div>
 						</div>
 						 
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="first-name"> Zip code <span class="text-danger">*</span></label>
+								<label for="first-name"> Zip code </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code[]" id="zip_code" placeholder="Zip code" onkeyup="autoFetchCountry(this)" required> 
 							</div>
 						</div>  
 						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> Country <span class="text-danger">*</span></label>
+								<label for="username"> Country </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
 							</div>
 						</div>
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> State <span class="text-danger">*</span></label>
+								<label for="username"> State </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="state[]" id="state" placeholder="State" required> 
 							</div>
 						</div>
 						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> City <span class="text-danger">*</span></label>
+								<label for="username"> City </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="city[]" id="city" placeholder="City" required> 
 							</div>
 						</div> 

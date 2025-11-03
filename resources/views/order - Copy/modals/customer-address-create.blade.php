@@ -15,32 +15,32 @@
                     <div class="row">
                         <div class="col-xl-12 col-md-12 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> Address <span class="text-danger">*</span></label>
+								<label for="username"> Address </label>
 								<textarea class="default" type="text" data-id="0" autocomplete="off" name="address[]" id="address" placeholder="Address" required></textarea>
 							</div>
 						</div>
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="first-name"> Zip code <span class="text-danger">*</span></label>
+								<label for="first-name"> Zip code </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code[]" id="zip_code" placeholder="Zip code" onkeyup="autoFetchCountry(this)" required> 
 							</div>
 						</div>  
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> Country <span class="text-danger">*</span></label>
+								<label for="username"> Country </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
 							</div>
 						</div>
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> State <span class="text-danger">*</span></label>
+								<label for="username"> State </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="state[]" id="state" placeholder="State" required> 
 							</div>
 						</div>
 						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> City <span class="text-danger">*</span></label>
+								<label for="username"> City </label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="city[]" id="city" placeholder="City" required> 
 							</div>
 						</div> 
@@ -105,16 +105,16 @@
 			});
 		});
 		
-		let zipTimeoutAddress;
+		let zipTimeout;
 	
 		function autoFetchCountry(obj)
 		{
-			clearTimeout(zipTimeoutAddress); // Clear previous timeout
+			clearTimeout(zipTimeout); // Clear previous timeout
 			
 			const zip_code = $(obj).val().trim();  
 			
 			if (/^\d{6}$/.test(zip_code)) { // Validate: Exactly 6 digits
-				zipTimeoutAddress = setTimeout(() => {
+				zipTimeout = setTimeout(() => {
 					$.ajax({
 						type: 'GET',
 						url: `https://api.postalpincode.in/pincode/${zip_code}`, // Using Template Literal
