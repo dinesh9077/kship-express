@@ -53,7 +53,7 @@
 			$userId = $user->id;
 			
 			// Base Query
-			$query = Customer::with('customerOrder:id,customer_id,order_prefix', 'latestCustomerAddress')->select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
+			$query = Customer::with( 'latestCustomerAddress')->select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
 			->when($role === "user", fn($q) => $q->where('user_id', $userId));
 			
 			$totalData = $query->count();
@@ -90,7 +90,7 @@
 			foreach ($customers as $index => $customer) {
 				$actionButtons = '';
 					
-				/* if (config('permission.client.edit')) {
+				 if (config('permission.client.edit')) {
 					$actionButtons .= '<a href="' . url('customer/edit', $customer->id) . '" 
 						class="btn btn-icon waves-effect waves-light action-icon mr-1">
 						<i class="mdi mdi-pencil"></i>
@@ -104,7 +104,7 @@
 						onClick="deleteRecord(this, event);"> 
 						<i class="mdi mdi-trash-can-outline"></i> 
 					</a>';
-				} */
+				}
 				 
 				$customerAddress = $customer->latestCustomerAddress ?? null; 
 				$customer_address = $customerAddress 
@@ -117,14 +117,13 @@
 				: '';
 			 
 				$data[] = [
-					'id' => $start + $index + 1,
-					'order_no' => '#'.$customer->customerOrder->order_prefix ?? 'N/A',
+					'id' => $start + $index + 1, 
 					'customer_name' => $customer->customer_name,
 					'mobile' => $customer->mobile,
 					'email' => $customer->email,  
 					'address' => $customer_address,  
 					'created_at' => date('d M Y', strtotime($customer->created_at)),
-					//'action' => $actionButtons
+					'action' => $actionButtons
 				];
 			}
  

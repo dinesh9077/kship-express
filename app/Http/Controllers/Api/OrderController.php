@@ -188,36 +188,34 @@
 					return $this->errorResponse('The order number already exists.'); 
 				} */
 				
-				// Create Customer
-				$customer = Customer::create([
-					'user_id'    => $user_id,
-					'first_name' => $request->first_name,
-					'last_name'  => $request->last_name,
-					'email'      => $request->email,
-					'gst_number' => $request->gst_number ?? null,
-					'mobile'     => $request->mobile,
-					'status'     => 1,
-				]);
+				// // Create Customer
+				// $customer = Customer::create([
+				// 	'user_id'    => $user_id,
+				// 	'first_name' => $request->first_name,
+				// 	'last_name'  => $request->last_name,
+				// 	'email'      => $request->email,
+				// 	'gst_number' => $request->gst_number ?? null,
+				// 	'mobile'     => $request->mobile,
+				// 	'status'     => 1,
+				// ]);
 				
-				// Create Customer Address if available
-				$customerAddress = null;
-				if ($request->filled('address')) {
-					$customerAddress = CustomerAddress::create([
-						'customer_id' => $customer->id,
-						'address'     => $request->address,
-						'country'     => $request->country,
-						'state'       => $request->state,
-						'city'        => $request->city,
-						'zip_code'    => $request->zip_code,
-						'status'      => 1,
-					]);
-				}
+				// // Create Customer Address if available
+				// $customerAddress = null;
+				// if ($request->filled('address')) {
+				// 	$customerAddress = CustomerAddress::create([
+				// 		'customer_id' => $customer->id,
+				// 		'address'     => $request->address,
+				// 		'country'     => $request->country,
+				// 		'state'       => $request->state,
+				// 		'city'        => $request->city,
+				// 		'zip_code'    => $request->zip_code,
+				// 		'status'      => 1,
+				// 	]);
+				// }
 					
 				$data['user_id'] = $user_id;
 				$data['order_prefix'] = Order::generateOrderNumber($user_id);
-				$data['status_courier'] = 'New';
-				$data['customer_id'] = $customer->id;
-				$data['customer_address_id'] = $customerAddress->id ?? null;
+				$data['status_courier'] = 'New'; 
 				$data['weight'] = $request->total_weight;
 				$data['is_fragile_item'] = $request->is_fragile_item ?? 0;
 				$data['total_amount'] = $request->invoice_amount;
@@ -369,29 +367,29 @@
 				
 				$order = Order::findOrFail($id); 
 				
-				$order->customer()->update([
-					'user_id'    => $user_id,
-					'first_name' => $request->first_name,
-					'last_name'  => $request->last_name,
-					'email'      => $request->email,
-					'gst_number' => $request->gst_number ?? null,
-					'mobile'     => $request->mobile,
-					'status'     => 1,
-					'updated_at' => now(), // ✅ fixed
-				]);
+				// $order->customer()->update([
+				// 	'user_id'    => $user_id,
+				// 	'first_name' => $request->first_name,
+				// 	'last_name'  => $request->last_name,
+				// 	'email'      => $request->email,
+				// 	'gst_number' => $request->gst_number ?? null,
+				// 	'mobile'     => $request->mobile,
+				// 	'status'     => 1,
+				// 	'updated_at' => now(), // ✅ fixed
+				// ]);
 
-				if (!empty($request->address)) {
-					$order->customerAddress()->update([
-						'customer_id' => $order->customer_id,
-						'address'     => $request->address,
-						'country'     => $request->country,
-						'state'       => $request->state,
-						'city'        => $request->city,
-						'zip_code'    => $request->zip_code,
-						'status'      => 1,
-						'updated_at'  => now(), // ✅ fixed
-					]);
-				}
+				// if (!empty($request->address)) {
+				// 	$order->customerAddress()->update([
+				// 		'customer_id' => $order->customer_id,
+				// 		'address'     => $request->address,
+				// 		'country'     => $request->country,
+				// 		'state'       => $request->state,
+				// 		'city'        => $request->city,
+				// 		'zip_code'    => $request->zip_code,
+				// 		'status'      => 1,
+				// 		'updated_at'  => now(), // ✅ fixed
+				// 	]);
+				// }
 	 
 				$data['user_id'] = $user_id;
 				$data['order_prefix'] = Order::generateOrderNumber($user_id);

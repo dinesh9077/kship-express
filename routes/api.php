@@ -56,7 +56,8 @@
 		  
 		Route::group(['prefix'=>'customer'], function(){ 
 			Route::post('/list', [WarehouseController::class, 'customerList']);   
-			Route::post('/create', [WarehouseController::class, 'storeCustomer']);  
+			Route::post('/create', [WarehouseController::class, 'storeCustomer']);
+			Route::post('/create-address', [WarehouseController::class, 'storeCustomerAddress']);
 			Route::post('/update/{id}', [WarehouseController::class, 'updateCustomer']);  
 			Route::post('/delete/{id}', [WarehouseController::class, 'deleteCustomer']);   
 		});

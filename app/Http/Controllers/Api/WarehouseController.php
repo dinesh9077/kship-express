@@ -239,8 +239,8 @@
 		{ 
 			$offset = $request->get("offset");
 			$limit = $request->get("limit"); 
-			$search_arr = $request->get('search');
-			  
+			$search = $request->get('search');
+		 
 			$user = Auth::user();
 			$role = $user->role;
 			$userId = $user->id;
@@ -263,14 +263,63 @@
 			 
 			// Fetch paginated records
 			$query->with('user:id,name', 'customerAddresses');
-			if($offset && $limit)
+			if($offset || $limit)
 			{
 				$query->offset($offset)->limit($limit);
 			}
 			$customers = $query->latest()->get();
 			return $this->successResponse($customers, 'customer fetched successfully.');
-		} 
-		  
+		}
+
+		public function storeCustomerAddress(Request $request)
+		{
+			// ✅ 1. Validate input
+			$validator = Validator::make($request->all(), [
+				'customer_id' => 'required|integer',
+				'address' => 'required|string|min:1',
+				'zip_code' => 'required|string|min:1',
+				'country' => 'required|string|min:1',
+				'state' => 'required|string|min:1',
+				'city' => 'required|string|min:1',
+			]);
+
+			if ($validator->fails()) {
+				return $this->validateResponse('Validation failed', 422, $validator->errors());
+			}
+
+			try {
+				DB::beginTransaction();
+
+				// ✅ 2. Prepare data
+				$addressData = [
+					'customer_id' => $request->customer_id,
+					'address' => $request->address,
+					'country' => $request->country,
+					'state' => $request->state,
+					'city' => $request->city,
+					'zip_code' => $request->zip_code,
+					'status' => 1,
+					'created_at' => now(),
+					'updated_at' => now(),
+				];
+
+				// ✅ 3. Use create() or insertGetId() to return inserted record info
+				$customerAddressId = CustomerAddress::insertGetId($addressData);
+
+				DB::commit();
+
+				// ✅ 4. Optionally fetch the new record for return
+				$customerAddress = CustomerAddress::find($customerAddressId);
+
+				return $this->successResponse($customerAddress, 'The customer address has been successfully added.');
+
+			} catch (\Exception $e) {
+				DB::rollBack();
+				return $this->errorResponse('Failed to add customer address. Please try again.', 500);
+			}
+		}
+
+
 		public function storeCustomer(Request $request)
 		{
 			// Validate input, including warehouse name uniqueness
