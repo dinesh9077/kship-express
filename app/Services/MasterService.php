@@ -38,10 +38,12 @@
 				$orderAmount = $amount * 100; // Razorpay usually expects paise
 				$orderUrl = "https://api.recharge.kashishindiapvtltd.com/payments/create-order-gateway";
 				
-				$response = Http::withHeaders([
+				$response = Http::withOptions(['verify' => false])
+				->withHeaders([
 					'Accept'       => 'application/json',
 					'Content-Type' => 'application/json',
-				])->post($orderUrl, [
+				])
+				->post($orderUrl, [
 					"secret_key" => "kashishindiapvtltdgatewaywithrznew",
 					"user"       => "8c816dcb-766b-4c7c-bbc3-831b494966fe",
 					"amount"     => $orderAmount,
@@ -66,6 +68,43 @@
 					'message'  => $e->getMessage()
 				];
 			} 
+		}
+ 
+		public function getRechargeStatus($orderId)
+		{
+			try { 
+				$orderUrl = "https://api.recharge.kashishindiapvtltd.com/payments/check-payment-gateway";
+
+				$response = Http::withOptions(['verify' => false])
+					->withHeaders([
+						'Accept' => 'application/json',
+						'Content-Type' => 'application/json',
+					])
+					->post($orderUrl, [
+						"secret_key" => "kashishindiapvtltdgatewaywithrznew",
+						"user" => "8c816dcb-766b-4c7c-bbc3-831b494966fe",
+						"id" => "order_RbDa9qLahwkFGM",
+					]);
+
+				if ($response->successful()) {
+					return [
+						'success' => true,
+						'response' => $response->json(),
+					];
+				}
+
+				return [
+					'success' => false,
+					'response' => json_decode($response->body(), true),
+				];
+
+			} catch (\Throwable $e) {
+				return [
+					'success' => false,
+					'response' => ['error' => 'Unable to connect to order service.'],
+					'message' => $e->getMessage()
+				];
+			}
 		}
 
 	}

@@ -1403,7 +1403,7 @@
 					
 					if ((isset($courierResponse['response']['result']) && $courierResponse['response']['result'] == 0))
 					{
-					return response()->json(['status' => 'error', 'msg' => $courierResponse['response']['data']['error'] ?? $courierResponse['response']['message'] ?? 'An error occurred.']);	 
+						return response()->json(['status' => 'error', 'msg' => $courierResponse['response']['data']['error'] ?? $courierResponse['response']['message'] ?? 'An error occurred.']);	 
 					}   
 					$awbNumber = $courierResponse['response']['data']['awb_number'] ?? '';
 					
