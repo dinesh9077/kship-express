@@ -163,7 +163,8 @@
 					$user->kyc_status = 1;
 					$user->save();
 				}
-				return $this->successResponse($userKyc->refresh(), 'Your Aadhar details have been verified successfully.'); 
+				$userKyc->aadhar_front = asset($imageUrl); 
+				return $this->successResponse($userKyc, 'Your Aadhar details have been verified successfully.'); 
 
 			} catch (\Throwable $e) {
 				return $this->errorResponse('Something went wrong while verifying Aadhar: ' . $e->getMessage()); 
