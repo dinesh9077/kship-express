@@ -144,7 +144,7 @@
         								</div>
         							</div> 
 									
-									<div class="col-xl-3 col-md-4 col-sm-6">
+									{{-- <div class="col-xl-3 col-md-4 col-sm-6">
                                         <div class="from-group my-2">
                                             <label for="first-name"> Aadhar Front Image </label>
                                             <input type="file" name="aadhar_front" id="aadhar_front" accept="image/png, image/jpeg, image/jpg, image/webp" > 
@@ -172,7 +172,7 @@
 										@if($customer->aadhar_front)
 											<img src="{{ url('storage/customer/pancard', $customer->pancard)}}" height=50>
 										@endif
-        							</div> 
+        							</div>  --}}
                                     <div class="col-xl-3 col-md-4 col-sm-6">
                                         <div class="from-group my-2">
                                             <label for="first-name"> Status </label>

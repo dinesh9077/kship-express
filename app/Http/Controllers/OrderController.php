@@ -955,7 +955,8 @@
 		}
 		
 		public function orderLableDownload($orderId)
-		{  
+		{
+			error_reporting(0);
 			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
 			
 			$shipping = $order->shippingCompany ?? null;
@@ -974,7 +975,8 @@
 		}
 		  
         public function alllabeldownload(Request $request)
-        { 
+        {
+		error_reporting(0);
 			try {
 				$orderIds = $request->input('order_ids'); 
 				if (empty($orderIds) || !is_array($orderIds)) {

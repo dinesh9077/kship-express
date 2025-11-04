@@ -46,7 +46,7 @@
 							</div>
 						</div> 
 						
-						<div class="col-xl-6 col-md-4 col-sm-12">
+						{{-- <div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
 								<label for="first-name"> Aadhar Front Image </label>
 								<input type="file" name="aadhar_front" id="aadhar_front" accept="image/png, image/jpeg, image/jpg, image/webp" > 
@@ -65,7 +65,7 @@
 								<label for="first-name"> Pancard Image </label>
 								<input type="file" name="pancard" id="pancard" accept="image/png, image/jpeg, image/jpg, image/webp" > 
 							</div>
-						</div> 
+						</div>  --}}
 						 
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">

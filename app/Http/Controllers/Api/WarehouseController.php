@@ -349,15 +349,7 @@
 			$userId = Auth::id();
 			$data = $request->except('_token', 'address', 'country', 'state', 'city', 'zip_code', 'aadhar_front', 'aadhar_back', 'pancard');
 			$data['user_id'] = $userId;
-
-			if (Customer::where('mobile', $request->mobile)->exists()) {
-				return $this->errorResponse('The mobile number already exists.');   
-			}
-
-			if (Customer::where('email', $request->email)->exists()) {
-				return $this->errorResponse('The mobile number already exists.');  
-			}
-
+  
 			try {
 				DB::beginTransaction();
 				
@@ -437,14 +429,7 @@
 			$data = $request->except('_token', 'address', 'country', 'state', 'city', 'zip_code', 'id', 'aadhar_front', 'aadhar_back', 'pancard');
 			$data['user_id'] = $userId;
 
-			if (Customer::where('id', '!=', $id)->where('mobile', $request->mobile)->exists()) {
-				return $this->errorResponse('The mobile number already exists.');   
-			}
-
-			if (Customer::where('id', '!=', $id)->where('email', $request->email)->exists()) {
-				return $this->errorResponse('The email already exists.');    
-			}
-
+		  
 			try {
 				DB::beginTransaction();
 				$customer = Customer::findOrFail($id); // Fetch the customer record
