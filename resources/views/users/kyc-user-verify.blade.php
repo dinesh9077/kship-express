@@ -68,6 +68,19 @@
                                                     </div>
                                                 </div>
                                             @endif
+                                            @if($userkyc->pancard_category)
+												<div class="col-lg-4 col-md-6">
+													<div class="form-group my-2">
+														<label for="username"> Pancard Category <span class="text-danger">*</span> </label>
+														<input type="text" autocomplete="off" 
+															value="{{ $userkyc->pancard_category }}"
+															class="form-control"
+															style="height: 48px;"
+															readonly>
+													</div>
+												</div>
+											@endif
+                                            
                                             @if (!$userkyc->pancard_status)
                                                 <div class="col-lg-4 col-md-6 d-flex justify-content-start my-2">
                                                     <button type="submit" class="btn btn-primary btn-main-1"
@@ -115,12 +128,55 @@
 											{{ $userkyc->aadhar_status ? 'readonly' : 'required' }}>
 									</div>
 								</div>
-
+                                 
 								@if($userkyc->aadhar_full_name)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Aadhar Holder Name</label>
 											<input type="text" class="form-control" value="{{ $userkyc->aadhar_full_name }}" readonly style="height: 48px;">
+										</div>
+									</div>
+								@endif
+                                @if($userkyc->aadhar_address)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2">
+											<label>Address</label>
+											<input type="text" class="form-control" value="{{ $userkyc->aadhar_address }}" readonly style="height: 48px;">
+										</div>
+									</div>
+								@endif
+								
+								@if($userkyc->aadhar_zip)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2">
+											<label>Zip Code</label>
+											<input type="text" class="form-control" value="{{ $userkyc->aadhar_zip }}" readonly style="height: 48px;">
+										</div>
+									</div>
+								@endif
+
+								@if($userkyc->aadhar_dob)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2">
+											<label>Date Of Birth</label>
+											<input type="text" class="form-control" value="{{ $userkyc->aadhar_dob }}" readonly style="height: 48px;">
+										</div>
+									</div>
+								@endif
+ 
+								@if($userkyc->aadhar_gender)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2">
+											<label>Gender</label>
+											<input type="text" class="form-control" value="{{ $userkyc->aadhar_gender }}" readonly style="height: 48px;">
+										</div>
+									</div>
+								@endif
+
+								@if($userkyc->aadhar_front)
+									<div class="col-lg-4 col-md-6">
+										<div class="form-group my-2"> 
+											<img src="{{ asset($userkyc->aadhar_front) }}" alt="Aadhar Front" style="max-width: 100%; height: auto; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
 										</div>
 									</div>
 								@endif

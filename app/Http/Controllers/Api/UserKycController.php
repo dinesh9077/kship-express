@@ -18,7 +18,8 @@
 			$user = Auth::user();
 
 			try {
-				$response = Http::withHeaders([
+				$response = Http::withOptions(['verify' => false])
+				->withHeaders([
 					'Content-Type' => 'application/json',
 				])->post('https://api.quickekyc.com/api/v1/pan/pan', [
 					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
@@ -41,6 +42,7 @@
 					[
 						'pancard' => $data['data']['pan_number'],
 						'pan_full_name' => $data['data']['full_name'],
+						'pancard_category' => $data['data']['category'],
 						'pancard_status' => 1,
 						'pancard_text' => $data,
 					]
@@ -61,7 +63,8 @@
 		public function kycUserAadharOtp(Request $request)
 		{
 			try {
-				$response = Http::withHeaders([
+				$response = Http::withOptions(['verify' => false])
+				->withHeaders([
 					'Content-Type' => 'application/json',
 				])->post('https://api.quickekyc.com/api/v1/aadhaar-v2/generate-otp', [
 					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
@@ -86,7 +89,8 @@
 			$user = Auth::user();
 
 			try {
-				$response = Http::withHeaders([
+				$response = Http::withOptions(['verify' => false])
+				->withHeaders([
 					'Content-Type' => 'application/json',
 				])->post('https://api.quickekyc.com/api/v1/aadhaar-v2/submit-otp', [
 					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
@@ -104,12 +108,51 @@
 					return $this->errorResponse($data['message'] ?? 'Aadhar verification unsuccessful. Please check your details.'); 
 				}
 
+				$address = $data['data']['address'];
+				$profileImage = $data['data']['profile_image'];
+
+				if ($profileImage) {
+					// Remove base64 prefix if it exists
+					$profileImage = preg_replace('/^data:image\/\w+;base64,/', '', $profileImage);
+
+					// Decode base64
+					$imageData = base64_decode($profileImage);
+
+					// Generate unique filename
+					$fileName = 'profile_' . time() . '.png';
+
+					$filePath = 'public/kyc/aadhar_profile/' . $fileName;
+					\Storage::put($filePath, $imageData);
+
+					$imageUrl = \Storage::url($filePath);
+
+				}
+
+				// Combine all non-empty address parts into one string
+				$fullAddress = implode(', ', array_filter([
+					$address['house'] ?? '',
+					$address['street'] ?? '',
+					$address['landmark'] ?? '',
+					$address['loc'] ?? '',
+					$address['po'] ?? '',
+					$address['vtc'] ?? '',
+					$address['subdist'] ?? '',
+					$address['dist'] ?? '',
+					$address['state'] ?? '',
+					$address['country'] ?? ''
+				]));
+
 				// Update or create KYC record
 				$userKyc = UserKyc::updateOrCreate(
 					['user_id' => $user->id],
 					[
+						'aadhar_front' => $imageUrl,
 						'aadhar' => $data['data']['aadhaar_number'],
 						'aadhar_full_name' => $data['data']['full_name'],
+						'aadhar_address' => $fullAddress,
+						'aadhar_dob' => $data['data']['dob'],
+						'aadhar_gender' => $data['data']['gender'],
+						'aadhar_zip' => $data['data']['zip'],
 						'aadhar_status' => 1,
 						'aadhar_text' => $data,
 					]

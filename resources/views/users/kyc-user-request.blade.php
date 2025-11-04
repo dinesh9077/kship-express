@@ -37,6 +37,7 @@
         						<thead>
         							<tr>
         								<th> SR.No </th>
+										<th> Profile Image </th>
         								<th> Name </th>
         								<th> Email </th>
         								<th> Pancard Status </th>
@@ -84,6 +85,7 @@
 		},
 		"columns": [
 		{ "data": "id" }, 
+		{ "data": "profile_image" }, 
 		{ "data": "name" }, 
 		{ "data": "email" }, 
 		{ "data": "pancard_status" }, 

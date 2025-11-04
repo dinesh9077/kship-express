@@ -32,7 +32,12 @@ class UserKyc extends Model
 		'bank_text',
 		'gst_text',
 		'aadhar_full_name',
-		'pan_full_name'
+		'pan_full_name',
+		'aadhar_address',
+        'aadhar_dob',
+        'aadhar_gender',
+        'aadhar_zip',
+		'pancard_category'
 	];
 
 	// Cast boolean fields properly
