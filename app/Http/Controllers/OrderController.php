@@ -976,7 +976,7 @@
 		  
         public function alllabeldownload(Request $request)
         {
-		error_reporting(0);
+			error_reporting(0);
 			try {
 				$orderIds = $request->input('order_ids'); 
 				if (empty($orderIds) || !is_array($orderIds)) {
@@ -1445,6 +1445,10 @@
 					$courier_id = $requestData['courier_id'] ?? null; 
 					$statusCourier = 'manifested';
 					$apiResponse = $courierResponse;   
+					if(empty($courierLogo))
+					{
+						$courierLogo = "{$courier_id}.png"; 
+					}
 				}
 				
 				// Prepare update data

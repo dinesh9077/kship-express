@@ -24,6 +24,9 @@
 									if (\Storage::disk('public')->exists($localPath)) { 
 										$logoUrl = asset("storage/{$localPath}");
 									}
+								}else{
+							    	$localPath = "courier-logo/{$order->courier_id}.png";
+								    $logoUrl = asset("storage/{$localPath}");
 								}
 
 								// Store final logo path for later use if needed
