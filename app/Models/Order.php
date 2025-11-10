@@ -23,7 +23,7 @@ class Order extends Model
 		'warehouse_id', 'freight_mode', 'cod_amount', 'dimension_type', 'invoice_no',
 		'invoice_amount', 'ewaybillno', 'lr_no', 'api_response', 'api_response1',
 		'invoice_document', 'weight_order', 'insurance_type', 'is_fragile_item',
-		'is_raise_weight', 'rto_charge_applied', 'invoice_id', 'is_invoice_count'
+		'is_raise_weight', 'rto_charge_applied', 'invoice_id', 'is_invoice_count', 'courier_logo'
 	];
 
 	
