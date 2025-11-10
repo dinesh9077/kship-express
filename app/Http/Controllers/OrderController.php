@@ -1328,7 +1328,7 @@
 		public function courierImage($imageUrl, $courierId)
 		{
 			// Build file info
-			$extension = pathinfo(parse_url($imageUrl, PHP_URL_PATH), PATHINFO_EXTENSION) ?: 'png';
+			$extension = 'png';
 			$filename = "{$courierId}.{$extension}";
 			$localPath = "courier-logo/{$filename}";
 

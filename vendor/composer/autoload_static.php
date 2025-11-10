@@ -720,6 +720,7 @@ class ComposerStaticInit82310160ef563641d126b96b015386e8
         'App\\Console\\Commands\\UpdateDelhiveryLrNo' => __DIR__ . '/../..' . '/app/Console/Commands/UpdateDelhiveryLrNo.php',
         'App\\Console\\Commands\\UpdateDelhiveryToken' => __DIR__ . '/../..' . '/app/Console/Commands/UpdateDelhiveryToken.php',
         'App\\Console\\Commands\\UpdateOrderStatus' => __DIR__ . '/../..' . '/app/Console/Commands/UpdateOrderStatus.php',
+        'App\\Console\\Commands\\UpdateRechargeStatus' => __DIR__ . '/../..' . '/app/Console/Commands/UpdateRechargeStatus.php',
         'App\\Console\\Kernel' => __DIR__ . '/../..' . '/app/Console/Kernel.php',
         'App\\Exceptions\\Handler' => __DIR__ . '/../..' . '/app/Exceptions/Handler.php',
         'App\\Exports\\BillingInvoiceExport' => __DIR__ . '/../..' . '/app/Exports/BillingInvoiceExport.php',

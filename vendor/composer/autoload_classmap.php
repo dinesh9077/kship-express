@@ -17,6 +17,7 @@ return array(
     'App\\Console\\Commands\\UpdateDelhiveryLrNo' => $baseDir . '/app/Console/Commands/UpdateDelhiveryLrNo.php',
     'App\\Console\\Commands\\UpdateDelhiveryToken' => $baseDir . '/app/Console/Commands/UpdateDelhiveryToken.php',
     'App\\Console\\Commands\\UpdateOrderStatus' => $baseDir . '/app/Console/Commands/UpdateOrderStatus.php',
+    'App\\Console\\Commands\\UpdateRechargeStatus' => $baseDir . '/app/Console/Commands/UpdateRechargeStatus.php',
     'App\\Console\\Kernel' => $baseDir . '/app/Console/Kernel.php',
     'App\\Exceptions\\Handler' => $baseDir . '/app/Exceptions/Handler.php',
     'App\\Exports\\BillingInvoiceExport' => $baseDir . '/app/Exports/BillingInvoiceExport.php',
