@@ -1570,9 +1570,12 @@
 		public function orderCustomerList()
 		{
 			$user = Auth::user();
-			$customers = Customer::where('user_id', $user->id)
-			->where('status', 1)
-			->get();
+			$customer = Customer::query();
+			if($user->role === "user")
+			{
+				$customer->where('user_id', $user->id);
+			} 
+			$customers = $customer->where('status', 1)->get();
 			
 			$options = ['<option value="">Select Recipeint/Customer</option>'];
 			
