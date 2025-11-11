@@ -22,6 +22,15 @@
 		align-items: center;
 		gap: 10px;
 	}
+	 
+.reason-badge {
+    background-color: #fde8e8;
+    border: 1px solid #f5c2c7;
+    border-radius: 4px;
+    color: #842029;
+    font-size: 13px;
+    line-height: 1.4;
+}
 </style>
 <div class="content-page">
 	<div class="container-fluid">
@@ -43,6 +52,12 @@
 											<span class="badge badge-danger">Rejected</span>
 										@endif
 									</div>
+									{{-- Show reason beside heading (if rejected) --}}
+									@if ($userkyc->pancard_status == 2 && !empty($userkyc->pan_reason))
+										<span class="reason-badge px-2 py-1 ml-2 ">
+											<strong>Reason:</strong> {{ $userkyc->pan_reason }}
+										</span>
+									@endif
 
 								</div> 
 								<div class="main-rowx-1 mt-3">
@@ -59,7 +74,7 @@
 														{{ $userkyc->pancard_status ? 'readonly' : 'required' }}>
 												</div>
 											</div>
-											@if($userkyc->pan_full_name)
+											@if($userkyc->pan_full_name  && $userkyc->pan_role == "user")
 												<div class="col-lg-4 col-md-6">
 													<div class="form-group my-2">
 														<label for="username"> Pancard Holder Name <span class="text-danger">*</span> </label>
@@ -71,7 +86,7 @@
 													</div>
 												</div>
 											@endif
-											@if($userkyc->pancard_category)
+											@if($userkyc->pancard_category && $userkyc->pan_role == "user")
 												<div class="col-lg-4 col-md-6">
 													<div class="form-group my-2">
 														<label for="username"> Pancard Category <span class="text-danger">*</span> </label>
@@ -82,8 +97,8 @@
 															readonly>
 													</div>
 												</div>
-											@endif
-											@if(!$userkyc->pancard_status)
+											@endif  
+											@if(!$userkyc || in_array($userkyc->pancard_status, [0, 2]))
 												<div class="col-lg-4 col-md-6 d-flex justify-content-start my-4">
 													<button type="submit" class="btn btn-primary btn-main-1"  style="height: 48px;">
 														Submit
@@ -116,6 +131,12 @@
 										<span class="badge badge-danger">Rejected</span>
 									@endif
 								</div>
+								{{-- Show reason beside heading (if rejected) --}}
+								@if ($userkyc->aadhar_status == 2 && !empty($userkyc->aadhar_reason))
+									<span class="reason-badge px-2 py-1 ml-2 ">
+										<strong>Reason:</strong> {{ $userkyc->aadhar_reason }}
+									</span>
+								@endif
 							</div>
 
 							<div class="row align-items-end">
@@ -132,7 +153,7 @@
 									</div>
 								</div>
 
-								@if($userkyc->aadhar_full_name)
+								@if($userkyc->aadhar_full_name && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Aadhar Holder Name</label>
@@ -141,7 +162,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_address)
+								@if($userkyc->aadhar_address && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Address</label>
@@ -150,7 +171,7 @@
 									</div>
 								@endif
 								
-								@if($userkyc->aadhar_zip)
+								@if($userkyc->aadhar_zip && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Zip Code</label>
@@ -159,7 +180,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_dob)
+								@if($userkyc->aadhar_dob && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Date Of Birth</label>
@@ -168,7 +189,7 @@
 									</div>
 								@endif
  
-								@if($userkyc->aadhar_gender)
+								@if($userkyc->aadhar_gender && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Gender</label>
@@ -177,7 +198,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_front)
+								@if($userkyc->aadhar_front && $userkyc->aadhar_role == "user")
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2"> 
 											<img src="{{ asset($userkyc->aadhar_front) }}" alt="Aadhar Front" style="max-width: 100%; height: auto; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">
@@ -185,7 +206,7 @@
 									</div>
 								@endif
 
-								@if(!$userkyc->aadhar_status)
+								@if(!$userkyc || in_array($userkyc->aadhar_status, [0, 2]))
 									<div class="col-lg-4 col-md-6 my-2 d-flex align-items-end">
 										<button type="button" id="sendOtpBtn" class="btn btn-primary btn-main-1" style="height: 48px;">
 											Send OTP

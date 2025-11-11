@@ -12,6 +12,8 @@
 	use App\Models\UserWallet;
 	use DB,Auth,File,Hash;
 	use Illuminate\Support\Facades\Http;
+	use Illuminate\Support\Facades\Schema;
+
 	class UserController extends Controller
 	{
 		public function __construct()
@@ -304,9 +306,9 @@
 				->withHeaders([
 					'Content-Type' => 'application/json',
 				])->post('https://api.quickekyc.com/api/v1/pan/pan', [
-							'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
-							'id_number' => $request->input('pancard'),
-						]);
+					'key' => 'd57238fd-1474-40a4-a058-2c20f1ab5247',
+					'id_number' => $request->input('pancard'),
+				]);
 
 				if ($response->failed()) {
 					return redirect()->back()->with('error', 'PAN verification failed. Please try again later.');
@@ -327,6 +329,8 @@
 						'pancard_category' => $data['data']['category'],
 						'pancard_status' => 1,
 						'pancard_text' => $data,
+						'pan_role' => 'user',
+						'pan_reason' => null,
 					]
 				);
 
@@ -389,13 +393,13 @@
 					'request_id' => $request->input('request_id'),
 					'otp' => $request->input('otp'),
 				]);
-
+ 
 				if ($response->failed()) {
 					return redirect()->back()->with('error', 'Aadhar verification failed. Please try again later.');
 				}
 
 				$data = $response->json();
-
+				
 				if (!isset($data['status']) || strtolower($data['status']) !== 'success') {
 					return redirect()->back()->with('error', $data['message'] ?? 'Aadhar verification unsuccessful. Please check your details.');
 				}
@@ -447,9 +451,11 @@
 						'aadhar_zip' => $data['data']['zip'],
 						'aadhar_status' => 1,
 						'aadhar_text' => $data,
+						'aadhar_role' => 'user',
+						'aadhar_reason' => null,
 					]
 				);
-
+			 
 				// Update user's overall KYC status if both PAN and Aadhar verified
 				if ($userKyc->pancard_status && $userKyc->aadhar_status) {
 					$user->kyc_status = 1;
@@ -592,19 +598,35 @@
 			// Prepare data for response
 			$data = [];
 			$i = $start + 1; // To display the correct row index
-			foreach ($values as $value) {
-				$pancardStatus = $this->getStatusBadge($value->pancard_status);
-				$aadharStatus = $this->getStatusBadge($value->aadhar_status); 
+			foreach ($values as $value) 
+			{
+			 
+				// dropdowns instead of badges
+				$pancardStatusHtml = $this->getStatusSelectHtml($value->id, 'pancard_status', $value->pancard_status);
+				$aadharStatusHtml = $this->getStatusSelectHtml($value->id, 'aadhar_status', $value->aadhar_status);
 
+				$imgSrc = $value->aadhar_front ? asset($value->aadhar_front) : asset('images/placeholder.png');
+    		    $aadhaarProfileHtml = '<img src="'.$imgSrc.'" alt="Aadhaar" width="50" height="50" style="object-fit:cover;border-radius:6px;">';
+
+				$actionHtml = $this->getActionButton($value->id, $role, $id);
+ 
 				$mainData = [
 					'id' => $i,
-					'profile_image' => '<img src="'.asset($value->aadhar_front).'" alt="Aadhar Front" width="50" height="50">',
-					'name' => $value->name,
-					'email' => $value->email,
-					'pancard_status' => $pancardStatus,
-					'aadhar_status' => $aadharStatus, 
-					'created_at' => $value->updated_at->format('d M Y'),
-					'action' => $this->getActionButton($value->id, $role, $id)
+					'user_name' => e($value->name ?? ''),
+					'user_email' => e($value->email ?? ''),
+					'pan_number' => e($value->pancard ?? ''),
+					'pan_holder_name' => e($value->pan_full_name ?? ''),
+					'pan_category' => e($value->pancard_category ?? ''),
+					'aadhaar_profile' => $aadhaarProfileHtml,
+					'aadhaar_holder_name' => e($value->aadhar_full_name ?? ''),
+					'aadhaar_address' => e($value->aadhar_address ?? ''),
+					'aadhaar_zip_code' => e($value->aadhar_zip ?? ''),
+					'aadhaar_dob' => $value->aadhar_dob ? \Carbon\Carbon::parse($value->aadhar_dob)->format('d M Y') : '',
+					'aadhaar_gender' => e($value->aadhar_gender ?? ''),
+					'pancard_status' => $pancardStatusHtml,
+					'aadhar_status' => $aadharStatusHtml,
+					'created_at' => $value->updated_at ? $value->updated_at->format('d M Y') : '',
+					'action' => $actionHtml,
 				];
 
 				$data[] = $mainData;
@@ -622,6 +644,68 @@
 			return response()->json($response);
 		}
 
+		private function getStatusSelectHtml(int $kycId, string $field, ?string $value): string
+		{ 
+			$options = [
+				0  => 'Pending',
+				1 => 'Approved',
+				2 => 'Rejected',
+			];
+			$html  = '<select class="form-select form-select-sm kyc-status-select"';
+			$html .= ' data-id="'.$kycId.'" data-field="'.$field.'" style="min-width:130px">';
+			foreach ($options as $k => $label) {
+				$sel = ($value == $k) ? 'selected' : '';
+
+				$html .= '<option value="'.$k.'" '.$sel.'>'.$label.'</option>';
+			}
+			$html .= '</select>';
+			return $html;
+		}
+
+		public function kycUserUpdateStatus(Request $request)
+		{
+			$data = $request->validate([
+				'id' => ['required', 'integer', 'exists:user_kycs,id'],
+				'field' => ['required', 'in:pancard_status,aadhar_status'],
+				'status' => ['required', 'in:0,1,2'],
+				'reason' => ['nullable', 'string', 'max:255'],
+			]);
+
+			$userKyc = UserKyc::findOrFail($data['id']);
+
+			$field = $data['field'];               // pancard_status | aadhar_status
+			$status = (int) $data['status'];        // 0|1|2
+			$reason = $data['reason'] ?? null;
+
+			// Map reason/role columns based on field
+			$isPan = $field === 'pancard_status';
+			$reasonKey = $isPan ? 'pan_reason' : 'aadhar_reason';
+			$roleKey = $isPan ? 'pan_role' : 'aadhar_role'; // if you really have separate columns
+			$singleRole = 'role'; // preferred single role column
+
+			$updateData = [
+				$field => $status,
+				'updated_at' => now(),
+				// set/unset reason in one place
+				$reasonKey => ($status === 2 ? $reason : null),
+			];
+
+			// set role/admin marker safely (support both designs)
+			if (Schema::hasColumn('user_kycs', $roleKey)) {
+				$updateData[$roleKey] = $status == 1 ? 'user' : 'admin';
+			} elseif (Schema::hasColumn('user_kycs', $singleRole)) {
+				$updateData[$singleRole] = $status == 1 ? 'user' : 'admin';
+			}
+ 
+			$userKyc->update($updateData);
+
+			// Your existing post-update hook
+			$this->userVerifiedKyc($userKyc);
+
+			return response()->json([
+				'message' => ucfirst(str_replace('_', ' ', $field)) . ' updated',
+			]);
+		}
 		// Helper to get the status badge HTML
 		private function getStatusBadge($status)
 		{
@@ -701,7 +785,7 @@
 		public function userVerifiedKyc($userKyc)
 		{ 
 			$userKyc->user->update(['kyc_status' => 0]);
-			if($userKyc->pancard_status == 1 && $userKyc->aadhar_status == 1 && $userKyc->gst_status == 1 && $userKyc->bank_status == 1)
+			if($userKyc->pancard_status == 1 && $userKyc->aadhar_status == 1)
 			{
 				$userKyc->user->update(['kyc_status' => 1]);
 			} 

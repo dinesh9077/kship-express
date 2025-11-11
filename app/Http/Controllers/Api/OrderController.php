@@ -693,8 +693,7 @@
 				DB::rollback();
 				return $this->errorResponse('Failed to cancel the order'); 
 			}
-		}
-		
+		} 
 		public function orderShipCharge($orderId)
 		{
 			$user = Auth::user();

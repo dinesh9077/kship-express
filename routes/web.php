@@ -128,7 +128,8 @@
 		
 		//KYC ADMIN
 		Route::get('/kyc/request', [App\Http\Controllers\UserController::class, 'kycUserRequest'])->name('users.kyc.request')->middleware('permission:client_kyc_request.view'); 
-		Route::post('/kyc/request-ajax', [App\Http\Controllers\UserController::class, 'kycUserRequestAjax'])->name('users.kyc-request.ajax');  
+		Route::post('/kyc/request-ajax', [App\Http\Controllers\UserController::class, 'kycUserRequestAjax'])->name('users.kyc-request.ajax');
+		Route::post('/kyc/update-status', [App\Http\Controllers\UserController::class, 'kycUserUpdateStatus'])->name('users.kyc.update-status');
 		Route::get('/kyc/verified/{id}', [App\Http\Controllers\UserController::class, 'kycUserRequestVerified'])->middleware('permission:client_kyc_request.edit');   
 		Route::post('/kyc/verified', [App\Http\Controllers\UserController::class, 'kycUserVerified'])->name('users.kyc.verified');  
 		Route::post('/kyc/rejected', [App\Http\Controllers\UserController::class, 'kycUserRejected'])->name('users.kyc.rejected');  
