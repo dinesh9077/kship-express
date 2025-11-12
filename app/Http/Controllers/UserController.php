@@ -105,7 +105,7 @@
 					'status' => $value->status == 1 ? '<span class="badge badge-success">Active</span>' : '<span class="badge badge-danger">In-Active</span>',
 					'staff_member' => $value->createdBy->name ?? 'N/A',
 					'created_at' => $value->created_at->format('d M Y'),
-					'action' => $this->generateUserActions($value, $role, $id)
+					'action' => $this->generateUserActions($value, $role, $id, $kycStatus)
 				];
 
 				$data[] = $mainData;
@@ -122,29 +122,75 @@
 			return response()->json($response);
 		}
 
-		private function generateUserActions($value, $role, $id)
+		private function generateUserActions($value, $role, $id, $kycStatus)
 		{
-			$actionButtons = '';  
-			if(config('permission.clients.add'))
-			{
-				$actionButtons .= '<a href="javascript:;" class="btn btn-icon waves-effect waves-light action-icon mr-1" data-toggle="tooltip" title="Recharge mannualy" data-id="'.$value->id.'" data-amount="'.$value->wallet_amount.'" onclick="rechargeUser(this, event)"> <i class="mdi mdi-refresh"></i> </a>';
+			$actionButtons = '';
+
+			// 🔹 Manual Credit & Debit — show only if KYC is approved
+			if (config('permission.clients.add') && $kycStatus == 1) {
+				// Credit / Recharge
+				$actionButtons .= '
+				<a href="javascript:;" 
+				class="btn btn-icon waves-effect waves-light action-icon text-success mr-1"
+				data-toggle="tooltip" 
+				title="Credit Manually (Add Balance)"
+				data-id="' . $value->id . '" 
+				data-amount="' . $value->wallet_amount . '" 
+				onclick="creditUser(this, event)">
+					<i class="mdi mdi-plus-circle-outline"></i>
+				</a>';
+
+				// Debit
+				$actionButtons .= '
+				<a href="javascript:;" 
+				class="btn btn-icon waves-effect waves-light action-icon text-danger mr-1"
+				data-toggle="tooltip" 
+				title="Debit Manually (Reduce Balance)"
+				data-id="' . $value->id . '" 
+				data-amount="' . $value->wallet_amount . '" 
+				onclick="debitUser(this, event)">
+					<i class="mdi mdi-minus-circle-outline"></i>
+				</a>';
 			}
-			if(config('permission.clients.edit'))
-			{
-				$actionButtons .=  '<a href="'.url('users/edit', $value->id).'?kyc_status='.$value->kyc_status.'" class="btn btn-icon waves-effect waves-light action-icon mr-1" data-toggle="tooltip" title="Update User"> <i class="mdi mdi-pencil"></i> </a>';
+
+			// 🔹 Edit user
+			if (config('permission.clients.edit')) {
+				$actionButtons .= '
+				<a href="' . url('users/edit', $value->id) . '?kyc_status=' . $value->kyc_status . '" 
+				class="btn btn-icon waves-effect waves-light action-icon mr-1" 
+				data-toggle="tooltip" 
+				title="Update User">
+					<i class="mdi mdi-pencil"></i>
+				</a>';
 			}
-			if(config('permission.clients.delete'))
-			{
-				$actionButtons .= '<a href="'.url('users/delete', $value->id).'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="Delete User" onClick="deleteRecord(this,event);"> <i class="mdi mdi-trash-can-outline"></i> </a>'; 
+
+			// 🔹 Delete user
+			if (config('permission.clients.delete')) {
+				$actionButtons .= '
+				<a href="' . url('users/delete', $value->id) . '" 
+				class="btn btn-icon waves-effect waves-light action-icon text-danger mr-1" 
+				data-toggle="tooltip" 
+				title="Delete User"
+				onclick="deleteRecord(this, event)">
+					<i class="mdi mdi-trash-can-outline"></i>
+				</a>';
 			}
-			if(config('permission.clients.edit'))
-			{
-				$actionButtons .= '<a href="'.url('users/commission', $value->id).'?kyc_status='.$value->kyc_status.'" class="btn btn-icon waves-effect waves-light action-icon" data-toggle="tooltip" title="User Commission"> <i class="mdi mdi-percent"></i> </a>'; 
+
+			// 🔹 Commission
+			if (config('permission.clients.edit')) {
+				$actionButtons .= '
+				<a href="' . url('users/commission', $value->id) . '?kyc_status=' . $value->kyc_status . '" 
+				class="btn btn-icon waves-effect waves-light action-icon" 
+				data-toggle="tooltip" 
+				title="User Commission">
+					<i class="mdi mdi-percent"></i>
+				</a>';
 			}
+
 			return $actionButtons;
 		} 
-		 
-		public function createUser()
+
+	public function createUser()
 		{ 
 			return view('users.create');
 		}
@@ -245,45 +291,78 @@
 				return redirect()->route('users')->with('error', 'Something went wrong.');
 			}
 		}
- 
-		public function rechargeOffline(Request $request)
-		{   
-			$user_id = $request->user_id;
-			$amount = $request->amount;
-			if(!$user_id || !$amount)
-			{
-				return back()->with('error', 'Something went wrong');
-			}
-			 
-			DB::beginTransaction(); 
-			try { 
-				$data = $request->except('_token');
-				$data['status'] = 1;
-				$data['transaction_status'] = 'success';
-				$data['created_at'] = now();  
-				$data['updated_at'] = now();
-				$userWallet = UserWallet::create($data); 
- 
-				$user = User::find($user_id);
-				if ($user) { 
-					$user->increment('wallet_amount', $amount);
- 
-					Billing::create([
-						'user_id' => $user_id,
-						'billing_type' => "Recharge Wallet",
-						'billing_type_id' => $userWallet->id,
-						'transaction_type' => 'credit',
-						'amount' => $amount,
-						'note' => 'Recharge Wallet amount offline by admin.',
-						'created_at' => now(),
-						'updated_at' => now(),
-					]);
-				} 
-				DB::commit();
 
-				return back()->with('success', 'The recharge amount has been successfully credited.');
-			} catch (\Exception $e) { 
-				DB::rollBack();  
+		public function rechargeOffline(Request $request)
+		{
+			$validated = $request->validate([
+				'user_id' => ['required', 'integer', 'exists:users,id'],
+				'amount' => ['required', 'numeric', 'min:1'],
+				'transaction_type' => ['required', 'in:credit,debit'] 
+			]);
+
+			$userId = (int) $validated['user_id'];
+			$amount = (float) $validated['amount'];
+			$type = $validated['transaction_type'];  
+
+			DB::beginTransaction();
+			try {
+				// Lock the user row for a consistent balance check/update
+				$user = User::where('id', $userId)->lockForUpdate()->firstOrFail();
+
+				if ($type === 'debit') 
+				{
+					// guard: no overdraft
+					if (($user->wallet_amount ?? 0) < $amount) {
+						DB::rollBack();
+						return back()->with('error', 'Insufficient wallet balance for debit.');
+					}
+					$delta = -$amount;
+					$billingType = 'Wallet Adjustment';
+					$billingTxnType = 'debit'; 
+					$billingNoteDefault = 'Manual wallet debit by admin.';
+					$flashOk = 'The amount has been successfully debited.';
+				} else {
+					$delta = +$amount;
+					$billingType = 'Recharge Wallet';
+					$billingTxnType = 'credit';
+					$billingNoteDefault = 'Manual wallet credit by admin.';
+					$flashOk = 'The amount has been successfully credited.';
+				}
+
+				// Create wallet ledger row (recommended explicit fields, not $request->except)
+				$walletRow = UserWallet::create([
+					'user_id' => $userId,
+					'amount' => $amount,
+					'transaction_type' => 'Manual',               // credit|debit (make sure column exists)
+					'amount_type' => $type,               // credit|debit (make sure column exists)
+					'status' => 1,
+					'transaction_status' => 'Paid',
+					'note' => $request->note ?? null,
+					'created_at' => now(),
+					'updated_at' => now(),
+				]);
+
+				// Update user balance atomically
+				$user->wallet_amount = ($user->wallet_amount ?? 0) + $delta;
+				$user->save();
+
+				// Billing log
+				Billing::create([
+					'user_id' => $userId,
+					'billing_type' => $billingType,
+					'billing_type_id' => $walletRow->id,
+					'transaction_type' => $billingTxnType,       // credit|debit
+					'amount' => $amount,
+					'note' => $billingNoteDefault,
+					'created_at' => now(),
+					'updated_at' => now(),
+				]);
+
+				DB::commit();
+				return back()->with('success', $flashOk);
+
+			} catch (\Throwable $e) {
+				DB::rollBack();
 				return back()->with('error', 'Something went wrong: ' . $e->getMessage());
 			}
 		}

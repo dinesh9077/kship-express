@@ -107,7 +107,7 @@
 					</div>
 				</div>
 				<div class="modal-footer" style="padding-top: 0px ; border-top : 0px;"> 
-					<button type="submit" class="btn new-submit-popup-btn"> Continue to Payment </button>
+					<button type="submit" id="txnSubmitBtn" class="btn new-submit-popup-btn"> Continue to Payment </button>
 				</div>
 			</form>
 		</div>
@@ -171,7 +171,7 @@
 		dataTable.draw();	
 	});
 	
-	function rechargeUser(obj, event)
+	function creditUser(obj, event)
 	{
 		event.preventDefault();
 		
@@ -182,7 +182,46 @@
 		
 		userIdField.val(id); // Set user ID
 		currentBalanceField.text(amount); // Update current balance
+		setTxnUi('credit');
+		$('#rechargeUserModal').modal('show'); // Show modal
+	}
+	
+	function setTxnUi(type) {
+		const titleEl  = $('#exampleModalLabel'); 
+		const submitEl = $('#txnSubmitBtn');
+		const form = $('#rechargeOfflineForm');
+
+		// 🔹 Set or update hidden input (avoid duplicates)
+		let txnInput = form.find('input[name="transaction_type"]');
+		if (txnInput.length) {
+			txnInput.val(type);
+		} else {
+			form.append(`<input type="hidden" name="transaction_type" value="${type}">`);
+		}
+
+		if (type === 'credit') {
+			titleEl.text('Manual Credit');
+			submitEl.text('Credit Now')
+
+		} else {
+			titleEl.text('Manual Debit'); 
+			submitEl.text('Debit Now')
+		}
+	}
+
+	function debitUser(obj, event)
+	{
+		event.preventDefault();
 		
+		const id = $(obj).data('id'); // Use jQuery's .data() for cleaner attribute access
+		const amount = $(obj).data('amount'); // Same for amount
+		const userIdField = $('#rechargeOfflineForm #user_id');
+		const currentBalanceField = $('#rechargeOfflineForm #current_balance');
+		
+		userIdField.val(id); // Set user ID
+		currentBalanceField.text(amount); // Update current balance 
+		setTxnUi('debit');                  
+
 		$('#rechargeUserModal').modal('show'); // Show modal
 	}
 

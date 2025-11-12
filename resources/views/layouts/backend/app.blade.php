@@ -619,6 +619,7 @@
 					body: JSON.stringify({
 						order_id: currentOrderId, 
 						txn_id: data.data.paymentDetails.id ?? '', 
+						utr_no: data.data.paymentDetails.acquirer_data.rrn ?? '', 
 					})
 				});
 				const res = await response.json();   

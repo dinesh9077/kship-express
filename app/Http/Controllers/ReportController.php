@@ -284,114 +284,143 @@
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get(); 
 			return view('report.shipping-charge', compact('users'));
 		}
-		  
+
 		public function shippingChargeAjax(Request $request)
 		{
-			$draw = $request->post('draw');
-			$start = $request->post("start");
-			$limit = $request->post("length"); 
-			$order_arr = $request->post('order');
-			$columnName_arr = $request->post('columns');
+			$draw = (int) $request->post('draw', 1);
+			$start = (int) $request->post('start', 0);
+			$limit = (int) $request->post('length', 25);
 
-			$columnIndex = $order_arr[0]['column'];
-			$order = $columnName_arr[$columnIndex]['data'];
-			$dir = $order_arr[0]['dir'];
-			
-			if ($order === 'action') {
-				$order = 'id';
-			}
+			$orderArr = $request->post('order', []);
+			$columnsArr = $request->post('columns', []);
+
+			$columnIndex = $orderArr[0]['column'] ?? 0;
+			$orderKey = $columnsArr[$columnIndex]['data'] ?? 'id';
+			$dir = ($orderArr[0]['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+
+			// Map DataTables columns -> real DB columns or expressions
+			$orderMap = [
+				'id' => 'orders.id',
+				'order_date' => 'orders.order_date',
+				'seller_details' => 'users.name',           // join needed via with() or join()
+				'order_details' => 'orders.order_no',
+				'shippings' => 'orders.courier_name',
+				'shipping_charges' => DB::raw('(COALESCE(orders.shipping_charge,0) - COALESCE(orders.percentage_amount,0))'),
+				'profit' => 'orders.percentage_amount',
+			];
+			$orderByCol = $orderMap[$orderKey] ?? 'orders.id';
 
 			$role = Auth::user()->role;
-			$id = Auth::user()->id;
-			$status = $request->post('status');
-			$currentDate = date('Y-m-d');
+			$authUserId = Auth::id();
 
-			// Build base query
-			$query = Order::with(['orderItems', 'user', 'shippingCompany'])  
-			->whereNotNull('orders.shipping_company_id');
+			// ---- Base query (authorization scope only) ----
+			$base = Order::query()
+				->with(['orderItems', 'user', 'shippingCompany'])
+				->whereNotNull('orders.shipping_company_id');
 
-			// Apply filters
-			if (in_array($role, ["user"])) {
-				$query->where('orders.user_id', $id);
+			// If role needs scoping
+			if (in_array($role, ['user'])) {
+				$base->where('orders.user_id', $authUserId);
 			}
- 
+
+			// For recordsTotal (unfiltered except auth scope)
+			$recordsTotal = (clone $base)->count();
+
+			// ---- Apply filters (UI filters) ----
+			$filtered = (clone $base);
+
 			if ($request->filled('user_id')) {
-				$query->where('orders.user_id', $request->user_id);
+				$filtered->where('orders.user_id', $request->user_id);
 			}
 
 			if ($request->filled('shipping_company_id')) {
-				$query->where('orders.shipping_company_id', $request->shipping_company_id);
+				$filtered->where('orders.shipping_company_id', $request->shipping_company_id);
 			}
 
 			if ($request->filled('fromdate') && $request->filled('todate')) {
-				$query->whereBetween('orders.order_date', [$request->fromdate, $request->todate]);
+				$filtered->whereBetween('orders.order_date', [$request->fromdate, $request->todate]);
 			} elseif ($request->filled('fromdate')) {
-				$query->whereDate('orders.order_date', $request->fromdate);
+				$filtered->whereDate('orders.order_date', $request->fromdate);
 			} elseif ($request->filled('todate')) {
-				$query->whereDate('orders.order_date', $request->todate);
+				$filtered->whereDate('orders.order_date', $request->todate);
 			}
 
-			// Search functionality
+			// Search (simple)
 			if ($request->filled('search')) {
 				$search = $request->input('search');
-				$query->where(function ($q) use ($search) {
-					$q->where('created_at', 'LIKE', "%{$search}%") 
-					  ->orWhereHas('user', function($q) use ($search){
-						  $q->where('name', 'LIKE', "%{$search}%")
-						  ->orwhere('email', 'LIKE', "%{$search}%")
-						  ->orwhere('company_name', 'LIKE', "%{$search}%")
-						  ->orwhere('mobile', 'LIKE', "%{$search}%");
-						}) 
-					  ->orWhere('awb_number', 'LIKE', "%{$search}%")
-					  ->orWhere('order_date', 'LIKE', "%{$search}%")
-					  ->orWhere('courier_name', 'LIKE', "%{$search}%")
-					  ->orWhere('status_courier', 'LIKE', "%{$search}%")
-					  ->orWhere('id', 'LIKE', "%{$search}%")
-					  ->orWhere('order_prefix', 'LIKE', "%{$search}%");
+				$filtered->where(function ($q) use ($search) {
+					$q->where('orders.created_at', 'like', "%{$search}%")
+						->orWhere('orders.awb_number', 'like', "%{$search}%")
+						->orWhere('orders.order_date', 'like', "%{$search}%")
+						->orWhere('orders.courier_name', 'like', "%{$search}%")
+						->orWhere('orders.status_courier', 'like', "%{$search}%")
+						->orWhere('orders.id', 'like', "%{$search}%")
+						->orWhere('orders.order_prefix', 'like', "%{$search}%")
+						->orWhereHas('user', function ($u) use ($search) {
+							$u->where('name', 'like', "%{$search}%")
+								->orWhere('email', 'like', "%{$search}%")
+								->orWhere('company_name', 'like', "%{$search}%")
+								->orWhere('mobile', 'like', "%{$search}%");
+						});
 				});
 			}
 
-			// Get total filtered count
-			$totalFiltered = $query->count();
+			// ---- Counts after filters ----
+			$recordsFiltered = (clone $filtered)->count();
 
-			// Fetch paginated results with ordering
-			$values = $query->orderBy("orders.$order", $dir)
-							->offset($start)
-							->limit($limit)
-							->get();
- 
+			// ---- Totals on filtered set ----
+			$totals = (clone $filtered)
+				->selectRaw('
+					SUM(COALESCE(orders.shipping_charge,0) - COALESCE(orders.percentage_amount,0)) as total_shipping,
+					SUM(COALESCE(orders.percentage_amount,0)) as total_profit
+				')
+				->first();
+
+			$totalShipping = (float) ($totals->total_shipping ?? 0);
+			$totalProfit = (float) ($totals->total_profit ?? 0);
+
+			// ---- Fetch page data ----
+			$rows = (clone $filtered)
+				->orderBy($orderByCol, $dir)
+				->offset($start)
+				->limit($limit)
+				->get();
+
+			// ---- Build DataTables rows ----
 			$data = [];
 			$i = $start + 1;
-			foreach ($values as $order) {
-				 
-				// Calculate total charges
-				$shipping_charges = $order->shipping_charge - $order->percentage_amount;
-				$total_charge = $shipping_charges;
-				 
-				// Prepare data row
+			foreach ($rows as $order) {
+				// row-level computed values
+				$shipping_charges = (float) ($order->shipping_charge ?? 0) - (float) ($order->percentage_amount ?? 0);
+				$profit = (float) ($order->percentage_amount ?? 0);
+
 				$data[] = [
 					'id' => $i,
 					'order_date' => $order->order_date,
-					'seller_details' => "<div class='main-cont1-2'><p>" . 
-					(isset($order->user) ? "{$order->user->name} ({$order->user->company_name})" : "N/A") . 
-					"</p><p>" . ($order->user->email ?? "N/A") . "</p><p>" . ($order->user->mobile ?? "N/A") . "</p></div>",
+					'seller_details' => "<div class='main-cont1-2'><p>" .
+					(isset($order->user) ? e($order->user->name) . ' (' . e($order->user->company_name) . ')' : 'N/A') .
+						"</p><p>" . e($order->user->email ?? 'N/A') . "</p><p>" . e($order->user->mobile ?? 'N/A') . "</p></div>",
 					'order_details' => $this->orderShipmentDetailHtml($order),
-					'shippings' => "<div class='main-cont1-2'><p>{$order->courier_name}</p></div>",
-					'charge' => "<div class='main-cont1-2'><p>" . number_format($order->shipping_charge, 2) . "</p></div>",
-					'shipping_charges' => "<div class='main-cont1-2'><p>" . number_format($total_charge, 2) . "</p></div>",
+					'shippings' => "<div class='main-cont1-2'><p>" . e($order->courier_name) . "</p></div>",
+					'shipping_charges' => "<div class='main-cont1-2'><p>" . number_format($shipping_charges, 2) . "</p></div>",
+					// 'commision_charge' => "<div class='main-cont1-2'><p>" . number_format($order->percentage_amount, 2) . "</p></div>",
+					'profit' => "<div class='main-cont1-2'><p>" . number_format($profit, 2) . "</p></div>",
 				];
-
 				$i++;
 			}
 
 			return response()->json([
-				"draw" => intval($draw),
-				"iTotalRecords" => $totalFiltered,
-				"iTotalDisplayRecords" => $totalFiltered,
-				"aaData" => $data
+				'draw' => $draw,
+				'recordsTotal' => $recordsTotal,
+				'recordsFiltered' => $recordsFiltered,
+				'data' => $data,             // modern key
+				'totals' => [
+						'total_shipping' => $totalShipping, // numeric
+						'total_profit' => $totalProfit,   // numeric
+					],
 			]);
-		}
-		
+		} 
+
 		public function passbookReport()
 		{ 
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();

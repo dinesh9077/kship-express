@@ -134,6 +134,20 @@
 		Route::post('/kyc/verified', [App\Http\Controllers\UserController::class, 'kycUserVerified'])->name('users.kyc.verified');  
 		Route::post('/kyc/rejected', [App\Http\Controllers\UserController::class, 'kycUserRejected'])->name('users.kyc.rejected');  
 	});
+
+	//Recharge Amount
+	Route::group(['prefix' => 'recharge'], function () {
+		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount');
+		Route::post('/wallet/update', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.wallet.razorpay');
+
+		Route::get('/list', [App\Http\Controllers\RechargeController::class, 'rechargeList'])->name('recharge.list');
+		Route::post('/ajax', [App\Http\Controllers\RechargeController::class, 'rechargeListAjax'])->name('recharge.list.ajax');
+
+		Route::get('/list/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAdmin'])->name('recharge.list.history');
+		Route::post('/ajax/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAjaxAdmin'])->name('recharge.list.ajax.history');
+
+		Route::post('/wallet/action', [App\Http\Controllers\RechargeController::class, 'rechargeWalletAction'])->name('recharge.wallet.action');
+	});
 	  
 	//staffs
     Route::get('/staff', [App\Http\Controllers\StaffController::class, 'staff'])->name('staff');
@@ -279,21 +293,7 @@
 	Route::get('report/billing-invoice/pdf/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoicePdf'])->name('report.billing-invoice.pdf');
 	Route::get('report/billing-invoice/excel/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoiceExcel'])->name('report.billing-invoice.excel');
 	
-	//Recharge Amount
-	Route::group(['prefix'=>'recharge'], function()
-	{
-		Route::post('/wallet/store', [App\Http\Controllers\RechargeController::class, 'rechargeWalletStore'])->name('recharge.wallet.amount'); 
-		Route::post('/wallet/update', [App\Http\Controllers\RechargeController::class, 'rechargeWalletRazorpay'])->name('recharge.wallet.razorpay');
-		  
-		Route::get('/list', [App\Http\Controllers\RechargeController::class, 'rechargeList'])->name('recharge.list');
-		Route::post('/ajax', [App\Http\Controllers\RechargeController::class, 'rechargeListAjax'])->name('recharge.list.ajax');
-		
-		Route::get('/list/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAdmin'])->name('recharge.list.history');
-		Route::post('/ajax/history', [App\Http\Controllers\RechargeController::class, 'rechargeListAjaxAdmin'])->name('recharge.list.ajax.history');
-		
-		Route::post('/wallet/action', [App\Http\Controllers\RechargeController::class, 'rechargeWalletAction'])->name('recharge.wallet.action');
-	});
-	  
+	 
 	//Ticket
 	Route::group(['prefix'=>'ticket'], function()
 	{

@@ -953,28 +953,55 @@
             // Return the full URL for downloading the file
             return $fileUrl;
 		}
-		
+
 		public function orderLableDownload($orderId)
 		{
 			error_reporting(0);
-			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
-			
+
+			// Load order with related data
+			$order = Order::with([
+				'shippingCompany:id,logo',
+				'customer:id,first_name,last_name,mobile',
+				'customerAddress',
+				'warehouse',
+				'orderItems'
+			])->findOrFail($orderId);
+
+			// Related data
 			$shipping = $order->shippingCompany ?? null;
 			$customer = $order->customer ?? null;
 			$customerAddr = $order->customerAddress ?? null;
-			$products =  $order->orderItems ?? null; 
-			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
-			 
-			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
+			$products = $order->orderItems ?? null;
+			$hideLabel = $order->warehouse ? $order->warehouse->label_options : [];
+
+			// Generate barcodes
+			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
 			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-			
-			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
-			 
-			$pdf = PDF::loadHtml($htmlView);  
-			return $pdf->download('order_label_' . $orderId . '.pdf'); 
+
+			// Render Blade HTML
+			$htmlView = view('order.single_label', compact(
+				'shipping',
+				'order',
+				'customer',
+				'customerAddr',
+				'products',
+				'barcodePng',
+				'hideLabel',
+				'orderIdBarcodePng'
+			))->render();
+
+			// ✅ Create PDF — set to A4 portrait (or landscape if preferred)
+			$pdf = PDF::loadHtml($htmlView)
+				->setPaper('A4', 'portrait') // or 'landscape'
+				->setOption('isHtml5ParserEnabled', true)
+				->setOption('isRemoteEnabled', true);
+
+			// ✅ Return A4 label PDF
+			return $pdf->stream('order_label_' . $orderId . '.pdf');
 		}
-		  
-        public function alllabeldownload(Request $request)
+
+
+		public function alllabeldownload(Request $request)
         {
 			error_reporting(0);
 			try {
@@ -1158,7 +1185,7 @@
 			{  
 				if($shippingCompany->id == 1)
 				{ 
-					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany);  
+					$trackingResponse = $this->shipMozo->trackOrder($order->awb_number, $shippingCompany); 
 					if (!($trackingResponse['success'] ?? false)) {
 						$errorMsg = $trackingResponse['response']['errors'][0]['message'] ?? ($trackingResponse['response']['error'] ?? 'An error occurred.');
 						return back()->with('error', $errorMsg); 
@@ -1173,7 +1200,7 @@
 					$trackingHistories = $responseData; 
 				}  
 			}
-			
+		
 			if(!$trackingHistories)
 			{
 				return back()->with('error', 'The order tracking data not found.');

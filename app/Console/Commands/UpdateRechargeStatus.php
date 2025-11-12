@@ -59,17 +59,18 @@ class UpdateRechargeStatus extends Command
 
             $status =  $statusResponse['response']['data']['paymentStatus'] ?? $recharge->transaction_status;
             $txnId = $statusResponse['response']['data']['paymentDetails']['id'] ?? null;
+            $utrNo = $statusResponse['response']['data']['paymentDetails']['acquirer_data']['rrn'] ?? null;
            
             if($status === "captured")
             {
-                $this->updateRechargeStatus($recharge->order_id, 'Paid', $txnId);
+                $this->updateRechargeStatus($recharge->order_id, 'Paid', $txnId, $utrNo);
             } 
         }       
 
         $this->info('Recharge status update completed!');
     }
 
-    public function updateRechargeStatus($orderId, $newStatus, $txnId = null)
+    public function updateRechargeStatus($orderId, $newStatus, $txnId = null, $utrNo = null)
     {
         DB::beginTransaction();
 
@@ -90,7 +91,7 @@ class UpdateRechargeStatus extends Command
                     'billing_type_id' => $userWallet->id,
                     'transaction_type' => 'credit',
                     'amount' => $userWallet->amount,
-                    'note' => 'Recharge Wallet amount credited.',
+                    'note' => 'Payment received via Razorpay.',
                 ]);
 
                 
@@ -100,6 +101,7 @@ class UpdateRechargeStatus extends Command
             $userWallet->update([
                 'transaction_status' => ucfirst($newStatus),
                 'txn_number' => $txnId,
+                'utr_no' => $utrNo ?? null,
             ]);
 
             DB::commit();

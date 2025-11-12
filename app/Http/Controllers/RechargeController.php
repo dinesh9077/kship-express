@@ -10,6 +10,7 @@
 	use Razorpay\Api\Api;
 	use Illuminate\Support\Facades\Http;
 	use App\Services\MasterService;
+	use Carbon\Carbon;
 	class RechargeController extends Controller
 	{   
 		public function rechargeList()
@@ -25,11 +26,8 @@
 
 			$columnIndex_arr = $request->get('order');
 			$columnName_arr = $request->get('columns');
-			$order_arr = $request->get('order');
-			$search_arr = $request->get('search');
-
-			$transaction_type = $request->transaction_type;
-			$status = $request->status;
+			$order_arr = $request->get('order'); 
+ 
 
 			$columnIndex = $columnIndex_arr[0]['column'] ?? 0;
 			$order = $columnName_arr[$columnIndex]['data'] ?? 'user_wallets.id';
@@ -41,13 +39,20 @@
 			$query = UserWallet::with('user:id,name')
 				->where('user_wallets.user_id', $userId);
 
-			if (!empty($transaction_type)) {
-				$query->where('user_wallets.transaction_type', $transaction_type);
+			if ($request->filled('payment_mode')) {
+				$query->where('user_wallets.transaction_type', $request->payment_mode);
 			}
 
-			if (!empty($status)) {
-				$query->where('user_wallets.transaction_status', $status);
+			if ($request->filled('status')) {
+				$query->where('user_wallets.transaction_status', $request->status);
 			}
+
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$query->whereBetween('user_wallets.created_at', [
+					Carbon::parse($request->fromdate)->startOfDay(),
+					Carbon::parse($request->todate)->endOfDay()
+				]);
+			} 
 
 			// Clone query for total count
 			$totalData = (clone $query)->count();
@@ -63,7 +68,11 @@
 					->orWhere('user_wallets.created_at', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.txn_number', 'LIKE', "%{$searchValue}%")
-					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%");
+					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.amount_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.pg_name', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.transaction_status', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.utr_no', 'LIKE', "%{$searchValue}%");
 				});
 			}
 
@@ -78,26 +87,26 @@
 			$data = [];
 			$i = $start + 1;
 			foreach ($values as $value) {
-				$receipt = '';
-				if ($value->payment_receipt) {
-					foreach (explode(',', $value->payment_receipt) as $image) {
-						$receipt .= '<a href="'.url('storage/receipt',$image).'" target="_blank">
-										<img src="'.url('storage/receipt',$image).'" style="height:50px">
-									 </a>';
-					}
-				} 
+				// $receipt = '';
+				// if ($value->payment_receipt) {
+				// 	foreach (explode(',', $value->payment_receipt) as $image) {
+				// 		$receipt .= '<a href="'.url('storage/receipt',$image).'" target="_blank">
+				// 						<img src="'.url('storage/receipt',$image).'" style="height:50px">
+				// 					 </a>';
+				// 	}
+				// } 
 
 				$data[] = [
 					'id' => $i++,
-					'name' => $value->user->name ?? '',
-					'transaction_type' => $value->transaction_type,
-					'amount' => config('setting.currency').$value->amount,
-					'payment_receipt' => $receipt,
-					'order_id' => $value->order_id,
-					'txn_number' => $value->txn_number,
-					'note' => $value->note,
-					'status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
 					'created_at' => $value->created_at->format('d M Y'),
+					'amount_type' => $value->amount_type ? ucwords($value->amount_type) : 'N/A',
+					'amount' => $value->amount,
+					'order_id' => $value->order_id ?? 'N/A',
+					'txn_number' => $value->txn_number ?? 'N/A',
+					'utr_no' => $value->utr_no ?? 'N/A',
+					'payment_mode' => $value->transaction_type,
+					'pg_name' => $value->pg_name ?? 'N/A',  
+					'transaction_status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
 				];
 			}
 
@@ -111,7 +120,8 @@
  
 		public function rechargeListAdmin()
 		{
-			return view('recharge.recharg_history');
+			$users = User::where('role', 'user')->where('kyc_status', '!=', 0)->orderBy('name')->get();
+			return view('recharge.recharg_history', compact('users'));
 		}
 		
 		public function rechargeListAjaxAdmin(Request $request)
@@ -123,15 +133,27 @@
 			$columnIndex = $request->input('order.0.column', 0);
 			$order = $request->input("columns.$columnIndex.data", 'user_wallets.id');
 			$dir = $request->input('order.0.dir', 'desc');
-
-			$role = Auth::user()->role;
-			$userId = Auth::id();
-
+  
 			// Base query with user relation
 			$query = UserWallet::with('user:id,name');
+ 
+			if ($request->filled('user_id')) {
+				$query->where('user_wallets.user_id', $request->user_id);
+			}
 
-			if ($role != 'admin') {
-				$query->where('user_wallets.user_id', $userId);
+			if ($request->filled('payment_mode')) {
+				$query->where('user_wallets.transaction_type', $request->payment_mode);
+			}
+
+			if ($request->filled('status')) {
+				$query->where('user_wallets.transaction_status', $request->status);
+			}
+
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$query->whereBetween('user_wallets.created_at', [
+					Carbon::parse($request->fromdate)->startOfDay(),
+					Carbon::parse($request->todate)->endOfDay()
+				]);
 			}
 
 			// Clone for total count
@@ -140,15 +162,22 @@
 			// Search filter
 			$searchValue = $request->input('search') ?? $request->input('search.value') ?? '';
 			if (!empty($searchValue)) {
-				$query->where(function ($q) use ($searchValue) {
-					$q->whereHas('user', function ($q2) use ($searchValue) {
-						$q2->where('name', 'LIKE', "%{$searchValue}%");
-					})
+			$query->where(function ($q) use ($searchValue) {
+				$q->whereHas('user', function ($q2) use ($searchValue) {
+					$q2->where('name', 'LIKE', "%{$searchValue}%");
+				})
 					->orWhere('user_wallets.amount', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.created_at', 'LIKE', "%{$searchValue}%")
-					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%")
 					->orWhere('user_wallets.txn_number', 'LIKE', "%{$searchValue}%")
-					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%");
+					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.amount_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.pg_name', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.transaction_status', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.utr_no', 'LIKE', "%{$searchValue}%")
+					->orwhereHas('user', function ($q) use ($searchValue) {
+						$q->where('name', 'LIKE', "%{$searchValue}%");
+					});
 				});
 			}
 
@@ -163,26 +192,22 @@
 			$data = [];
 			$i = $start + 1;
 
-			foreach ($values as $value) {
-				// Payment receipts
-				$receipt = '';
-				if ($value->payment_receipt) {
-					foreach (explode(',', $value->payment_receipt) as $image) {
-						$receipt .= '<a href="'.url('storage/receipt', $image).'" target="_blank">
-										<img src="'.url('storage/receipt', $image).'" style="height:50px">
-									 </a>';
-					}
-				}
- 
+			foreach ($values as $value) { 
 				$array = [
 					'id' => $i++,
-					'name' => $value->user->name ?? '', 
-					'amount' => config('setting.currency') . $value->amount,
-					'order_id' => $value->order_id,
-					'txn_number' => $value->txn_number,
-					'status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
-					'created_at' => $value->created_at->format('d M Y')
+					'username' => $value->user->name ?? 'N/A',
+					'created_at' => $value->created_at->format('d M Y'),
+					'amount_type' => $value->amount_type ? ucwords($value->amount_type) : 'N/A',
+					'amount' => $value->amount,
+					'order_id' => $value->order_id ?? 'N/A',
+					'txn_number' => $value->txn_number ?? 'N/A',
+					'utr_no' => $value->utr_no ?? 'N/A',
+					'payment_mode' => $value->transaction_type,
+					'pg_name' => $value->pg_name ?? 'N/A',  
+					'transaction_status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
 				];
+
+
 				$array['action'] = "";
 				if($value->transaction_status != "Paid")
 				{	
@@ -220,7 +245,7 @@
 							'billing_type_id'  => $userWallet->id,
 							'transaction_type' => 'credit',
 							'amount'           => $userWallet->amount,
-							'note'             => 'Recharge Wallet amount approved by admin.',
+							'note' => 'The amount has been credited and approved by the admin.' 
 						]);
 
 						$userWallet->update(['transaction_status' => 'Paid']);
@@ -247,7 +272,7 @@
 				$userId = $request->user_id;
 				$amount = $request->amount; 
 				$response = $masterService->rechargeOrderCreate($amount);
-			 
+				 
 				if (!($response['success'] ?? false)) {
 					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');
 					return response()->json(['status' => 'error', 'msg' => $errorMsg]);
@@ -270,6 +295,9 @@
 				$data['user_id'] = $userId;
 				$data['status'] = 1;
 				$data['amount'] = $amount;
+				$data['amount_type'] = "credit";
+				$data['transaction_type'] = "QR Code (Intent)";
+				$data['pg_name'] = "Razorpay";
 				$data['order_id'] = $responseData['order_id'] ?? null; 
 				$data['payable_response'] = $responseData ?? null; 
 				$data['created_at'] = now();
@@ -307,13 +335,14 @@
 						'billing_type_id' => $userWallet->id,
 						'transaction_type' => 'credit',
 						'amount' => $userWallet->amount,
-						'note' => 'Recharge Wallet amount online.',
+						'note' => 'Payment received via Razorpay.',
 					]);
 
 					// Update UserWallet record if needed
 					$userWallet->update([
 						'transaction_status' => 'Paid',
 						'txn_number' => $request->txn_id ?? null,
+						'utr_no' => $request->utr_no ?? null,
 					]);
 				});
 

@@ -952,28 +952,49 @@
             
             // Return the full URL for downloading the file
             return $fileUrl;
-		}
-		
-		public function orderLableDownload($orderId)
-		{  
-			$order = Order::with(['shippingCompany:id,logo', 'customer:id,first_name,last_name,mobile', 'customerAddress', 'warehouse', 'orderItems'])->find($orderId);
-			
+		} 
+		public function orderLabelDownload($orderId)
+		{
+			$order = Order::with([
+				'shippingCompany:id,logo',
+				'customer:id,first_name,last_name,mobile',
+				'customerAddress',
+				'warehouse',
+				'orderItems'
+			])->findOrFail($orderId);
+
 			$shipping = $order->shippingCompany ?? null;
 			$customer = $order->customer ?? null;
 			$customerAddr = $order->customerAddress ?? null;
-			$products =  $order->orderItems ?? null; 
-			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
-			 
-			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
+			$products = $order->orderItems ?? null;
+			$hideLabel = $order->warehouse ? $order->warehouse->label_options : [];
+
+			// Barcodes
+			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
 			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-			
-			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
-			 
-			$pdf = PDF::loadHtml($htmlView);  
-			return $pdf->download('order_label_' . $orderId . '.pdf'); 
+
+			// Render Blade HTML
+			$htmlView = view('order.single_label', compact(
+				'shipping',
+				'order',
+				'customer',
+				'customerAddr',
+				'products',
+				'barcodePng',
+				'hideLabel',
+				'orderIdBarcodePng'
+			))->render();
+
+			// Load PDF (6x4 inch)
+			$pdf = PDF::loadHtml($htmlView)
+			->setPaper('A4', 'portrait')
+			->setOption('isHtml5ParserEnabled', true)
+			->setOption('isRemoteEnabled', true);
+
+			return $pdf->download('order_label_' . $orderId . '.pdf');
 		}
-		  
-        public function alllabeldownload(Request $request)
+ 
+		public function alllabeldownload(Request $request)
         { 
 			try {
 				$orderIds = $request->input('order_ids'); 
@@ -1170,8 +1191,7 @@
 					$responseData = $trackingResponse['response']['data']['scan_detail'] ?? [];
 					$trackingHistories = $responseData; 
 				}  
-			}
-			
+			} 
 			if(!$trackingHistories)
 			{
 				return back()->with('error', 'The order tracking data not found.');

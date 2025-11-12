@@ -7,6 +7,7 @@
 	use Illuminate\Support\Facades\Auth;
 	use App\Models\User;
 	use App\Models\UserWallet;
+use App\Models\Billing;
 	use App\Models\ShippingCompany;
 	use App\Models\Notification;
 	use App\Models\AppBanner;
@@ -313,6 +314,9 @@
 				$data['user_id'] = $userId;
 				$data['status'] = 1;
 				$data['amount'] = $amount;
+				$data['amount_type'] = "credit";
+				$data['transaction_type'] = "QR Code (Intent)";
+				$data['pg_name'] = "Razorpay";
 				$data['order_id'] = $responseData['order_id'] ?? null;
 				$data['payable_response'] = $responseData ?? null;
 				$data['created_at'] = now();
@@ -345,13 +349,14 @@
 						'billing_type_id' => $userWallet->id,
 						'transaction_type' => 'credit',
 						'amount' => $userWallet->amount,
-						'note' => 'Recharge Wallet amount online.',
+						'note' => 'Payment received via Razorpay.',
 					]);
 
 					// Update UserWallet record if needed
 					$userWallet->update([
 						'transaction_status' => 'Paid',
 						'txn_number' => $request->txn_id ?? null,
+						'utr_no' => $request->utr_no ?? null,
 					]);
 				}); 
 

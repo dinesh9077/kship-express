@@ -16,6 +16,9 @@ class UserWallet extends Model
 		'status',
 		'order_id',
 		'transaction_type',
+		'pg_name',
+		'utr_no',
+		'amount_type',
 		'txn_number',
 		'payable_response',
 		'payment_receipt',
@@ -23,7 +26,7 @@ class UserWallet extends Model
 		'transaction_status',
 		'reject_note',
 		'created_at',
-		'updated_at',
+		'updated_at'  
 	];
 
 
