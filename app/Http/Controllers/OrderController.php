@@ -17,7 +17,7 @@
 	use App\Services\DelhiveryB2CService;
 	use App\Imports\BulkOrder;
 	use Helper; 
-	use DNS1D;
+	use DNS1D, DNS2D;
 	use App\Exports\CodRemittanceExport;
 	use PhpOffice\PhpSpreadsheet\Shared\Date;
 	
@@ -975,7 +975,7 @@
 			$hideLabel = $order->warehouse ? $order->warehouse->label_options : [];
 
 			// Generate barcodes
-			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+			$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 
 			// Render Blade HTML
@@ -1029,9 +1029,9 @@
 					$customerAddr   = $order->customerAddress;
 					$products       = $order->orderItems;  
 					 
-					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
-					 
-					$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : [];
+
+					$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 					
 					// Generate HTML for label

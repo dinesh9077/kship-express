@@ -49,13 +49,32 @@
 			</tr>
 			
 			<tr>
-				<td colspan="4" style="padding: 10px 0px; text-align: center; border: 1px solid black;">
-					<div style="height: 50px; width: 100%;">
-						@if(!empty($order->awb_number))  
-							<img src="data:image/png;base64,{{ $barcodePng }}" alt="Barcode" style="display: block; margin: 0 auto; width: 90%;" /> 
+				<td colspan="4" style="padding: 10px 0; border: 1px solid black;">
+					<div style="
+						display: table;
+						margin: 0 auto;
+						text-align: center;
+					">
+						<div style="
+							display: table-row;
+							vertical-align: middle;
+						">
+						@if(!empty($order->awb_number))
+							<!-- QR/Barcode (left side) -->
+							<div style="display: table-cell; vertical-align: middle; padding-right: 10px;">
+							<img src="data:image/png;base64,{{ $barcodePng }}" alt="QR Code"
+								style="height: 60px; width: 60px; object-fit: contain;" />
+							</div>
 						@endif
+
+						<!-- AWB Number (right side) -->
+						<div style="display: table-cell; vertical-align: middle;">
+							<p style="font-size: 18px; font-weight: 600; margin: 0;">
+							{{ $order->awb_number }}
+							</p>
+						</div>
+						</div>
 					</div>
-					<p style="font-size: 18px;margin:0">{{ $order->awb_number }}</p>
 				</td>
 				<td colspan="1" style="font-size: 15px; text-align: center; font-weight: bold; border: 1px solid black;">
 					@if($order->order_type == "cod")
