@@ -288,11 +288,25 @@ use App\Models\Billing;
 		{
 			try {
 				$userId = $request->user_id;
-				$amount = $request->amount;
-				if($amount < 10)
-				{
-					return $this->errorResponse('Enter a valid amount (min ₹200)');
+				$minAmount = config('setting.recharge_min_amount', 200);
+				$maxAmount = config('setting.recharge_max_amount', 10000);
+
+				$amount = floatval($request->amount ?? 0);
+
+				// Validate amount
+				if ($amount < $minAmount) {
+					return $this->errorResponse("Minimum recharge amount is ₹{$minAmount}.");
 				}
+
+				if ($amount > $maxAmount) {
+					return $this->errorResponse("Maximum recharge limit is ₹{$maxAmount}.");
+				}
+
+				// Optional: check for invalid amount (0, negative, or NaN)
+				if ($amount <= 0) {
+					return $this->errorResponse("Please enter a valid amount.");
+				}
+
 				$response = $masterService->rechargeOrderCreate($amount);
 				if (!($response['success'] ?? false)) {
 					$errorMsg = $response['response']['errors'][0]['message'] ?? ($response['response']['error'] ?? 'An error occurred.');

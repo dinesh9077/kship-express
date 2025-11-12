@@ -93,8 +93,15 @@
 			->where('status_courier', 'New')
 			->latest()
 			->limit(10)
-			->get();	 
-			
+			->get();
+
+			$courierWiseCount = Order::whereNotNull('shipping_company_id')
+			->whereNotNull('courier_name')
+			->select('courier_name', DB::raw('COUNT(*) as total_orders'))
+			->groupBy('courier_name')
+			->orderByDesc('total_orders')
+			->get();
+			 
 			$banners = DB::table('app_banners')->where('status', 1)->get();
 			return view('home', [
 				'user'                  => $user,
@@ -114,6 +121,7 @@
 				'tadaysCodAmount'       => $orderStats->tadaysCodAmount,
 				'recentOrders'      	=> $recentOrders,
 				'banners'      			=> $banners,
+				'courierWiseCount'      => $courierWiseCount,
 			]);
 		} 
 		

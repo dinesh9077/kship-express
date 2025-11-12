@@ -90,6 +90,23 @@
 										</div>
 									</div>   
 								</div>
+								<hr> 
+								<div class="row">
+									<div class="col-lg-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="first-name"> Recharge Minimum Amount </label>
+											<input type="number" name="recharge_min_amount" value="{{ config('setting.recharge_min_amount', 200) }}" placeholder="Recharge Minimum Amount" >
+										</div>
+									</div>   
+								 
+									<div class="col-lg-6 col-md-6">
+										<div class="from-group my-2">
+											<label for="first-name"> Recharge Maximum Amount </label>
+											<input type="number" name="recharge_max_amount" value="{{ config('setting.recharge_max_amount',  10000) }}" placeholder="Recharge Maximum Amount" >
+										</div>
+									</div>   
+								</div>
+								
 							</div>
 						</div> 
 						@if(config('permission.general_setting.edit'))

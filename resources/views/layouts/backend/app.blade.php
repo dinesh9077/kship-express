@@ -187,21 +187,21 @@
 									<h5>Enter Amount</h5>
 									<div class="form-group rech-re-form position-relative">
 										<span class="position-absolute custom-rupee-position">{{ config('setting.currency') }}</span>
-										<input type="number" name="amount" id="recharge_amount"  value="200"  placeholder="200" class="form-control" required>
-										<small class="form-text text-muted">Min value: {{ config('setting.currency') }}200</small>
+										<input type="number" name="amount" id="recharge_amount" value="{{ config('setting.recharge_min_amount', 200) }}"  placeholder="200" class="form-control" required>
+										<small class="form-text text-muted">Min value: {{ config('setting.currency') }}{{ config('setting.recharge_min_amount', 200) }}</small>
 									</div>
 
 									{{-- Quick Amount Buttons --}}
-									<h6>Or Select From Below</h6>
+									{{-- <h6>Or Select From Below</h6>
 									<div class="main-21-33">
 										@foreach([200, 500, 1000, 2500, 5000, 10000] as $preset)
 											<button type="button" 
-													class="re-btn {{ $preset == 200 ? 'active' : '' }}" 
+													class="re-btn" 
 													onclick="setRechargeAmount(this, {{ $preset }})">
 												{{ config('setting.currency') }}{{ $preset }}
 											</button>
 										@endforeach
-									</div> 
+									</div>  --}}
 								</div> 
 							</div> 
 
@@ -635,11 +635,28 @@
 			showMessage("Error checking status: " + err.message, "error");
 		  }
 		}
-		 
+		
+		// Fetch limits from Laravel config
+		var minAmount = @json(config('setting.recharge_min_amount', 200));
+		var maxAmount = @json(config('setting.recharge_max_amount', 10000));
+ 
 		async function initiatePayment() {
-			const amount = parseFloat(document.getElementById('recharge_amount').value);
-		    if (!amount || amount < 10) {
-				showMessage("Enter a valid amount (min ₹200)", "error");
+			const amount = parseFloat(document.getElementById('recharge_amount').value); 
+			// Empty or NaN
+			if (!amount) {
+				showMessage("Please enter a valid recharge amount.", "error");
+				return;
+			}
+
+			// Below minimum
+			if (amount < minAmount) {
+				showMessage(`Minimum recharge amount is ₹${minAmount}.`, "error");
+				return;
+			}
+
+			// Above maximum
+			if (amount > maxAmount) {
+				showMessage(`Maximum recharge limit is ₹${maxAmount}.`, "error");
 				return;
 			}
 			
