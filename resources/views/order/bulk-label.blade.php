@@ -50,7 +50,7 @@
 			
 			<tr>
 				<td colspan="4" style="padding: 10px 0px; text-align: center; border: 1px solid black;">
-					<div style="height: 40px; width: 100%;">
+					<div style="height: 50px; width: 100%;">
 						@if(!empty($order->awb_number))  
 							<img src="data:image/png;base64,{{ $barcodePng }}" alt="Barcode" style="display: block; margin: 0 auto; width: 90%;" /> 
 						@endif
