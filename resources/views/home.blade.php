@@ -162,155 +162,325 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                         <div class="col-xl-4">
-
-
-
                             <div class="row main-mb-2 align-items-center">
                                 <div class="col-lg-12 col-md-12">
                                     <div class="main-roow-1">
-                                        <div class="row">
-                                            <div class="col-12 new-border-design-single">
-                                                <div class="row">
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12  border-1-top">
-                                                        <a href="{{ url('order') }}?weight_order=1&status=Manifested">
-                                                            <div class="main012">
-                                                                <img src="{{ asset('assets/images/dashbord/rr-1.png') }}">
-                                                                <h5> {{ $manifested }} </h5>
-                                                                <div
-                                                                    style="display: flex;     justify-content: space-between;">
-                                                                    <h4> Manifested / Pending Pickup </h4>
-                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                        style="object-fit: none; width: fit-content;">
-                                                                </div>
-                                                            </div>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 ">
-                                                        <a
-                                                            href="{{ url('order') }}?weight_order=1&status=All&order_status=cancelled">
-                                                            <div class="main012">
-                                                                <img src="{{ asset('assets/images/dashbord/rr-2.png') }}">
-                                                                <h5> {{ $cancelledOrder }} </h5>
-                                                                <div
-                                                                    style="display: flex;     justify-content: space-between;">
-                                                                    <h4> Cancelled </h4>
-                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                        style="object-fit: none; width: fit-content;">
-                                                                </div>
-                                                            </div>
-                                                        </a>
-                                                    </div>
 
-                                                </div>
-                                            </div>
-                                            <div class="col-12 new-border-design-single">
-                                                <div class="row">
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-center">
-                                                        <a href="{{ url('order') }}?weight_order=1&status=In Transit">
-                                                            <div class="main012">
-                                                                <img src="{{ asset('assets/images/dashbord/rr-4.png') }}">
-                                                                <h5> {{ $inTransit }} </h5>
-                                                                <div
-                                                                    style="display: flex;     justify-content: space-between;">
-                                                                    <h4> In-Transit </h4>
-                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                        style="object-fit: none; width: fit-content;">
+                                        <!-- Tabs -->
+                                        <ul class="nav nav-tabs mb-3" id="orderTypeTabs" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active" id="b2c-tab" data-toggle="tab"
+                                                    data-target="#b2c" type="button" role="tab" aria-controls="b2c"
+                                                    aria-selected="true">B2C</button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link" id="b2b-tab" data-toggle="tab"
+                                                    data-target="#b2b" type="button" role="tab" aria-controls="b2b"
+                                                    aria-selected="false">B2B</button>
+                                            </li>
+                                        </ul>
 
-                                                                </div>
-                                                            </div>
-                                                        </a>
-                                                    </div>
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                                        <div class="main012">
-                                                            <img src="{{ asset('assets/images/dashbord/rr-5.png') }}">
-                                                            <h5> {{ $rto }} </h5>
-                                                            <div style="display: flex;     justify-content: space-between;">
-                                                                <h4> RTO </h4>
-                                                                <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                    style="object-fit: none; width: fit-content;">
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                </div>
-                                            </div>
-                                            <div class="col-12">
+                                        <div class="tab-content">
+                                            <!-- B2C TAB -->
+                                            <div class="tab-pane fade show active" id="b2c" role="tabpanel"
+                                                aria-labelledby="b2c-tab">
                                                 <div class="row">
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-bottom">
-                                                        <div class="main012">
-                                                            <img src="{{ asset('assets/images/dashbord/rr-3.png') }}">
-                                                            <h5> {{ $outForDelivery }} </h5>
+                                                    <div class="col-12 new-border-design-single">
+                                                        <div class="row">
                                                             <div
-                                                                style="display: flex;     justify-content: space-between;">
-                                                                <h4> Out For Delivery </h4>
-                                                                <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                    style="object-fit: none; width: fit-content;">
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12  border-1-top">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=Manifested">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-1.png') }}">
+                                                                        <h5> {{ $manifested_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Manifested / Pending Pickup </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 ">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=All&order_status=cancelled">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-2.png') }}">
+                                                                        <h5> {{ $cancelled_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Cancelled </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
-                                                        <a
-                                                            href="{{ url('order') }}?weight_order=1&status=All&order_status=delivered">
-                                                            <div class="main012">
-                                                                <img src="{{ asset('assets/images/dashbord/rr-6.png') }}">
-                                                                <h5> {{ $delivered }} </h5>
-                                                                <div
-                                                                    style="display: flex;justify-content: space-between;">
-                                                                    <h4> Delivered </h4>
-                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}" style="object-fit: none; width: fit-content;">
-                                                                </div>
+
+                                                    <div class="col-12 new-border-design-single">
+                                                        <div class="row">
+                                                            <div
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-center">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=In Transit">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-4.png') }}">
+                                                                        <h5> {{ $inTransit_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> In-Transit </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
                                                             </div>
-                                                        </a>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=All&order_status=rto">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-5.png') }}">
+                                                                        <h5> {{ $rto_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> RTO </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </div>
+
+                                                    <div class="col-12">
+                                                        <div class="row">
+                                                            <div
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-bottom">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=Out For Delivery">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-3.png') }}">
+                                                                        <h5> {{ $outForDelivery_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Out For Delivery </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=1&status=All&order_status=delivered">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-6.png') }}">
+                                                                        <h5> {{ $delivered_b2c }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Delivered </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div> {{-- row --}}
+                                            </div> {{-- tab-pane B2C --}}
+
+                                            <!-- B2B TAB -->
+                                            <div class="tab-pane fade" id="b2b" role="tabpanel"
+                                                aria-labelledby="b2b-tab">
+                                                <div class="row">
+                                                    {{-- duplicate the same grid but with B2B vars and weight_order=2 in links --}}
+                                                    <div class="col-12 new-border-design-single">
+                                                        <div class="row">
+                                                            <div
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12  border-1-top">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=Manifested">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-1.png') }}">
+                                                                        <h5> {{ $manifested_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Manifested / Pending Pickup </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12 ">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=All&order_status=cancelled">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-2.png') }}">
+                                                                        <h5> {{ $cancelled_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Cancelled </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12 new-border-design-single">
+                                                        <div class="row">
+                                                            <div
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-center">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=In Transit">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-4.png') }}">
+                                                                        <h5> {{ $inTransit_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> In-Transit </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=All&order_status=rto">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-5.png') }}">
+                                                                        <h5> {{ $rto_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> RTO </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="col-12">
+                                                        <div class="row">
+                                                            <div
+                                                                class="col-xl-6 col-lg-6 col-md-6 col-sm-12 border-1-bottom">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=Out For Delivery">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-3.png') }}">
+                                                                        <h5> {{ $outForDelivery_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Out For Delivery </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+
+                                                            <div class="col-xl-6 col-lg-6 col-md-6 col-sm-12">
+                                                                <a
+                                                                    href="{{ url('order') }}?weight_order=2&status=All&order_status=delivered">
+                                                                    <div class="main012">
+                                                                        <img
+                                                                            src="{{ asset('assets/images/dashbord/rr-6.png') }}">
+                                                                        <h5> {{ $delivered_b2b }} </h5>
+                                                                        <div
+                                                                            style="display:flex;justify-content:space-between;">
+                                                                            <h4> Delivered </h4>
+                                                                            <img src="{{ asset('assets/images/dashbord/arro.png') }}"
+                                                                                style="width: fit-content;">
+                                                                        </div>
+                                                                    </div>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                </div> {{-- row --}}
+                                            </div> {{-- tab-pane B2B --}}
+
+                                        </div> {{-- tab-content --}}
+
                                     </div>
                                 </div>
-                            </div> 
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-		<div style="margin: 10px;">
-            <div class="mb-2" style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
-                <h6 style="font-size: 18px; color : white; font-weight : 500; ">Courier Wise Total Count</h6> 
+        <div style="margin: 10px;">
+            <div class="mb-2"
+                style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
+                <h6 style="font-size: 18px; color : white; font-weight : 500; ">Courier Wise Total Count</h6>
             </div>
-            <table id="courierWiseTotalDatatable" style="width:100%" class="dataTable no-footer" aria-describedby="neworder_datatable_info">
+            <!-- FILTERS -->
+            <div class="row mb-3 courierFilter" style="padding:10px; background:#fafafa; border-radius:8px;"> 
+                <div class="col-md-3">
+                    <label>From Date</label>
+                    <input type="date" id="from_date" class="form-control" value="{{ now()->toDateString() }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label>To Date</label>
+                    <input type="date" id="to_date" class="form-control" value="{{ now()->toDateString() }}">
+                </div>
+
+                <div class="col-md-3">
+                    <label>Search Courier</label>
+                    <input type="text" id="search_courier" class="form-control" placeholder="Search courier...">
+                </div>
+
+                <div class="col-md-1" style="display:flex; align-items:end;">
+                    <button class="btn btn-primary" style="padding: 11px 22px; !important" id="applyFilter">Apply</button>
+                </div> 
+            </div>
+            <table id="courierWiseTotalDatatable" style="width:100%" class="dataTable no-footer"
+                aria-describedby="neworder_datatable_info">
                 <thead class="table-light">
                     <tr>
-                    <th>#</th>
-                    <th>Courier Name</th>
-                    <th>B2C Total Count</th>
-                    <th>B2B Total Count</th>
-                    <th>Total Orders</th>
+                        <th>#</th>
+                        <th>Courier Name</th>
+                        <th>B2C Total Count</th>
+                        <th>B2B Total Count</th>
+                        <th>Total Orders</th>
                     </tr>
-                </thead>
-                <tbody>
-                    @foreach($courierWiseCount as $index => $courier)
-                        <tr class="odd new-tbs-white">
-                            <td>{{ $index + 1 }}</td>
-                            <td>{{ $courier->courier_name }}</td>
-                            <td>
-                                <a target="_blank" href="{{ url('order') }}?weight_order=1&status=All&courier_name={{ urlencode($courier->courier_name) }}">
-                                    {{ $courier->b2c_count }}
-                                </a>
-                            </td>
-                            <td>
-                                <a target="_blank" href="{{ url('order') }}?weight_order=2&status=All&courier_name={{ urlencode($courier->courier_name) }}">
-                                    {{ $courier->b2b_count }}
-                                </a>
-                            </td> 
-                            <td>{{ $courier->total_orders }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+                </thead> 
             </table>
-		</div>
+        </div>
         <div style="margin: 10px;">
             <div
                 style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
@@ -318,7 +488,7 @@
                 <a href="{{ url('order') }}?weight_order=1&status=All"
                     style="font-size: 16px; color : white; font-weight : 300;text-decoration: underline !important; ">View
                     Details</a>
-            </div> 
+            </div>
             <table id="neworder_datatable" style="width:100%" class="dataTable no-footer"
                 aria-describedby="neworder_datatable_info">
                 <thead>
@@ -577,11 +747,46 @@
     </div>
 @endsection
 @push('js')
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>  
-    <script>
-       $('#courierWiseTotalDatatable').dataTable({
-            "pageLength": 10,
-            "lengthMenu": [10, 25, 50, 100]
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script> 
+ 
+        var dataTable = $('#courierWiseTotalDatatable').DataTable({
+            processing:true,
+            "language": {
+                'loadingRecords': '&nbsp;',
+                'processing': 'Loading...'
+            }, 
+            serverSide:true,
+            bLengthChange: false,
+            searching: false,
+            bFilter: true,
+            bInfo: true,
+            iDisplayLength: 25,
+            order: [[0, 'desc'] ],
+            bAutoWidth: false,			 
+            "ajax":{
+                "url": "{{ route('home.courier-wise-count-ajax') }}",
+                "dataType": "json",
+                "type": "POST",
+                "data": function (d) {
+                    d._token   = "{{csrf_token()}}";
+                    d.search = $('input[name="search"]').val();  
+                    d.fromdate = $('.courierFilter #from_date').val();
+                    d.todate = $('.courierFilter #to_date').val();
+                    d.status_courier = $('.courierFilter #search_courier').val();
+                }
+            },
+            "columns": [
+                { "data": "id" }, 
+                { "data": "courier_name" }, 
+                { "data": "b2c_count" }, 
+                { "data": "b2b_count" },  
+                { "data": "total_orders" }
+            ]
+        }); 
+         
+        $('#applyFilter').click(function () {
+            dataTable.ajax.reload();   // BEST
         });
 
         $('.customization_popup').on('click', function(event) {

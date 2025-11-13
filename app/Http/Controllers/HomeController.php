@@ -60,6 +60,14 @@
 				SUM(CASE WHEN status_courier = 'out for delivery' AND weight_order = 1 THEN 1 ELSE 0 END) as outForDelivery,
 				SUM(CASE WHEN status_courier LIKE '%rto%' AND weight_order = 1 THEN 1 ELSE 0 END) as rto,
 				SUM(CASE WHEN status_courier NOT IN ('new','manifested','delivered','cancelled') AND weight_order = 1 THEN 1 ELSE 0 END) as inTransit,
+
+				SUM(CASE WHEN status_courier = 'cancelled' AND weight_order = 2 THEN 1 ELSE 0 END) as cancelledOrderB2b,
+				SUM(CASE WHEN status_courier = 'manifested' AND weight_order = 2 THEN 1 ELSE 0 END) as manifestedB2b,
+				SUM(CASE WHEN status_courier = 'delivered' AND weight_order = 2 THEN 1 ELSE 0 END) as deliveredB2b,
+				SUM(CASE WHEN status_courier = 'out for delivery' AND weight_order = 2 THEN 1 ELSE 0 END) as outForDeliveryB2b,
+				SUM(CASE WHEN status_courier LIKE '%rto%' AND weight_order = 2 THEN 1 ELSE 0 END) as rtoB2b,
+				SUM(CASE WHEN status_courier NOT IN ('new','manifested','delivered','cancelled') AND weight_order = 2 THEN 1 ELSE 0 END) as inTransitB2b,
+
 				SUM(invoice_amount) as totalInvoiceAmount,
 				SUM(CASE WHEN DATE(created_at) = ? THEN invoice_amount ELSE 0 END) as tadaysInvoiceAmount,
 				SUM(CASE WHEN order_type = 'cod' THEN cod_amount ELSE 0 END) as totalCodAmount,
@@ -114,22 +122,162 @@
 				'todayRecharge'         => $todayRecharge,
 				'overallWalletAmount'   => $overallWalletAmount,
 				'todaysLightWeightOrder'=> $orderStats->todaysLightWeightOrder,
-				'totalLightWeightShipment'=> $orderStats->totalLightWeightShipment,
-				'cancelledOrder'        => $orderStats->cancelledOrder,
-				'manifested'            => $orderStats->manifested,
-				'delivered'             => $orderStats->delivered,
-				'outForDelivery'        => $orderStats->outForDelivery,
-				'rto'                   => $orderStats->rto,
-				'inTransit'             => $orderStats->inTransit,
+				'totalLightWeightShipment'=> $orderStats->totalLightWeightShipment, 
 				'totalInvoiceAmount'    => $orderStats->totalInvoiceAmount,
 				'tadaysInvoiceAmount'   => $orderStats->tadaysInvoiceAmount,
 				'totalCodAmount'        => $orderStats->totalCodAmount,
 				'tadaysCodAmount'       => $orderStats->tadaysCodAmount,
 				'recentOrders'      	=> $recentOrders,
 				'banners'      			=> $banners,
+				'manifested_b2c' => $orderStats->manifested,
+				'cancelled_b2c' => $orderStats->cancelledOrder,
+				'inTransit_b2c' => $orderStats->inTransit,
+				'rto_b2c' => $orderStats->rto,
+				'outForDelivery_b2c' => $orderStats->outForDelivery,
+				'delivered_b2c' => $orderStats->delivered, 
+				'manifested_b2b' => $orderStats->manifestedB2b,
+				'cancelled_b2b' => $orderStats->cancelledOrderB2b,
+				'inTransit_b2b' => $orderStats->inTransitB2b,
+				'rto_b2b' => $orderStats->rtoB2b,
+				'outForDelivery_b2b' => $orderStats->outForDeliveryB2b,
+				'delivered_b2b' => $orderStats->deliveredB2b,
 				'courierWiseCount'      => $courierWiseCount,
 			]);
-		} 
+		}
+
+		public function courierWiseTotalAjax(Request $request)
+		{
+			// DataTables params
+			$draw = (int) $request->post('draw', 1);
+			$start = (int) $request->post('start', 0);
+			$length = (int) $request->post('length', 10); // default 10
+
+			$orderArr = $request->post('order', []);
+			$columnsArr = $request->post('columns', []);
+			$searchVal = $request->input('search.value', $request->input('search', null));
+
+			// Map DataTables column index/name to DB ordering expression (safe)
+			// Columns expected by frontend: courier_name, total_orders, b2c_count, b2b_count
+			$orderMap = [
+				'courier_name' => 'courier_name',
+				'total_orders' => DB::raw('total_orders'),
+				'b2c_count' => DB::raw('b2c_count'),
+				'b2b_count' => DB::raw('b2b_count'),
+			];
+
+			// Determine order column and direction
+			$orderColumnIndex = $orderArr[0]['column'] ?? null;
+			$orderDir = ($orderArr[0]['dir'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
+			$orderColumnName = 'total_orders'; // default
+
+			if ($orderColumnIndex !== null && isset($columnsArr[$orderColumnIndex]['data'])) {
+				$candidate = $columnsArr[$orderColumnIndex]['data'];
+				if (isset($orderMap[$candidate])) {
+					$orderColumnName = $candidate;
+				}
+			}
+
+			// Base query: apply filters first, then aggregate
+			$baseQuery = Order::query()
+			->whereNotNull('shipping_company_id')
+			->whereNotNull('courier_name')
+			->when($request->filled('status_courier'), function ($q) use ($request) {
+				// status_courier here holds the courier name filter
+				$q->where('courier_name', 'like', '%'.$request->input('status_courier').'%');
+			})
+			->when($request->filled('fromdate'), function ($q) use ($request) {
+				$q->whereDate('order_date', '>=', $request->input('fromdate'));
+			})
+			->when($request->filled('todate'), function ($q) use ($request) {
+				$q->whereDate('order_date', '<=', $request->input('todate'));
+			})
+			// now aggregate
+			->select(
+				'courier_name',
+				DB::raw('COUNT(*) as total_orders'),
+				DB::raw('SUM(CASE WHEN weight_order = 1 THEN 1 ELSE 0 END) as b2c_count'),
+				DB::raw('SUM(CASE WHEN weight_order = 2 THEN 1 ELSE 0 END) as b2b_count')
+			)
+			->groupBy('courier_name');
+
+
+			// Apply global search (search across courier_name)
+			if (!empty($searchVal)) {
+				$baseQuery->havingRaw('courier_name LIKE ?', ["%{$searchVal}%"]);
+				// Note: because we're grouping, search must be in HAVING or use subquery approach.
+			}
+
+			// Count total distinct couriers (without filters) - use a raw query for performance
+			$recordsTotal = (int) Order::whereNotNull('shipping_company_id')
+				->whereNotNull('courier_name')
+				->select('courier_name')
+				->distinct()
+				->count();
+
+			// Count filtered records (after search)
+			// Because of groupBy, easiest way is to wrap into a subquery
+			$filteredQuery = DB::table(DB::raw("({$baseQuery->toSql()}) as sub"))
+				->mergeBindings($baseQuery->getQuery()) // merge bindings so raw works
+				->select(DB::raw('COUNT(*) as count'));
+			$recordsFilteredRow = $filteredQuery->first();
+			$recordsFiltered = $recordsFilteredRow ? (int) $recordsFilteredRow->count : 0;
+
+			// Apply ordering (we can order by alias names since DB returns them)
+			// Build a query to fetch paginated results; use order by appropriate alias/column
+			$finalQuery = $baseQuery;
+
+			// If ordering on aggregate columns, use orderByRaw for alias fallback
+			if (in_array($orderColumnName, ['total_orders', 'b2c_count', 'b2b_count'])) {
+				$finalQuery->orderBy(DB::raw($orderColumnName), $orderDir);
+			} else {
+				$finalQuery->orderBy($orderColumnName, $orderDir);
+			}
+
+			// Apply pagination
+			if ($length > 0) {
+				$finalQuery->offset($start)->limit($length);
+			}
+
+			$rows = $finalQuery->get();
+
+			// Build response data
+			$data = $rows->map(function ($r, $index) use ($start, $request) {
+
+				$b2cUrl = url('order') 
+					. '?weight_order=1'
+					. '&status=All'
+					. '&courier_name=' . urlencode($r->courier_name) 
+					. '&from_date=' . urlencode($request->fromdate ?? '')
+					. '&to_date=' . urlencode($request->todate ?? '');
+
+				$b2bUrl = url('order')
+					. '?weight_order=2'
+					. '&status=All'
+					. '&courier_name=' . urlencode($r->courier_name) 
+					. '&from_date=' . urlencode($request->fromdate ?? '')
+					. '&to_date=' . urlencode($request->todate ?? '');
+
+				return [
+					'id' => $start + $index + 1,
+					'courier_name' => $r->courier_name,
+					'total_orders' => (int) $r->total_orders,
+					'b2c_count' => '<a target="_blank" href="' . $b2cUrl . '">'
+						. (int) $r->b2c_count .
+						'</a>',
+
+					'b2b_count' => '<a target="_blank" href="' . $b2bUrl . '">'
+						. (int) $r->b2b_count .
+						'</a>',
+				];
+			}); 
+
+			return response()->json([
+				'draw' => $draw,
+				'recordsTotal' => $recordsTotal,
+				'recordsFiltered' => $recordsFiltered,
+				'data' => $data 
+			]);
+		}
 		
 		public function notification()
 		{

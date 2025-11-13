@@ -343,7 +343,7 @@
 			{ data: "action" }
 		];
 		
-		var statusCourier = "{{ request('order_status') ?? '' }}";
+		var statusCourier = "{{ request('order_status') ?? '' }}"; 
 
 		// Initialize DataTables for different statuses
 		let newOrderTable = initializeDataTable('#neworder_datatable', "{{ route('order.ajax') }}", { status: "New", weightOrder: weightOrder, courier_name: courierName }, OrderColumns);
@@ -352,7 +352,7 @@
 		let allOrdersTable = initializeDataTable('#all_datatable', "{{ route('order.ajax') }}", {
 			status: 'All',
 			status_courier: statusCourier ?? $('.searchAllForm  #status_courier').val(),
-			from_date: $('.searchAllForm  #from_date').val(),
+			from_date:  $('.searchAllForm  #from_date').val(),
 			to_date: $('.searchAllForm  #to_date').val(),
 			order_type: $('.searchAllForm  #order_type').val(),
 			user_id: $('.searchAllForm #user_id').val(),

@@ -31,7 +31,8 @@
 	Route::post('verfiy-otp', [App\Http\Controllers\Auth\RegisterController::class, 'verifyOTP'])->name('register.verify-otp'); 
 	Route::post('resend-otp', [App\Http\Controllers\Auth\RegisterController::class, 'resend'])->name('register.resend-otp'); 
 	
-	Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home'); 
+	Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+	Route::post('/courier-wise-count-ajax', [App\Http\Controllers\HomeController::class, 'courierWiseTotalAjax'])->name('home.courier-wise-count-ajax');
 	Route::get('/notification', [App\Http\Controllers\HomeController::class, 'notification'])->name('notification');
 	Route::get('/notification/clear-all', [App\Http\Controllers\HomeController::class, 'notificationClearAll'])->name('notification.clear-all');
 	Route::get('/check-amount', [App\Http\Controllers\HomeController::class,'checkAmount'])->name('check-amount');
