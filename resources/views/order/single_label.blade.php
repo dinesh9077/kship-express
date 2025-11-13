@@ -16,7 +16,7 @@
 					<img src="{{ url('storage/settings', config('setting.header_logo')) }}" width="150" alt="">
 				</td>
 				<td colspan="1" style="padding: 0; text-align: center ; width: 20%; center; border: 1px solid black; padding: 0px 20px;">
-					<div style="height: 30px; width: 100%;">
+					<div style="height: 45px; width: 100%;">
 						@if($shipping->id == 1)
 							@php 
 								$logoUrl = $order->courier_logo;
@@ -38,13 +38,13 @@
 								$order->final_logo = $logoUrl;
 							@endphp	
 
-							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
+							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 50px	; width: 50px; display: block; margin-left: auto; margin-right: auto;">	
 						@else
 							<img src="{{ asset('storage/shipping-logo/'.$shipping->logo) }}" alt="LOGO"
 						style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
 						@endif 
 					</div>
-					<p style="font-weight: bold;margin: 0;">{{ $order->shipping_mode }}</p>
+					<p style="font-weight: bold;margin: 0;font-size : 14px;">{{ $order->shipping_mode }}</p>
 				</td>
 			</tr>
 			
