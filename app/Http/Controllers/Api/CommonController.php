@@ -96,6 +96,18 @@ use App\Models\Billing;
 			->latest()
 			->limit(10)
 			->get();
+			
+			$courierWiseCount = Order::whereNotNull('shipping_company_id')
+			->whereNotNull('courier_name')
+			->select(
+				'courier_name',
+				DB::raw('COUNT(*) as total_orders'),
+				DB::raw('SUM(CASE WHEN weight_order = 1 THEN 1 ELSE 0 END) as b2c_count'),
+				DB::raw('SUM(CASE WHEN weight_order = 2 THEN 1 ELSE 0 END) as b2b_count')
+			)
+			->groupBy('courier_name')
+			->orderByDesc('total_orders')
+			->get();
 
 			$data = [ 
 				'todayRecharge'         	=> $todayRecharge,
@@ -113,6 +125,7 @@ use App\Models\Billing;
 				'totalCodAmount'        	=> $orderStats->totalCodAmount,
 				'tadaysCodAmount'       	=> $orderStats->tadaysCodAmount,
 				'recentOrders'       		=> $recentOrders,
+				'courierWiseCount'			=> $courierWiseCount
 			];
 			
 			return $this->successResponse($data, 'detail fetched successfully.');

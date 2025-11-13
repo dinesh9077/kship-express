@@ -64,7 +64,8 @@
 				SUM(CASE WHEN DATE(created_at) = ? THEN invoice_amount ELSE 0 END) as tadaysInvoiceAmount,
 				SUM(CASE WHEN order_type = 'cod' THEN cod_amount ELSE 0 END) as totalCodAmount,
 				SUM(CASE WHEN order_type = 'cod' AND DATE(created_at) = ? THEN cod_amount ELSE 0 END) as tadaysCodAmount
-			", [$today, $yesterday, $yesterday])->first();
+			", [$today, $yesterday, $yesterday])
+			->first();
 
 			// ✅ Today recharge (filtered by user if not admin)
 			$todayRecharge = UserWallet::when(!$isAdmin, function ($q) use ($user) {
@@ -97,7 +98,12 @@
 
 			$courierWiseCount = Order::whereNotNull('shipping_company_id')
 			->whereNotNull('courier_name')
-			->select('courier_name', DB::raw('COUNT(*) as total_orders'))
+			->select(
+				'courier_name',
+				DB::raw('COUNT(*) as total_orders'),
+				DB::raw('SUM(CASE WHEN weight_order = 1 THEN 1 ELSE 0 END) as b2c_count'),
+				DB::raw('SUM(CASE WHEN weight_order = 2 THEN 1 ELSE 0 END) as b2b_count')
+			)
 			->groupBy('courier_name')
 			->orderByDesc('total_orders')
 			->get();

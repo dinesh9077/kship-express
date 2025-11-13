@@ -96,6 +96,10 @@
 			
 			if($status === "all")
 			{
+				if ($request->courier_name)
+				{
+					$query->where('orders.courier_name', $request->courier_name);
+				}
 				if($request->status_courier)
 				{
 					$query->where('orders.status_courier', $request->status_courier);
@@ -998,8 +1002,7 @@
 
 			// ✅ Return A4 label PDF
 			return $pdf->download('order_label_' . $orderId . '.pdf');
-		}
-
+		} 
 
 		public function alllabeldownload(Request $request)
         {

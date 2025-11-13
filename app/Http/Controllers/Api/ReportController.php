@@ -18,7 +18,8 @@
 	use Barryvdh\DomPDF\Facade\Pdf;
 	use Illuminate\Support\Facades\Storage; 
 	use App\Exports\BillingInvoiceExport; 
-	use App\Traits\ApiResponse;   
+	use App\Traits\ApiResponse;
+	use Carbon\Carbon;
 
 	class ReportController extends Controller
 	{ 
@@ -299,34 +300,42 @@
 			$start = $request->get("offset");
 			$limit = $request->get("limit"); // Rows per page
  
-			$search = $request->get('search');
-
-			$transaction_type = $request->transaction_type;
-			$status = $request->status;
+			$searchValue = $request->get('search');
  
 			$userId = Auth::id();  
 			$query = UserWallet::with('user:id,name')
 				->where('user_wallets.user_id', $userId);
 
-			if (!empty($transaction_type)) {
-				$query->where('user_wallets.transaction_type', $transaction_type);
+			if ($request->filled('payment_mode')) {
+				$query->where('user_wallets.transaction_type', $request->payment_mode);
 			}
 
-			if (!empty($status)) {
-				$query->where('user_wallets.status', $status);
+			if ($request->filled('status')) {
+				$query->where('user_wallets.transaction_status', $request->status);
 			}
-  
+
+			if ($request->filled('fromdate') && $request->filled('todate')) {
+				$query->whereBetween('user_wallets.created_at', [
+					Carbon::parse($request->fromdate)->startOfDay(),
+					Carbon::parse($request->todate)->endOfDay()
+				]);
+			}
+
 			// Search filter 
-			if (!empty($search)) {
-				$query->where(function ($q) use ($search) {
-					$q->whereHas('user', function ($q2) use ($search) {
-						$q2->where('name', 'LIKE', "%{$search}%");
+			if (!empty($searchValue)) {
+				$query->where(function ($q) use ($searchValue) {
+					$q->whereHas('user', function ($q2) use ($searchValue) {
+						$q2->where('name', 'LIKE', "%{$searchValue}%");
 					})
-					->orWhere('user_wallets.amount', 'LIKE', "%{$search}%")
-					->orWhere('user_wallets.created_at', 'LIKE', "%{$search}%")
-					->orWhere('user_wallets.order_id', 'LIKE', "%{$search}%")
-					->orWhere('user_wallets.txn_number', 'LIKE', "%{$search}%")
-					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$search}%");
+					->orWhere('user_wallets.amount', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.created_at', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.order_id', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.txn_number', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.transaction_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.amount_type', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.pg_name', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.transaction_status', 'LIKE', "%{$searchValue}%")
+					->orWhere('user_wallets.utr_no', 'LIKE', "%{$searchValue}%");
 				});
 			} 
 			

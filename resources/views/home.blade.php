@@ -258,11 +258,9 @@
                                                                 <img src="{{ asset('assets/images/dashbord/rr-6.png') }}">
                                                                 <h5> {{ $delivered }} </h5>
                                                                 <div
-                                                                    style="display: flex;     justify-content: space-between;">
+                                                                    style="display: flex;justify-content: space-between;">
                                                                     <h4> Delivered </h4>
-                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}"
-                                                                        style="object-fit: none; width: fit-content;">
-
+                                                                    <img src="{{ asset('assets/images/dashbord/arro.png') }}" style="object-fit: none; width: fit-content;">
                                                                 </div>
                                                             </div>
                                                         </a>
@@ -279,29 +277,40 @@
             </div>
         </div>
 		<div style="margin: 10px;">
-            <div
-                style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
+            <div class="mb-2" style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
                 <h6 style="font-size: 18px; color : white; font-weight : 500; ">Courier Wise Total Count</h6> 
             </div>
-				<table id="neworder_datatable" style="width:100%" class="dataTable no-footer" aria-describedby="neworder_datatable_info">
-					<thead class="table-light">
-						<tr>
-						<th>#</th>
-						<th>Courier Name</th>
-						<th>Total Orders</th>
-						</tr>
-					</thead>
-					<tbody>
-						@foreach($courierWiseCount as $index => $courier)
-							<tr class="odd new-tbs-white">
-								<td>{{ $index + 1 }}</td>
-								<td>{{ $courier->courier_name }}</td>
-								<td>{{ $courier->total_orders }}</td>
-							</tr>
-						@endforeach
-					</tbody>
-				</table>
-		 </div>
+            <table id="courierWiseTotalDatatable" style="width:100%" class="dataTable no-footer" aria-describedby="neworder_datatable_info">
+                <thead class="table-light">
+                    <tr>
+                    <th>#</th>
+                    <th>Courier Name</th>
+                    <th>B2C Total Count</th>
+                    <th>B2B Total Count</th>
+                    <th>Total Orders</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($courierWiseCount as $index => $courier)
+                        <tr class="odd new-tbs-white">
+                            <td>{{ $index + 1 }}</td>
+                            <td>{{ $courier->courier_name }}</td>
+                            <td>
+                                <a target="_blank" href="{{ url('order') }}?weight_order=1&status=All&courier_name={{ urlencode($courier->courier_name) }}">
+                                    {{ $courier->b2c_count }}
+                                </a>
+                            </td>
+                            <td>
+                                <a target="_blank" href="{{ url('order') }}?weight_order=2&status=All&courier_name={{ urlencode($courier->courier_name) }}">
+                                    {{ $courier->b2b_count }}
+                                </a>
+                            </td> 
+                            <td>{{ $courier->total_orders }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+		</div>
         <div style="margin: 10px;">
             <div
                 style="display: flex; justify-content : space-between; align-items: center; padding : 2px 20px; background : #5640B0; border-radius: 10px;">
@@ -309,8 +318,7 @@
                 <a href="{{ url('order') }}?weight_order=1&status=All"
                     style="font-size: 16px; color : white; font-weight : 300;text-decoration: underline !important; ">View
                     Details</a>
-            </div>
-
+            </div> 
             <table id="neworder_datatable" style="width:100%" class="dataTable no-footer"
                 aria-describedby="neworder_datatable_info">
                 <thead>
@@ -569,7 +577,13 @@
     </div>
 @endsection
 @push('js')
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>  
     <script>
+       $('#courierWiseTotalDatatable').dataTable({
+            "pageLength": 10,
+            "lengthMenu": [10, 25, 50, 100]
+        });
+
         $('.customization_popup').on('click', function(event) {
             if ($(event.target).is('.customization_popup_close') || $(event.target).is('.customization_popup')) {
                 event.preventDefault();

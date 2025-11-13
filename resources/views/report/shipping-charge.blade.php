@@ -62,7 +62,7 @@
                             <div class="col-lg-2 col-sm-6">
                                 <div class="main-selet-11">
                                     <button class="btn-main-1 search_user search-btn-remi">Search</button>
-                                </div>
+                                </div> 
                             </div>
                             <!-- Totals on the right -->
                             <div class="col-lg-4 ms-lg-auto">
@@ -76,10 +76,36 @@
                                         <div id="total_profit" class="value">₹0.00</div>
                                     </div>
                                 </div>
-                            </div>
-
+                            </div> 
                         </div>
                         <div class="main-calander-11 mt-2">
+                            <div class="page-heading-main justify-content-between align-items-end  mb-0">
+                                <div class="left-head-deta">
+                                    <div class="custom-entry">
+                                        <p>Show</p>
+                                        <select id="page_length">
+                                            <option value="10">10</option>
+                                            <option value="25" selected>25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                            <option value="500">500</option>
+                                            <option value="1000">1000</option>
+                                            <option value="2000">2000</option>
+                                            <option value="200000000">All</option>
+                                        </select>
+                                        <p>entries</p>
+                                    </div>
+                                </div>
+                                <div class="right-head-deta">
+                                    {{-- <div class="table-custom-serch">
+                                        <input class="input-main" type="search" id="search_table"  placeholder="Search">
+                                    </div>  --}}
+                                    <div>
+                                        <a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
+                                        <a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
+                                    </div>
+                                </div>
+                            </div> 
                             <div class="main-data-teble-1 table-responsive">
                                 <table id="payment_datatable" class="" style="width:100%">
                                     <thead>

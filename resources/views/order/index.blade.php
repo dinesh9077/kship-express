@@ -242,6 +242,7 @@
 
 <script>
 	var weightOrder = @json(request('weight_order')) || 1;
+	var courierName = @json(request('courier_name', '')) || '';
 	
 	$('.customization_popup').on('click', function(event) {
 		if ($(event.target).is('.customization_popup_close') || $(event.target).is('.customization_popup')) {
@@ -345,9 +346,9 @@
 		var statusCourier = "{{ request('order_status') ?? '' }}";
 
 		// Initialize DataTables for different statuses
-		let newOrderTable = initializeDataTable('#neworder_datatable', "{{ route('order.ajax') }}", { status: "New", weightOrder: weightOrder }, OrderColumns);
-		let readyToShipTable = initializeDataTable('#readytoship_datatable', "{{ route('order.ajax') }}", { status: "Manifested", weightOrder: weightOrder}, OrderColumns);
-		let pickupTable = initializeDataTable('#pickup_datatable', "{{ route('order.ajax') }}", { status: @json($status), weightOrder: weightOrder}, OrderColumns);
+		let newOrderTable = initializeDataTable('#neworder_datatable', "{{ route('order.ajax') }}", { status: "New", weightOrder: weightOrder, courier_name: courierName }, OrderColumns);
+		let readyToShipTable = initializeDataTable('#readytoship_datatable', "{{ route('order.ajax') }}", { status: "Manifested", weightOrder: weightOrder, courier_name: courierName}, OrderColumns);
+		let pickupTable = initializeDataTable('#pickup_datatable', "{{ route('order.ajax') }}", { status: @json($status), weightOrder: weightOrder, courier_name: courierName}, OrderColumns);
 		let allOrdersTable = initializeDataTable('#all_datatable', "{{ route('order.ajax') }}", {
 			status: 'All',
 			status_courier: statusCourier ?? $('.searchAllForm  #status_courier').val(),
@@ -355,7 +356,8 @@
 			to_date: $('.searchAllForm  #to_date').val(),
 			order_type: $('.searchAllForm  #order_type').val(),
 			user_id: $('.searchAllForm #user_id').val(),
-			weightOrder: weightOrder
+			weightOrder: weightOrder,
+			courier_name: courierName
 		}, OrderColumns);
 
 		// Redraw DataTable on filter button click
