@@ -1001,7 +1001,7 @@
 				->setOption('isRemoteEnabled', true);
 
 			// ✅ Return A4 label PDF
-			return $pdf->download('order_label_' . $orderId . '.pdf');
+			return $pdf->stream('order_label_' . $orderId . '.pdf');
 		} 
 
 		public function alllabeldownload(Request $request)

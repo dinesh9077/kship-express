@@ -11,13 +11,7 @@
 				<h2 style="font-weight: 800; text-align: center; color: red;">
 					Your KYC verification is incomplete. Please complete it to proceed.
 				</h2>
-			</div>
-		@elseif($user->charge == '0.00' && $user->role === 'user')
-			<div class="container-fluid">
-				<h2 style="font-weight: 800; text-align: center; color: red;">
-					Please contact the admin to set up your rate calculator.
-				</h2>
-			</div>
+			</div> 
 		@else  
 			<div class="container-fluid">
 				<div class="main-create-order mt-3"> 
