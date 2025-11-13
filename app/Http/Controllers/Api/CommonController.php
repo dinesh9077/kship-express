@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\UserWallet;
 use App\Models\Billing;
 use App\Models\ShippingCompany;
+use App\Models\CourierCommission;
 use App\Models\Notification;
 use App\Models\AppBanner;
 use App\Models\Order;
@@ -269,11 +270,36 @@ class CommonController extends Controller
 					continue;
 				}
 
+				$courierCommissions = CourierCommission::with([
+					'userCommissions' => function ($q) use ($user) {
+						$q->where('user_id', $user->id);
+					}
+				])
+				->where('shipping_company', $shippingCompany->id)
+				->get()
+				->keyBy('courier_id');
+
 				foreach ($responseDetails as $responseData) {
 					$totalCharges = $responseData['total_charges'];
 					$beforeTax = $responseData['before_tax_total_charges'];
 					$gst = $responseData['gst'];
 
+					$courierCommission = $courierCommissions->has($responseData['id']) ? $courierCommissions->get($responseData['id']) : null;
+					$commissionAmount = 0;
+					if ($courierCommission && $user->role == "user") {
+						$userCommission = $courierCommission->userCommissions->first() ?? null;
+						$commissionType = $userCommission->type ?? $courierCommission->type ?? 'fix';
+						$commissionValue = $userCommission->value ?? $courierCommission->value ?? 0;
+
+						if ($commissionType === "fix") {
+							$commissionAmount = $commissionValue; // flat fee
+						} else {
+							$commissionAmount = ($totalCharges * $commissionValue) / 100; // percentage
+						}
+
+						$totalCharges += $commissionAmount;
+						$beforeTax += $commissionAmount;
+					}
 					$couriers[] = [
 						'shipping_charge' => $beforeTax,
 						'tax' => $gst,
@@ -286,7 +312,7 @@ class CommonController extends Controller
 						'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A',
 						'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
 						'applicable_weight' => $request->weight ?? 0,
-						'percentage_amount' => 0,
+						'percentage_amount' => $commissionAmount,
 						'responseData' => $responseData
 					];
 				}

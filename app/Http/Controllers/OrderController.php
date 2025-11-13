@@ -1337,7 +1337,7 @@
 							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
 							'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
 							'applicable_weight' =>  max($volumetricWt, $weight) ?? 0,
-							'percentage_amount' => 0,
+							'percentage_amount' => $commissionAmount,
 							'responseData' => $responseData
 						];
 					}
@@ -1448,7 +1448,7 @@
 					
 					if ((isset($response['response']['result']) && $response['response']['result'] == 0))
 					{
-					return response()->json(['status' => 'error', 'msg' => $$response['response']['data']['error'] ?? $response['response']['message'] ?? 'An error occurred.']);	 
+						return response()->json(['status' => 'error', 'msg' => $$response['response']['data']['error'] ?? $response['response']['message'] ?? 'An error occurred.']);	 
 					} 
 					
 					$orderId = $response['response']['data']['order_id'] ?? '';

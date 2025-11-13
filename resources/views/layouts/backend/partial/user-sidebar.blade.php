@@ -124,7 +124,7 @@
 			</a>
 		</li>  
 		<li>
-			<a href="{{route('report.passbook')}}" class="{{ request()->is('passbook*') ? 'active' : '' }}"> 
+			<a href="{{ url('passbook', Auth::user()->id) }}" class="{{ request()->is('passbook*') ? 'active' : '' }}"> 
 				<span> Passbook </span>
 			</a>
 		</li>  

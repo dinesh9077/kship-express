@@ -1,6 +1,6 @@
 @extends('layouts.backend.app')
 @section('title', config('setting.company_name') . ' - Passbook Report')
-@section('header_title', $user->name)
+@section('header_title', 'Passbook Report')
 @section('content')
     <style>
         .tooltip .tooltiptext {
@@ -109,52 +109,34 @@
                     <div class="main-order-001">
                         <div class="main-filter-weight">
                             <div class="row row-re passbookSerachForm">
-
-                                <div class="col-lg-2 col-sm-6">
-                                    <div class="main-selet-11">
-                                        <input type="text" class="form-control new-height-fcs-rmi  datepicker"
-                                            name="fromdate" value="{{ $defaultFrom }}" id="fromdate"
-                                            placeholder="From Date">
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-2 col-sm-6">
-                                    <div class="main-selet-11">
-                                        <input type="text" class="form-control new-height-fcs-rmi  datepicker"
-                                            name="todate" value="{{ $defaultTo }}" id="todate"
-                                            placeholder="To Date">
-                                    </div>
-                                </div>
-
-                                <div class="col-lg-2 col-sm-6">
-                                    <div class="main-selet-11">
-                                        <button type="submit" class="btn-main-1 search_user search-btn-remi">Search</button>
-                                    </div>
-                                </div>
-
+								<div class="col-lg-2 col-sm-6">
+									<div class="main-selet-11">
+										<select class="select2 form-control" name="user" id="user_id">
+											<option value="">Select User</option>
+											@foreach ($users as $user)
+												<option value="{{ $user->id }}"
+													{{ request('user') == $user->id ? 'selected' : '' }}>
+													{{ $user->name }}</option>
+											@endforeach
+										</select>
+									</div>
+								</div> 
 								<!-- Totals on the right -->
-								<div class="col-lg-4 ms-lg-auto">
+								<div class="col-lg-10 ms-lg-auto">
 									<div class="d-flex justify-content-end gap-4 totals-wrap">
 										<div class="text-end">
-											<div class="label">Opening Balance</div>
-											<div id="total_opening" class="value">₹0.00</div>
+											<div class="label">Total Wallet Amount</div>
+											<div id="total_wallet" class="value">₹0.00</div>
 										</div> 
 									</div>
-								</div>
-								<div class="col-lg-2 ms-lg-auto">
-									<div class="d-flex justify-content-start gap-4 totals-wrap">
-										<div class="text-start">
-											<div class="label">Closing Balance</div>
-											<div id="total_closing" class="value">₹0.00</div>
-										</div> 
-									</div>
-								</div>  
+								</div> 
                             </div>
+							
                         </div>
                         <div class="ordr-main-001">
                             <div class="page-heading-main justify-content-between align-items-end  mb-0">
                                 <div class="left-head-deta">
-                                    {{-- <div class="custom-entry">
+                                    <div class="custom-entry">
                                         <p>Show</p>
                                         <select id="page_length">
                                             <option value="10">10</option>
@@ -167,12 +149,12 @@
                                             <option value="200000000">All</option>
                                         </select>
                                         <p>entries</p>
-                                    </div> --}}
+                                    </div>
                                 </div>
                                 <div class="right-head-deta">
-                                    {{-- <div class="table-custom-serch">
+                                    <div class="table-custom-serch">
 										<input class="input-main" type="search" id="search_table"  placeholder="Search">
-									</div>  --}}
+									</div>
                                     <div>
                                         <a href="javascript:;" class="btn btn-blues" id="pdfExport"> PDF</a>
                                         <a href="javascript:;" class="btn btn-warning" id="excelExport"> XLXS</a>
@@ -183,13 +165,11 @@
                                 <table id="wallet_datatable" class="" style="width:100%">
                                     <thead>
                                         <tr>
-                                            <th> Sr.No</th> 
-											<th> Date </th>
-                                            <th> Billing details </th>
-											<th> Description </th> 
-                                            <th> Credit </th>
-                                            <th> Debit </th>
-                                            <th> Balance </th>  
+                                            <th> Sr.No</th>
+                                            <th> User Name </th>
+                                            <th> User Email </th>
+                                            <th> Wallet Balance </th>  
+                                            <th> Action </th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -221,30 +201,127 @@
     <!-- Buttons print option (optional) -->
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
 
-    <script> 
-		var userId = @json($user->id);
+    <script>
         var dataTable = $('#wallet_datatable').DataTable({
             processing: true,
             dom: 'Bfrtip',
-            buttons: [{
-                extend: 'excelHtml5',
-                className: 'd-none',
-                text: 'excel',
-                exportOptions: {
-                    modifier: {
-                        page: 'current'
-                    }
-                }
-            }, {
-                extend: 'pdfHtml5',
-                className: 'd-none',
-                text: 'excel',
-                exportOptions: {
-                    modifier: {
-                        page: 'current'
-                    }
-                }
-            }],
+          	buttons: [
+			{
+				extend: 'excelHtml5',
+				className: 'd-none',
+				text: 'excel',
+				exportOptions: {
+				columns: ':visible',
+				format: {
+					body: function (data, row, column, node) {
+					// prefer data-export attribute if provided (plain text for export)
+					if (node && node.dataset && node.dataset.export) return node.dataset.export;
+					if (data === null || data === undefined) return '';
+					if (typeof data !== 'string') return String(data);
+					data = data.replace(/<\/p\s*>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<p[^>]*>/gi, '');
+					var tmp = document.createElement('div');
+					tmp.innerHTML = data;
+					return (tmp.textContent || tmp.innerText || '').trim();
+					}
+				}
+				}
+			},
+			{
+				extend: 'pdfHtml5',
+				className: 'd-none',
+				text: 'pdf',
+				orientation: 'landscape',
+				pageSize: 'A4',
+				exportOptions: {
+				columns: ':visible',
+				format: {
+					body: function (data, row, column, node) {
+					if (node && node.dataset && node.dataset.export) return node.dataset.export;
+					if (data === null || data === undefined) return '';
+					if (typeof data !== 'string') return String(data);
+					data = data.replace(/<\/p\s*>/gi, '\n').replace(/<br\s*\/?>/gi, '\n').replace(/<p[^>]*>/gi, '');
+					var tmp = document.createElement('div');
+					tmp.innerHTML = data;
+					return (tmp.textContent || tmp.innerText || '').trim();
+					}
+				}
+				},
+				customize: function (doc) {
+				// Defensive: find the first table node (don't assume index)
+				var tableBlock = null;
+				for (var i = 0; i < doc.content.length; i++) {
+					if (doc.content[i] && doc.content[i].table) {
+					tableBlock = doc.content[i];
+					break;
+					}
+				}
+				if (!tableBlock || !tableBlock.table || !tableBlock.table.body) {
+					// nothing to customize — avoid crash
+					return;
+				}
+
+				var table = tableBlock.table;
+				// Ensure headerRows set
+				table.headerRows = table.headerRows || 1;
+				table.dontBreakRows = true;
+				table.keepWithHeaderRows = 1;
+
+				// Ensure no undefined/null cells in body — replace with empty text objects
+				var colCount = (table.body[0] || []).length;
+				for (var r = 0; r < table.body.length; r++) {
+					if (!Array.isArray(table.body[r])) continue;
+					for (var c = 0; c < colCount; c++) {
+					var cell = table.body[r][c];
+					if (cell === null || cell === undefined) {
+						table.body[r][c] = { text: '' };
+						continue;
+					}
+					// Normalize string cells into objects (helps pdfMake)
+					if (typeof cell === 'string') {
+						table.body[r][c] = { text: cell };
+						cell = table.body[r][c];
+					}
+					}
+				}
+
+				// Build proper widths array that matches column count.
+				// Use flexible widths '*' for most and small fixed widths for some columns if desired.
+				var widths = [];
+				for (var i = 0; i < colCount; i++) {
+					// example: make first column narrow, last column narrow, others flexible
+					if (i === 0) widths.push(40);
+					else if (i === colCount - 1) widths.push(80);
+					else widths.push('*');
+				}
+				// Guarantee lengths match
+				if (widths.length === colCount) {
+					table.widths = widths;
+				} else {
+					// fallback: let pdfMake auto-size
+					table.widths = new Array(colCount).fill('*');
+				}
+
+				// Compact layout
+				tableBlock.layout = {
+					fillColor: function (rowIndex) { return (rowIndex % 2 === 0) ? null : '#f7f7f7'; },
+					hLineWidth: function () { return 0.3; },
+					vLineWidth: function () { return 0.3; },
+					paddingTop: function () { return 4; },
+					paddingBottom: function () { return 4; },
+					paddingLeft: function () { return 4; },
+					paddingRight: function () { return 4; }
+				};
+
+				// Optional: global font tweak if needed
+				doc.defaultStyle = doc.defaultStyle || {};
+				doc.defaultStyle.fontSize = 8;
+				doc.styles = doc.styles || {};
+				doc.styles.tableHeader = doc.styles.tableHeader || {};
+				doc.styles.tableHeader.fontSize = 9;
+				}
+			}
+			],
+
             "language": {
                 'loadingRecords': '&nbsp;',
                 'processing': 'Loading...'
@@ -252,9 +329,8 @@
             serverSide: true,
             bLengthChange: false,
             searching: false,
-            bFilter: false,
+            bFilter: true,
             bInfo: true,
-			paging: false,
             iDisplayLength: 25,
             lengthMenu: [
                 [10, 25, 50, 100, 200, 500, 1000000],
@@ -265,46 +341,36 @@
             ],
             bAutoWidth: false,
             "ajax": {
-                "url": "{{ route('report.passbook.ajax') }}",
+                "url": "{{ route('report.passbook-user.ajax') }}",
                 "dataType": "json",
                 "type": "POST",
                 "data": function(d) {
                     d._token = "{{ csrf_token() }}";
                     d.search = $('input[type="search"]').val();
-                    d.user_id = userId;
-                    d.fromdate = $('.passbookSerachForm #fromdate').val();
-                    d.todate = $('.passbookSerachForm #todate').val();
+                    d.user_id = $('.passbookSerachForm #user_id').val(); 
                 },
 				// Update totals UI
 				dataSrc: function(json) {
-					const opening_balance = json?.opening_balance ?? 0; 
-					const closing_balance = json?.closing_balance ?? 0; 
-					$('#total_opening').text(opening_balance); 
-					$('#total_closing').text(closing_balance); 
+					const total_wallet_amount = json?.total_wallet_amount ?? 0; 
+					$('#total_wallet').text(total_wallet_amount); 
 					return json.aaData || [];
 				}
             },
             "columns": [{
                     "data": "id"
                 },
-				{
-                    "data": "created_at"
+                {
+                    "data": "name"
                 },
                 {
-                    "data": "billing_type"
-                }, 
-				{
-                    "data": "note"
-                },
-                {
-                    "data": "credit"
-                },
-                {
-                    "data": "debit"
+                    "data": "email"
                 },
                 {
                     "data": "balance"
-                } 
+                }, 
+                {
+                    "data": "action"
+                }
             ]
         });
 
@@ -316,14 +382,15 @@
             $(".buttons-pdf").trigger("click");
         });
 
+		$(document).on('change', '#user_id', function () {
+			dataTable.draw();   // or dataTable.ajax.reload();
+		});
+
+
         $('#page_length').change(function() {
             dataTable.page.len($(this).val()).draw();
-        })
-
-        $('.search_user').click(function() {
-            dataTable.draw();
-        });
-
+        }) 
+  
         var debounceTimer;
         $('#search_table').keyup(function() {
             clearTimeout(debounceTimer);

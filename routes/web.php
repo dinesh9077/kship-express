@@ -281,8 +281,10 @@
 	Route::get('/report/order', [App\Http\Controllers\ReportController::class, 'index'])->name('report.order')->middleware('permission:order_report.view'); 
 	Route::post('/report/order/ajax', [App\Http\Controllers\ReportController::class, 'reportOrderAjax'])->name('report.order.ajax');
 	Route::get('/report/export-orders', [App\Http\Controllers\ReportController::class, 'reportOrderExport'])->name('report.order.export');
-	
-	Route::get('/passbook/', [App\Http\Controllers\ReportController::class, 'passbookReport'])->name('report.passbook')->middleware('permission:passbook_report.view'); 
+
+	Route::get('/passbook-user/', [App\Http\Controllers\ReportController::class, 'passbookUser'])->name('report.passbook.user')->middleware('permission:passbook_report.view');
+	Route::post('/passbook-user/ajax', [App\Http\Controllers\ReportController::class, 'passbookUserAjax'])->name('report.passbook-user.ajax');
+	Route::get('/passbook/{user_id}', [App\Http\Controllers\ReportController::class, 'passbookReport'])->middleware('permission:passbook_report.view'); 
 	Route::post('/passbook/ajax', [App\Http\Controllers\ReportController::class, 'passbookReportAjax'])->name('report.passbook.ajax'); 
 	 
 	Route::get('/report/shipping-charge', [App\Http\Controllers\ReportController::class, 'shippingCharge'])->name('report.shipping-charge')->middleware('permission:shipping_charge.view'); 

@@ -229,7 +229,7 @@
 								@endif
 								@if(config('permission.passbook_report.view'))
 								<li>
-									<a href="{{route('report.passbook')}}" class="{{ request()->is('passbook*') ? 'active' : '' }}"> 
+									<a href="{{ route('report.passbook.user') }}" class="{{ request()->is('passbook-user*') ? 'active' : '' }}"> 
 										<span> Passbook </span>
 									</a>
 								</li> 

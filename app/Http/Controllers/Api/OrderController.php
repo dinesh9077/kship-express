@@ -798,7 +798,7 @@
 							'estimated_delivery' => $responseData['estimated_delivery'] ?? 'N/A', 
 							'chargeable_weight' => $responseData['minimum_chargeable_weight'] ?? 0,
 							'applicable_weight' =>  max($volumetricWt, $weight) ?? 0,
-							'percentage_amount' => 0,
+							'percentage_amount' => $commissionAmount,
 							'responseData' => $responseData
 						];
 					}

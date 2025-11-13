@@ -23,5 +23,9 @@ class Billing extends Model
 	public function user()
 	{
 		return $this->belongsTo(User::class, 'user_id');
+	} 
+	public function order()
+	{
+		return $this->belongsTo(Order::class, 'billing_type_id');
 	}
 }

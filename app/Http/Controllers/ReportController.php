@@ -421,12 +421,74 @@
 			]);
 		} 
 
-		public function passbookReport()
+		public function passbookUser()
 		{ 
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
-			return view('report.passbook', compact('users'));
+			return view('report.passbook-user', compact('users'));
 		}
-		
+
+		public function passbookUserAjax(Request $request)
+		{
+			$draw = $request->post('draw');
+			$start = $request->post("start");
+			$limit = $request->post("length");
+
+			$columnIndex = $request->post('order')[0]['column'];
+			$orderColumn = $request->post('columns')[$columnIndex]['data'];
+			$orderDir = $request->post('order')[0]['dir'];
+
+			$orderColumn = ($orderColumn == 'action') ? 'created_at' : $orderColumn;
+
+			$query = User::where('role', 'user')
+				->where('kyc_status', '!=', 0)
+				->when($request->user_id, function ($q) use ($request) {
+					return $q->where('id', $request->user_id);
+				});
+
+			if ($request->filled('search')) {
+				$search = $request->input('search');
+				$query->where(function ($q) use ($search) {
+					$q->where('name', 'like', "%{$search}%")
+						->orWhere('email', 'like', "%{$search}%");
+				});
+			}
+
+			// Get all filtered records
+			$allRecords = $query->orderBy("users.id", 'asc')->get();
+
+			// Calculate total wallet amount
+			$totalWallet = $allRecords->sum('wallet_amount');
+
+			$data = [];
+			foreach ($allRecords as $key => $value) {
+			// Create URL for passbook
+				$viewUrl = url('passbook', $value->id);
+				$data[] = [
+					'id' => $start + $key + 1,
+					'name' => $value->name,
+					'email' => $value->email,
+					'balance' => number_format($value->wallet_amount, 2),
+					'action' => '<a href="' . $viewUrl . '" class="btn btn-sm btn-success">Passbook</a>'
+				];
+			}
+
+			return response()->json([
+				"draw" => intval($draw),
+				"iTotalRecords" => $allRecords->count(),
+				"iTotalDisplayRecords" => $allRecords->count(),
+				"aaData" => $data,
+				"total_wallet_amount" => number_format($totalWallet, 2) // ← Added here
+			]);
+		}
+
+
+		public function passbookReport($userId)
+		{ 
+			$user = User::find($userId); 
+			$defaultFrom = now()->copy()->startOfMonth()->toDateString(); 
+			$defaultTo = now()->copy()->endOfMonth()->toDateString();  
+			return view('report.passbook', compact('user', 'defaultFrom', 'defaultTo'));
+		}
 		public function passbookReportAjax(Request $request)
 		{
 			$draw = $request->post('draw');
@@ -442,90 +504,120 @@
 			$role = Auth::user()->role;
 			$id = Auth::user()->id;
 
-			$query = Billing::with(['user'])
-			->when(
-				in_array($role, ['user']),
-				fn($q) =>
-				$q->where('billings.user_id', $id)
-			)
-			->when(
-				!in_array($role, ['user']) && $request->user_id,
-				fn($q) =>
-				$q->where('billings.user_id', $request->user_id)
-			)
-			// ✅ From + To date (inclusive, full-day range)
-			->when($request->fromdate && $request->todate, function ($q) use ($request) {
-				$from = Carbon::parse($request->fromdate)->startOfDay();
-				$to = Carbon::parse($request->todate)->endOfDay();
-				return $q->whereBetween('billings.created_at', [$from, $to]);
-			})
-			// ✅ Only From date (single-day filter)
-			->when($request->fromdate && !$request->todate, function ($q) use ($request) {
-				$from = Carbon::parse($request->fromdate)->startOfDay();
-				$to = Carbon::parse($request->fromdate)->endOfDay();
-				return $q->whereBetween('billings.created_at', [$from, $to]);
-			})
-			// ✅ Only To date (everything up to that day inclusive)
-			->when($request->todate && !$request->fromdate, function ($q) use ($request) {
-				$to = Carbon::parse($request->todate)->endOfDay();
-				return $q->where('billings.created_at', '<=', $to);
-			});
+			// Base query for filtered records (applies user_id and date range if provided)
+			$query = Billing::with(['order'])
+				->when($request->user_id, function ($q) use ($request) {
+					return $q->where('user_id', $request->user_id);
+				})
+				->when($request->fromdate && $request->todate, function ($q) use ($request) {
+					$from = Carbon::parse($request->fromdate)->startOfDay();
+					$to = Carbon::parse($request->todate)->endOfDay();
+					return $q->whereBetween('billings.created_at', [$from, $to]);
+				})
+				// If only fromdate provided - filter that single day
+				->when($request->fromdate && !$request->todate, function ($q) use ($request) {
+					$from = Carbon::parse($request->fromdate)->startOfDay();
+					$to = Carbon::parse($request->fromdate)->endOfDay();
+					return $q->whereBetween('billings.created_at', [$from, $to]);
+				})
+				// If only todate provided - everything up to that day inclusive
+				->when($request->todate && !$request->fromdate, function ($q) use ($request) {
+					$to = Carbon::parse($request->todate)->endOfDay();
+					return $q->where('billings.created_at', '<=', $to);
+				});
 
-			// Get all records for accurate reverse balance calculation
-			$allRecords = $query->orderBy("billings.id", 'asc')->get();
+			// --- Opening balance: sum of all transactions BEFORE fromdate (if provided)
+			$openingBalance = 0.00;
+			if ($request->fromdate) {
+				$before = Carbon::parse($request->fromdate)->startOfDay();
 
-			// Calculate final balance
-			$totalBalance = 0;
-			foreach ($allRecords as $record) {
-				$totalBalance += ($record->transaction_type == 'debit') ? -$record->amount : $record->amount;
+				$openingQuery = Billing::query()
+					->when($request->user_id, function ($q) use ($request) {
+						return $q->where('user_id', $request->user_id);
+					})
+					->where('billings.created_at', '<', $before);
+
+				// Sum credits as +amount, debits as -amount
+				$openingBalance = $openingQuery->get()->reduce(function ($carry, $item) {
+					return $carry + (($item->transaction_type === 'credit') ? $item->amount : -$item->amount);
+				}, 0.00);
+			} else {
+				// If no fromdate provided, opening balance is zero (or you can compute all prior if desired)
+				$openingBalance = 0.00;
 			}
 
-			// Reverse order for pagination display
-			$reversed = $allRecords->sortByDesc('id')->values();
-			$paginated = $reversed/* ->slice($start, $limit) */;
+			// Get filtered records in ASC order (oldest → newest) to compute running balances cleanly
+			$filteredAsc = $query->orderBy("billings.created_at", 'asc')->get();
 
+			// Build running balances array
+			$running = $openingBalance;
+			$runningBalances = []; // same index as $filteredAsc
+			foreach ($filteredAsc as $rec) {
+				$running += ($rec->transaction_type === 'credit') ? $rec->amount : -$rec->amount;
+				$runningBalances[] = $running;
+			}
+
+			// Closing balance = running after last filtered record (or opening if none)
+			$closingBalance = $running;
+
+			// For display you previously reversed the records (most recent first)
+			$filteredDesc = $filteredAsc->sortByDesc('id')->values();
+
+			// Reverse running balances array to align with $filteredDesc
+			$runningBalancesDesc = array_reverse($runningBalances);
+
+			// Prepare data rows (matching $filteredDesc order)
 			$data = [];
-			$currentBalance = $totalBalance;
+			foreach ($filteredDesc as $key => $value) {
 
-			foreach ($paginated as $key => $value) {
-				  
 				$billingTypeHtml = $value->billing_type === 'Order'
+
 					? '<div class="main-cont1-1">
-							<div class="checkbox checkbox-purple">Order Id: 
-								<a href="'.url('order/details/'.$value->billing_type_id).'" target="_blank"> #'.$value->billing_type_id.' </a>
-							</div> 
-					   </div>'
+						<div class="checkbox checkbox-purple">Order Id: 
+							<a href="' . url('order/details/' . $value->billing_type_id) . '" target="_blank"> #' . $value->billing_type_id . ' </a> 
+						</div> 
+						<div class="checkbox checkbox-purple">Courier Name: 
+							<a href="' . url('order/details/' . $value->billing_type_id) . '" target="_blank"> #' . ($value->order->courier_name ?? 'N/A') . ' </a> 
+						</div>  
+						<div class="checkbox checkbox-purple">Awb Number: 
+							<a href="' . url('order/details/' . $value->billing_type_id) . '" target="_blank"> #' . ($value->order->awb_number ?? 'N/A') . ' </a> 
+						</div> 
+					</div>'
 					: "<div class='main-cont1-2'><p>{$value->billing_type}</p></div>";
 
-				$transactionTypeHtml = ($value->transaction_type == 'debit')
-					? '<span class="badge badge-danger" disabled>Debit</span>'
-					: '<span class="badge badge-success" disabled>Credit</span>';
-				
-				$displayCurrentBalance = $currentBalance;
-				
+				// compute the index in runningBalancesDesc
+				$balanceForRow = isset($runningBalancesDesc[$key]) ? $runningBalancesDesc[$key] : $openingBalance;
+
 				$data[] = [
 					'id' => $start + $key + 1,
-					'name' => "<div class='main-cont1-2'><p>{$value->user->name}</p></div>",
 					'billing_type' => $billingTypeHtml,
-					'transaction_type' => "<div class='main-cont1-2'>{$transactionTypeHtml}</div>",
-					'debit' => ($value->transaction_type == 'debit') ? $value->amount : "-",
-					'credit' => ($value->transaction_type == 'credit') ? $value->amount : "-",
-					'balance' => number_format($displayCurrentBalance, 2),
+					'debit' => ($value->transaction_type == 'debit')
+						? '<span class="text-danger">' . number_format($value->amount, 2) . '</span>'
+						: '-',
+					'credit' => ($value->transaction_type == 'credit')
+						? '<span class="text-success">' . number_format($value->amount, 2) . '</span>'
+						: '-',
+					'balance' => number_format($balanceForRow, 2),
 					'note' => "<div class='main-cont1-2'><p>{$value->note}</p></div>",
-					'created_at' => "<div class='main-cont1-2'><p>".date('Y M d | h:i A', strtotime($value->created_at))."</p></div>",
+					'created_at' => "<div class='main-cont1-2'><p>" . date('Y M d | h:i A', strtotime($value->created_at)) . "</p></div>",
 				];
-
-				$currentBalance -= ($value->transaction_type == 'debit') ? -$value->amount : $value->amount;
 			}
 
+			if($openingBalance <= 0)
+			{
+				$openingBalance = Billing::where('user_id', $request->user_id)->orderBy('id')->first()->amount ?? 0;
+			}
 			return response()->json([
 				"draw" => intval($draw),
-				"iTotalRecords" => $allRecords->count(),
-				"iTotalDisplayRecords" => $allRecords->count(),
-				"aaData" => $data
+				"iTotalRecords" => $filteredAsc->count(),
+				"iTotalDisplayRecords" => $filteredAsc->count(),
+				"aaData" => $data,
+				// New fields:
+				"opening_balance" => number_format($openingBalance, 2),
+				"closing_balance" => number_format($closingBalance, 2),
 			]);
-		}   
-		
+		} 
+
 		public function billingInvoice()
 		{
 			$users = User::where('role', 'user')->orderBy('name', 'asc')->get(); 
