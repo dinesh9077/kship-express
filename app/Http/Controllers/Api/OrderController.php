@@ -702,20 +702,23 @@
 		public function orderShipCharge($orderId)
 		{
 			$user = Auth::user();
-			$role = $user->role;
-			$charge = $user->charge;
-			$charge_type = $user->charge_type;
+			$role = $user->role; 
 			
 			if($role != "admin" && $user->kyc_status == 0)
 			{ 
 				return $this->errorResponse('Your order cannot be placed until your KYC is approved.');
-			} 
-			
-			$order = Order::with(['warehouse', 'customerAddress', 'orderItems'])->find($orderId);
+			}  
+			 
+			$order = Order::with(['warehouse', 'user', 'customerAddress', 'orderItems'])->find($orderId);
 			if (!$order) {
-				return $this->errorResponse('Order not found');  
+				return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
 			}
-			  
+			
+			$user = $order->user ?? null;
+			if (!$user) {
+				return response()->json(['status' => 'error', 'message' => 'User order not found'], 404);
+			}
+
 			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
 			$couriers = [];
 			

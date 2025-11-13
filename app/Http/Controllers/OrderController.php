@@ -1244,17 +1244,16 @@
 		}
 		 
 		public function orderShipCharge($orderId)
-		{
-			$user = Auth::user();
-			$role = $user->role;
-			$charge = $user->charge;
-			$charge_type = $user->charge_type;
-			
-			$order = Order::with(['warehouse', 'customerAddress', 'orderItems'])->find($orderId);
+		{ 
+			$order = Order::with(['warehouse', 'user', 'customerAddress', 'orderItems'])->find($orderId);
 			if (!$order) {
 				return response()->json(['status' => 'error', 'message' => 'Order not found'], 404);
 			}
-			  
+			
+			$user = $order->user ?? null;
+			if (!$user) {
+				return response()->json(['status' => 'error', 'message' => 'User order not found'], 404);
+			}
 			$shippingCompanies = ShippingCompany::whereStatus(1)->get();
 			$couriers = [];
 			
