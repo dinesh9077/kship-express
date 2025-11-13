@@ -38,7 +38,7 @@
 								$order->final_logo = $logoUrl;
 							@endphp	
 
-							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 50px	; width: 50px; display: block; margin-left: auto; margin-right: auto;">	
+							<img src="{{ $logoUrl }}" alt="LOGO" style="height: 50px; width: auto; display: block; margin-left: auto; margin-right: auto;">	
 						@else
 							<img src="{{ asset('storage/shipping-logo/'.$shipping->logo) }}" alt="LOGO"
 						style="height: 100%; width: auto; display: block; margin-left: auto; margin-right: auto;">	
