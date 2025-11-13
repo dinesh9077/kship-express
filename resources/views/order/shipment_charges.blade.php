@@ -47,9 +47,10 @@
 					<thead>
 						<tr style="border-bottom: none !important;">
 							<th class="new-details-table;" style="text-align:left;"> Logo </th> 
-							<th class="new-details-table;" > Courier </th>
-							<th class="new-details-table;" > Chargeable Weight </th>
-							<th class="new-details-table;" > Charges </th>
+							<th class="new-details-table;" style="text-align:left;"> Courier </th>
+							<th class="new-details-table;" style="text-align:left;"> Estimated Delivery </th>
+							<th class="new-details-table;" style="text-align:left;"> Chargeable Weight </th>
+							<th class="new-details-table;" style="text-align:left;"> Charges </th>
 							<th class="new-details-table;" > Action </th>
 						</tr>
 					</thead>
@@ -64,6 +65,7 @@
 									</div>
 								</td> 
 								<td style="text-align: start;"> {{ $courier['courier_name'] }} </td>
+								<td style="text-align: start;"> {{ $courier['estimated_delivery'] ?? 'N/A'}} </td>
 								<td style="text-align: start;"> {{ $courier['chargeable_weight'] }} </td>
 								<td style="text-align: start;"> ₹{{ $courier['total_charges'] }} </td>
 								<td style="text-align: start;"> 

@@ -55,27 +55,28 @@
 		
 		
 		@foreach($couriers as $courier)
-		<div class="col-lg-3 col-md-4 col-sm-12 mt-2">
-			<div style="display: flex;flex-direction: column; height: 100%; align-items: center; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.09);border-radius: 7px;">
-				<div>
-					<div class="main-img-and-product">
-						<div class="pro-img-11" style="width : 100px; height : 100px;     display: flex
-						;
-						align-items: center;
-						">
-							<img src="{{ $courier['shipping_company_logo'] }}" style="width : 100%; ">
-						</div> 
-					</div>
-				</div> 
-				<div style="font-size: 16px; font-weight : 500; color : black;">{{ $courier['courier_name'] }} </div>
-				<div class="mt-1" style="font-size: 14px; color : #626262;">( Weight : {{ $courier['applicable_weight'] }} )</div>
-				<div class="mt-1" style="font-size: 14px; color : #626262;">Chargeable Weight : {{ $courier['chargeable_weight'] }} </div>
-				<div class="mt-1" style="font-size: 20px; font-weight : 500;  color : #000000ff;"> ₹{{ $courier['total_charges'] }} </div>  
-				<div class="mt-2">
-					<button type="button" class="btn btn-new-bfs mb-3" data-freight-charge='@json($courier)' onclick="viewFreightBreakup(this, event)">View Freight Breakup</button> 
-				</div>  
+			<div class="col-lg-3 col-md-4 col-sm-12 mt-2">
+				<div style="display: flex;flex-direction: column; height: 100%; align-items: center; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.09);border-radius: 7px;">
+					<div>
+						<div class="main-img-and-product">
+							<div class="pro-img-11" style="width : 100px; height : 100px;     display: flex
+							;
+							align-items: center;
+							">
+								<img src="{{ $courier['shipping_company_logo'] }}" style="width : 100%; ">
+							</div> 
+						</div>
+					</div> 
+					<div style="font-size: 16px; font-weight : 500; color : black;">{{ $courier['courier_name'] }} </div>
+					<div class="mt-1" style="font-size: 14px; color : #626262;">( Weight : {{ $courier['applicable_weight'] }} )</div>
+					<div class="mt-1" style="font-size: 14px; color : #626262;">Chargeable Weight : {{ $courier['chargeable_weight'] }} </div>
+					<div class="mt-1" style="font-size: 14px; color : #626262;">Estimated Delivery : {{ $courier['estimated_delivery'] }} </div>
+					<div class="mt-1" style="font-size: 20px; font-weight : 500;  color : #000000ff;"> ₹{{ $courier['total_charges'] }} </div>  
+					<div class="mt-2">
+						<button type="button" class="btn btn-new-bfs mb-3" data-freight-charge='@json($courier)' onclick="viewFreightBreakup(this, event)">View Freight Breakup</button> 
+					</div>  
+				</div>
 			</div>
-		</div>
 		@endforeach 
 	</div>
 	
