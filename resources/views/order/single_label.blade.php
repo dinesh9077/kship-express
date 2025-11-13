@@ -16,7 +16,7 @@
 					<img src="{{ url('storage/settings', config('setting.header_logo')) }}" width="150" alt="">
 				</td>
 				<td colspan="1" style="padding: 0; text-align: center ; width: 20%; center; border: 1px solid black; padding: 0px 20px;">
-					<div style="height: 45px; width: 100%;">
+					<div style="height: 50px; width: 100%;">
 						@if($shipping->id == 1)
 							@php 
 								$logoUrl = $order->courier_logo;
