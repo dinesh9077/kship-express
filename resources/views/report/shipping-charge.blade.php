@@ -134,6 +134,14 @@ border-radius: 10px;
                             @endif
                             <div class="col-lg-2 col-sm-6">
                                 <div class="main-selet-11">
+                                    <select name="filter_type" id="filter_type"> 
+                                       <option value="order_date"> Order Date </option>
+                                       <option value="delivery_date"> Delivery Date </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-sm-6">
+                                <div class="main-selet-11">
                                     <input type="text" class="form-control datepicker " name="fromdate"
                                         <?php echo isset($_GET['fromdate']) ? $_GET['fromdate'] : ''; ?> id="fromdate" placeholder="From Date">
                                 </div>
@@ -144,13 +152,13 @@ border-radius: 10px;
                                         id="todate" placeholder="To Date">
                                 </div>
                             </div>
-                            <div class="col-lg-2 col-sm-6">
+                            <div class="col-lg-1 col-sm-6">
                                 <div class="main-selet-11">
                                     <button class="btn-main-1 search_user search-btn-remi">Search</button>
                                 </div> 
                             </div>
                             <!-- Totals on the right -->
-                            <div class="col-lg-4 ms-lg-auto">
+                            <div class="col-lg-3 ms-lg-auto">
                                 <div class="d-flex justify-content-end gap-4 totals-wrap">
                                     <div class="text-end">
                                         <div class="label">Total Shipping Charge</div>
@@ -196,13 +204,15 @@ border-radius: 10px;
                                     <thead>
                                         <tr>
                                             <th> Sr.No</th>
-                                            <th> Date</th>
+                                            <th> Order Date</th>
+                                            <th> Delivery Date</th>
                                             <th> Seller Details </th>
                                             <th> Order details </th>
                                             <th> Shipping details</th>
+                                            <th> Aggregator Charge </th>
                                             <th> Shipping Charge </th>
                                             {{-- <th> Comission Charge </th>  --}}
-                                            <th> profit</th>
+                                            <th> Net profit</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -239,6 +249,7 @@ border-radius: 10px;
                 {
                     extend: 'excelHtml5',
                     text: 'Excel',
+                    className: 'd-none',
                     exportOptions: {
                     columns: ':visible', // adjust as needed
                     format: {
@@ -265,6 +276,7 @@ border-radius: 10px;
                 {
                     extend: 'pdfHtml5',
                     text: 'PDF',
+                    className: 'd-none',
                     orientation: 'landscape',
                     pageSize: 'A4',
                     exportOptions: {
@@ -358,6 +370,7 @@ border-radius: 10px;
                         d._token = "{{ csrf_token() }}";
                         d.search = $('input[type="search"]').val();
                         d.user_id = $('.paymentSearchForm #user_id').val();
+                        d.filter_type = $('.paymentSearchForm #filter_type').val();
                         d.fromdate = $('.paymentSearchForm #fromdate').val();
                         d.todate = $('.paymentSearchForm #todate').val();
                     },
@@ -378,6 +391,9 @@ border-radius: 10px;
                         "data": "order_date"
                     },
                     {
+                        "data": "delivery_date"
+                    },
+                    {
                         "data": "seller_details"
                     },
                     {
@@ -388,8 +404,10 @@ border-radius: 10px;
                     },
                     {
                         "data": "shipping_charges"
+                    }, 
+                    {
+                        "data": "aggregator_charges"
                     },
-
                     {
                         "data": "profit"
                     }

@@ -316,7 +316,8 @@
 			// ---- Base query (authorization scope only) ----
 			$base = Order::query()
 				->with(['orderItems', 'user', 'shippingCompany'])
-				->whereNotNull('orders.shipping_company_id');
+				->whereNotNull('orders.shipping_company_id')
+				->whereIn('status_courier', ['delivered', 'Delivered']);
 
 			// If role needs scoping
 			if (in_array($role, ['user'])) {
@@ -336,13 +337,14 @@
 			if ($request->filled('shipping_company_id')) {
 				$filtered->where('orders.shipping_company_id', $request->shipping_company_id);
 			}
-
-			if ($request->filled('fromdate') && $request->filled('todate')) {
-				$filtered->whereBetween('orders.order_date', [$request->fromdate, $request->todate]);
+			$filterType = $request->filter_type;
+			if ($request->filled('fromdate') && $request->filled('todate') && $request->filled('filter_type')) 
+			{
+				$filtered->whereBetween($filterType, [$request->fromdate, $request->todate]);
 			} elseif ($request->filled('fromdate')) {
-				$filtered->whereDate('orders.order_date', $request->fromdate);
+				$filtered->whereDate($filterType, $request->fromdate);
 			} elseif ($request->filled('todate')) {
-				$filtered->whereDate('orders.order_date', $request->todate);
+				$filtered->whereDate($filterType, $request->todate);
 			}
 
 			// Search (simple)
@@ -391,19 +393,21 @@
 			$i = $start + 1;
 			foreach ($rows as $order) {
 				// row-level computed values
-				$shipping_charges = (float) ($order->shipping_charge ?? 0) - (float) ($order->percentage_amount ?? 0);
+				$shipping_charges = (float) ($order->shipping_charge ?? 0);
+				$aggregator_charges = (float) ($order->shipping_charge ?? 0) -  (float) ($order->percentage_amount ?? 0);
 				$profit = (float) ($order->percentage_amount ?? 0);
 
 				$data[] = [
 					'id' => $i,
 					'order_date' => $order->order_date,
+					'delivery_date' => $order->delivery_date ?? 'N/A',
 					'seller_details' => "<div class='main-cont1-2'><p>" .
 					(isset($order->user) ? e($order->user->name) . ' (' . e($order->user->company_name) . ')' : 'N/A') .
 						"</p><p>" . e($order->user->email ?? 'N/A') . "</p><p>" . e($order->user->mobile ?? 'N/A') . "</p></div>",
 					'order_details' => $this->orderShipmentDetailHtml($order),
 					'shippings' => "<div class='main-cont1-2'><p>" . e($order->courier_name) . "</p></div>",
 					'shipping_charges' => "<div class='main-cont1-2'><p>" . number_format($shipping_charges, 2) . "</p></div>",
-					// 'commision_charge' => "<div class='main-cont1-2'><p>" . number_format($order->percentage_amount, 2) . "</p></div>",
+					'aggregator_charges' => "<div class='main-cont1-2'><p>" . number_format($aggregator_charges, 2) . "</p></div>",
 					'profit' => "<div class='main-cont1-2'><p>" . number_format($profit, 2) . "</p></div>",
 				];
 				$i++;
