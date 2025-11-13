@@ -71,10 +71,10 @@
 														value="{{ $userkyc->pancard }}"
 														class="form-control"
 														style="height: 48px;"
-														{{ $userkyc->pancard_status ? 'readonly' : 'required' }}>
+														{{ $userkyc->pancard_status == 1 ? 'readonly' : 'required' }}>
 												</div>
 											</div>
-											@if($userkyc->pan_full_name  && $userkyc->pan_role == "user")
+											@if($userkyc->pan_full_name  && $userkyc->pancard_status == 1)
 												<div class="col-lg-4 col-md-6">
 													<div class="form-group my-2">
 														<label for="username"> Pancard Holder Name <span class="text-danger">*</span> </label>
@@ -86,7 +86,7 @@
 													</div>
 												</div>
 											@endif
-											@if($userkyc->pancard_category && $userkyc->pan_role == "user")
+											@if($userkyc->pancard_category && $userkyc->pancard_status == 1)
 												<div class="col-lg-4 col-md-6">
 													<div class="form-group my-2">
 														<label for="username"> Pancard Category <span class="text-danger">*</span> </label>
@@ -149,11 +149,11 @@
 											class="form-control"
 											placeholder="Enter Aadhar Number"
 											style="height: 48px;"
-											{{ $userkyc->aadhar_status ? 'readonly' : 'required' }}>
+											{{ $userkyc->aadhar_status == 1 ? 'readonly' : 'required' }}>
 									</div>
 								</div>
 
-								@if($userkyc->aadhar_full_name && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_full_name && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Aadhar Holder Name</label>
@@ -162,7 +162,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_address && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_address && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Address</label>
@@ -171,7 +171,7 @@
 									</div>
 								@endif
 								
-								@if($userkyc->aadhar_zip && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_zip  && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Zip Code</label>
@@ -180,7 +180,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_dob && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_dob  && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Date Of Birth</label>
@@ -189,7 +189,7 @@
 									</div>
 								@endif
  
-								@if($userkyc->aadhar_gender && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_gender  && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2">
 											<label>Gender</label>
@@ -198,7 +198,7 @@
 									</div>
 								@endif
 
-								@if($userkyc->aadhar_front && $userkyc->aadhar_role == "user")
+								@if($userkyc->aadhar_front  && $userkyc->aadhar_status == 1)
 									<div class="col-lg-4 col-md-6">
 										<div class="form-group my-2"> 
 											<img src="{{ asset($userkyc->aadhar_front) }}" alt="Aadhar Front" style="max-width: 100%; height: auto; border: 1px solid #ccc; padding: 5px; border-radius: 5px;">

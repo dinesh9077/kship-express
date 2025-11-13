@@ -157,28 +157,27 @@
 														@if(!empty($order->weight_status))
 															<button class="main-gray-b">{{ $order->weight_status }}</button>
 														@endif
-													</td>
-								
-													 @if(config('permission:weight_descripencies.add'))
-														<td>
-															@if(!empty($order->weight_status))
-																@if($order->weight_status == "remark")
-																	<select name="action" id="take_action" class="form-control" onchange="takeAction(this,{{$order->id}})">
-																		<option value="">Take Action</option> 
-																		<option value="Accepted">Accepted</option>
-																		<option value="Remark">Remark</option>
-																	</select>
-																@endif
-
-																@if(in_array($order->weight_status, ["Accepted", "Auto Accepted"]))
-																<a class="btn-main-1 ml-2" style="color:#fff !important" href="{{ url('weight/descripencies/remark', $order->id) }}"> View Remark </a>
-																	<a class="btn-main-1" style="color:#fff !important" href="javascript:;" data-order_id="{{ $order->id }}" onclick="viewHistory(this, event)"> View Details </a>
-																@endif
-															@else
-																<button class="btn-main-1" data-id="{{ $order->id }}" data-user_id="{{ $order->user_id }}" onclick="raiseExcess(this,event)">Raise Weight</button>
+													</td> 
+													
+													<td>
+														@if(!empty($order->weight_status))
+															@if($order->weight_status == "remark")
+																<select name="action" id="take_action" class="form-control" onchange="takeAction(this,{{$order->id}})">
+																	<option value="">Take Action</option> 
+																	<option value="Accepted">Accepted</option>
+																	<option value="Remark">Remark</option>
+																</select>
 															@endif
-														</td>
-													@endif 
+
+															@if(in_array($order->weight_status, ["Accepted", "Auto Accepted"]))
+																<a class="btn-main-1 " style="color:#fff !important" href="{{ url('weight/descripencies/remark', $order->id) }}"> View Remark </a>
+																<a class="btn-main-1 ml-2" style="color:#fff !important" href="javascript:;" data-order_id="{{ $order->id }}" onclick="viewHistory(this, event)"> View Details </a>
+															@endif
+														@else
+															<button class="btn-main-1" data-id="{{ $order->id }}" data-user_id="{{ $order->user_id }}" onclick="raiseExcess(this,event)">Raise Weight</button>
+														@endif
+													</td>
+													 
 												</tr>
 											@empty
 												<tr>

@@ -189,7 +189,6 @@
 		Route::get('/edit/{id}', [App\Http\Controllers\ShippingController::class, 'shipmentPackagingEdit']);    
 		Route::post('/update', [App\Http\Controllers\ShippingController::class, 'shipmentPackagingUpdate'])->name('shipment.packaging.update');    
 		Route::get('/delete/{id}', [App\Http\Controllers\ShippingController::class, 'shipmentPackagingDelete']);    
-		
 	});
 	
 	//Shippping Rate
