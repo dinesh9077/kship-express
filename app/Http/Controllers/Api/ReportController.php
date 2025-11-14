@@ -198,6 +198,7 @@
 					'billing_type' => $value->billing_type, 
 					'billing_type_id' => $value->billing_type_id, 
 					'order_id' => $value->billing_type === 'Order' ? $value->order->id : null, 
+					'awb_number' => $value->billing_type === 'Order' ? $value->order->awb_number : null, 
 					'order_prefix' => $value->billing_type === 'Order' ? $value->order->order_prefix : null,
 					'courier_name' => $value->billing_type === 'Order' ? $value->order->courier_name : null,
 					'courier_logo' => $courierLogo,
