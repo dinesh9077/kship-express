@@ -607,7 +607,7 @@
 				];
 			}
 
-			if($openingBalance <= 0)
+			if($openingBalance == 0)
 			{
 				$openingBalance = Billing::where('user_id', $request->user_id)->orderBy('id')->first()->amount ?? 0;
 			}

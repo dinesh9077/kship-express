@@ -57,7 +57,7 @@
 				'user:id,name,company_name,email,mobile',
 				'orderItems:id,order_id,product_category,product_name,sku_number,hsn_number,amount,quantity',
 			])
-			->select('id', 'order_prefix', 'user_id', 'customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
+			->select('id', 'order_prefix', 'user_id', 'courier_id', 'courier_logo','customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
 			->when($role === "user", fn($q) => $q->where('orders.user_id', $id));
 			
 			if($status === "in transit")

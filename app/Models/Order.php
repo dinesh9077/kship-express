@@ -52,6 +52,15 @@ class Order extends Model
 		
         return $orderNumber;
 	}
+
+	protected $appends = [
+		'courier_image_url',
+	];
+
+	public function getCourierImageUrlAttribute()
+	{
+		return $this->courier_id ? url("storage/courier-logo/{$this->courier_id}.png") : null;
+	}
 	
 	public function customer()
 	{
