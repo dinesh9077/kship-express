@@ -44,7 +44,7 @@ class UpdateRechargeStatus extends Command
         { 
             $this->info("Checking status for Recharge ID: {$recharge->id}, Order ID: {$recharge->order_id}"); 
             $statusResponse = $this->masterService->getRechargeStatus($recharge->order_id);
-            
+           
             if (!($statusResponse['success'] ?? false)) {
                 continue;
             }
@@ -58,6 +58,7 @@ class UpdateRechargeStatus extends Command
             }  
 
             $status =  $statusResponse['response']['data']['paymentStatus'] ?? $recharge->transaction_status;
+
             $txnId = $statusResponse['response']['data']['paymentDetails']['id'] ?? null;
             $utrNo = $statusResponse['response']['data']['paymentDetails']['acquirer_data']['rrn'] ?? null;
            
