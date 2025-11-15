@@ -29,6 +29,7 @@
 			$user = Auth::user();	
 			$users = User::where('role', 'user')->where('kyc_status','!=', 0)->orderBy('name')->get();
 			$status = $request->query('status', 'New');
+			
 			$couriers = Order::select('courier_name')
 			->distinct()
 			->orderBy('courier_name');
@@ -38,7 +39,11 @@
 			$couriers = $couriers->pluck('courier_name', 'courier_name')
 			->filter()
 			->toArray(); 
-			return view('report.order', compact('status', 'users', 'couriers'));
+			
+			$defaultFrom = now()->copy()->startOfMonth()->toDateString(); 
+			$defaultTo = now()->copy()->endOfMonth()->toDateString();  
+
+			return view('report.order', compact('status', 'users', 'couriers', 'defaultFrom', 'defaultTo'));
 		}
  
     	public function reportOrderAjax(Request $request)

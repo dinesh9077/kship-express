@@ -131,12 +131,12 @@
 							</div>
     						<div class="col-lg-2 col-sm-6">
     							<div class="main-selet-11">
-    								<input type="text" class="form-control new-height-fcs-rmi datepicker" name="fromdate" value="{{ request('fromdate') }}" id="fromdate" placeholder="From Date">
+    								<input type="text" class="form-control new-height-fcs-rmi datepicker" name="fromdate" value="{{ $defaultFrom }}" id="fromdate" placeholder="From Date">
 								</div>
 							</div>
     						<div class="col-lg-2 col-sm-6">
     							<div class="main-selet-11">
-    								<input type="text" class="form-control new-height-fcs-rmi datepicker" name="todate" value="{{ request('todate') }}" id="todate" placeholder="To Date">
+    								<input type="text" class="form-control new-height-fcs-rmi datepicker" name="todate" value="{{ $defaultTo }}" id="todate" placeholder="To Date">
 								</div>
 							</div>
     						<div class="col-lg-2 col-sm-6">
