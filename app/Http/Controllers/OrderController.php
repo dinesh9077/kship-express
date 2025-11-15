@@ -1001,7 +1001,7 @@
 			// Generate barcodes
 			$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 			//$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 50);
 
 			// Render Blade HTML
 			$htmlView = view('order.single_label', compact(
@@ -1057,9 +1057,9 @@
 
 					$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 					//$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
-					
-					// Generate HTML for label
+					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 50); 
+
+				// Generate HTML for label
 					$html = view('order.bulk-label', compact(
 					'shipping', 'order', 'customer', 'products',
 					'customerAddr', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'
