@@ -153,10 +153,10 @@
 					</div>",
 					
 					'customer_address' => "<p style='word-wrap:break-word; white-space:normal;'>" . ($customeraddr->address ?? "N/A") . "</p>",
-					'customer_city' => $customeraddr->city,
-					'customer_state' => $customeraddr->state,
-					'customer_country' => $customeraddr->country,
-					'customer_pincode' => $customeraddr->zip_code,
+					'customer_city' => $customeraddr->city ?? 'N/A',
+					'customer_state' => $customeraddr->state ?? 'N/A',
+					'customer_country' => $customeraddr->country ?? 'N/A',
+					'customer_pincode' => $customeraddr->zip_code ?? 'N/A',
 					
 		
 					'package_details' => $this->orderPackageDetailHtml($order),
