@@ -141,7 +141,10 @@
 															<th>Shipping Details</th>
 															<th>Package Details</th>
 															<th>Status</th>
-															<th>Action</th>
+															@if($key === 'All' || $key === "Delivered")
+																<th>Delivery Date</th>
+															@endif
+															<th>Action</th> 
 														</tr>
 													</thead> 
 												</table>
@@ -229,7 +232,24 @@
 		</div>
 	</div>
 </div>
+@php
+	$columns = [
+		['data' => 'id', 'orderable' => false],
+		['data' => 'order_id'],
+		['data' => 'seller_details'],
+		['data' => 'customer_details'],
+		['data' => 'total_amount'],
+		['data' => 'shipment_details'],
+		['data' => 'package_details'],
+		['data' => 'status_courier'],
+	];
 
+	if ($status === 'All' || $status === "Delivered") {
+		$columns[] = ['data' => 'delivery_date'];
+	}
+
+	$columns[] = ['data' => 'action'];
+@endphp
 @endsection
 @push('js')  
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script> 
@@ -331,17 +351,7 @@
 		}
 
 		// Define table columns
-		let OrderColumns = [
-			{ data: "id", orderable: false },
-			{ data: "order_id" },
-			{ data: "seller_details" },
-			{ data: "customer_details" },
-			{ data: "total_amount" },
-			{ data: "shipment_details" },
-			{ data: "package_details" },
-			{ data: "status_courier" },
-			{ data: "action" }
-		];
+		let OrderColumns = @json($columns);
 		
 		var statusCourier = "{{ request('order_status') ?? '' }}"; 
 

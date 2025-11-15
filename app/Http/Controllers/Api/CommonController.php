@@ -467,7 +467,7 @@ class CommonController extends Controller
 					'billing_type_id' => $userWallet->id,
 					'transaction_type' => 'credit',
 					'amount' => $userWallet->amount,
-					'note' => 'Payment received via Razorpay.',
+					'note' => "Payment received through Razorpay with UTR number: {$request->utr_no}."
 				]);
 
 				// Update UserWallet record if needed

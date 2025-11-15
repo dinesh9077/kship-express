@@ -114,8 +114,8 @@
 							@if(auth()->user()->role == "admin")
 								@if($remark->role == "admin")
 									<!-- Admin's own messages -->
-									<div class="message admin-message admin-right mt-2" style="font-size: 16px;">
-										<strong>Me:</strong> {{ $remark->remark }}
+									<div class="message admin-message  mt-2" style="font-size: 16px;">
+										<span style="font-size: 13px;border-bottom: 1px dashed black;">{{ $remark->created_at->format('Y-m-d h:i a') }} </span> <span style="float: right"> <strong>Me:</strong> {{ $remark->remark }} </span>
 										@if(!empty($images))
 											<div class="image-preview">
 												@foreach($images as $image)
@@ -127,7 +127,7 @@
 								@else
 									<!-- User's messages for Admin -->
 									<div class="message user-message user-left mt-2" style="font-size: 16px;">
-										<strong>{{ $remark->user->name }}:</strong> {{ $remark->remark }}
+										<strong>{{ $remark->user->name }}:</strong> {{ $remark->remark }}  <span style="font-size: 13px;float: right;border-bottom: 1px dashed black;">{{ $remark->created_at->format('Y-m-d h:i a') }} </span>
 										@if(!empty($images))
 											<div class="image-preview">
 												@foreach($images as $image)
@@ -141,7 +141,7 @@
 								@if($remark->role == "admin")
 									<!-- Admin messages for User (left side) -->
 									<div class="message admin-message admin-left mt-2" style="font-size: 16px;">
-										<strong>Admin:</strong> {{ $remark->remark }}
+										<strong>Admin:</strong> {{ $remark->remark }}<span style="font-size: 13px;float: right;border-bottom: 1px dashed black;">{{ $remark->created_at->format('Y-m-d h:i a') }} </span>
 										@if(!empty($images))
 											<div class="image-preview">
 												@foreach($images as $image)
@@ -152,8 +152,8 @@
 									</div>
 								@else
 									<!-- User's own messages (right side) -->
-									<div class="message user-message user-right mt-2" style="font-size: 16px;">
-										<strong>Me:</strong> {{ $remark->remark }}
+									<div class="message user-message mt-2" style="font-size: 16px;">
+									    <span style="font-size: 13px;border-bottom: 1px dashed black;">{{ $remark->created_at->format('Y-m-d h:i a') }} </span><span style="float: right"><strong>Me:</strong> {{ $remark->remark }}</span>
 										@if(!empty($images))
 											<div class="image-preview">
 												@foreach($images as $image)

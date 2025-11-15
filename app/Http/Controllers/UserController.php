@@ -19,21 +19,26 @@
 		public function __construct()
 		{
 			$this->middleware('auth');
-		}
-		
-		public function index()
-		{  
-			if (auth()->user()->role === 'user') {
+		} 
+
+		public function index(Request $request)
+		{
+			$user = $request->user();
+ 
+			if ($user->role === 'user') {
 				abort(403, 'Permission denied');
+			}
+ 
+			$taskId = $request->query('task_id');     
+			$notifyId = $request->query('notify_id');   
+ 
+			if ($taskId && $notifyId) {
+				Notification::where('id', $notifyId)->update(['read_at' => now()]);
 			} 
-			
-			if(isset($_GET['task_id']))
-			{
-				Notification::whereId($_GET['notify_id'])->update(['read_at'=>1]);
-			} 
-			$user_id = (isset($_GET['task_id']))?$_GET['task_id']:''; 
-			
-			$kycStatus = request('kyc_status', 0);
+
+			$user_id = $taskId ?: null; 
+			$kycStatus = $request->query('kyc_status', 0);
+
 			return view('users.index', compact('user_id', 'kycStatus'));
 		}
 		
@@ -294,11 +299,19 @@
 
 		public function rechargeOffline(Request $request)
 		{
+
 			$validated = $request->validate([
 				'user_id' => ['required', 'integer', 'exists:users,id'],
 				'amount' => ['required', 'numeric', 'min:1'],
-				'transaction_type' => ['required', 'in:credit,debit'] 
+				'transaction_type' => ['required', 'in:credit,debit'],
+				'passkey' => "required"
 			]);
+
+			$user = Auth::user();
+			// Hash::check returns true when plain text matches hashed password
+			if (!Hash::check($request->input('passkey'), $user->password)) { 
+				return back()->with('error', 'Passkey does not match.');
+			}
 
 			$userId = (int) $validated['user_id'];
 			$amount = (float) $validated['amount'];

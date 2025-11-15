@@ -107,6 +107,7 @@
                                         <select name="status" id="status">
                                             <option value="">All Status</option>
                                             <option value="Pending">Pending</option>
+                                            <option value="Rejected">Rejected</option>
                                             <option value="Paid">Paid</option>
                                         </select>
                                     </div>

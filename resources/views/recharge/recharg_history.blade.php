@@ -92,6 +92,15 @@
             color: #0A1629;
             font-weight: 500;
         }
+
+        .new-submit-thmebtn {
+            padding: 9.5px 40px;
+            background-color: #6248b7;
+            border: none;
+            outline: none;
+            color: white;
+            border-radius: 5px;
+        }
     </style>
     <div class="content-page">
         <div class="content">
@@ -119,6 +128,7 @@
                                         <select name="status" id="status">
                                             <option value="">All Status</option>
                                             <option value="Pending">Pending</option>
+                                            <option value="Rejected">Rejected</option>
                                             <option value="Paid">Paid</option>
                                         </select>
                                     </div>
@@ -219,7 +229,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <form method="post" action="{{ route('recharge.wallet.action') }}" enctype="multipart/form-data">
+                <form id="formApproved" method="post" action="{{ route('recharge.wallet.action') }}" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-body">
                         <div class="">
@@ -227,6 +237,7 @@
                             <div class="from-group rech-re-form">
                                 <select name="status" id="status" required>
                                     <option value="Pending">Pending</option>
+                                    <option value="Rejected">Rejected</option>
                                     <option value="Paid">Paid</option>
                                 </select>
                             </div>
@@ -238,9 +249,15 @@
                                 <textarea name="reject_note" id="reject_note"></textarea>
                             </div>
                         </div>
+                        <div class="offline_param"> 
+							<h5> Pass Key </h5>
+							<div class="from-group rech-re-form"> 
+								<input name="passkey" id="passkey" required>
+							</div>
+						</div> 
                     </div>
                     <div class="modal-footer" style="justify-content: center; padding-top : 0px; border-top : 0px;">
-                        <button type="submit" class="btn new-submit-popup-btn"> Submit </button>
+                        <button type="submit" class="new-submit-btn"> Submit </button>
                     </div>
                 </form>
             </div>
@@ -251,7 +268,7 @@
 @push('js')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.dataTables.min.css">
- 
+
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 
     <!-- Buttons + deps -->
@@ -274,77 +291,81 @@
                         }
                     }
                 },
-               {
-      extend: 'pdfHtml5',
-      className: 'd-none',
-      text: 'pdf',
-      orientation: 'landscape',
-      pageSize: 'A4',
-      exportOptions: {
-        columns: ':visible:not(:last-child)', // ✅ exclude action column
-        format: {
-          body: function (data) {
-            if (data === null || data === undefined) return '';
-            if (typeof data !== 'string') return String(data);
-            return data.replace(/<[^>]*>/g, '').replace(/\r?\n|\r/g, ' ').trim();
-          }
-        }
-      },
-      customize: function (doc) {
-        doc.pageMargins = [12, 12, 12, 12];
-        doc.defaultStyle.fontSize = 8;
-        doc.styles.tableHeader.fontSize = 9;
+                {
+                    extend: 'pdfHtml5',
+                    className: 'd-none',
+                    text: 'pdf',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: ':visible:not(:last-child)', // ✅ exclude action column
+                        format: {
+                            body: function(data) {
+                                if (data === null || data === undefined) return '';
+                                if (typeof data !== 'string') return String(data);
+                                return data.replace(/<[^>]*>/g, '').replace(/\r?\n|\r/g, ' ').trim();
+                            }
+                        }
+                    },
+                    customize: function(doc) {
+                        doc.pageMargins = [12, 12, 12, 12];
+                        doc.defaultStyle.fontSize = 8;
+                        doc.styles.tableHeader.fontSize = 9;
 
-        // Find the table node safely
-        var tableBlock = doc.content.find(c => c && c.table);
-        if (!tableBlock) return;
+                        // Find the table node safely
+                        var tableBlock = doc.content.find(c => c && c.table);
+                        if (!tableBlock) return;
 
-        var table = tableBlock.table;
-        if (!table.body || !table.body.length) return;
+                        var table = tableBlock.table;
+                        if (!table.body || !table.body.length) return;
 
-        table.headerRows = 1;
-        table.dontBreakRows = true;
-        table.keepWithHeaderRows = 1;
+                        table.headerRows = 1;
+                        table.dontBreakRows = true;
+                        table.keepWithHeaderRows = 1;
 
-        // ✅ Adjusted compact widths (no Action column)
-        // [id, created_at, amount_type, amount, order_id, txn_number, utr_no, payment_mode, pg_name, transaction_status]
-        var compact = [35, 70, 65, 45, 100, 90, 80, 65, 60, 70];
-        var colCount = table.body[0].length;
-        if (compact.length !== colCount) {
-          compact = compact.slice(0, colCount);
-          while (compact.length < colCount) compact.push('*');
-        }
-        table.widths = compact;
+                        // ✅ Adjusted compact widths (no Action column)
+                        // [id, created_at, amount_type, amount, order_id, txn_number, utr_no, payment_mode, pg_name, transaction_status]
+                        var compact = [35, 70, 65, 45, 100, 90, 80, 65, 60, 70];
+                        var colCount = table.body[0].length;
+                        if (compact.length !== colCount) {
+                            compact = compact.slice(0, colCount);
+                            while (compact.length < colCount) compact.push('*');
+                        }
+                        table.widths = compact;
 
-        // No-wrap for IDs
-        for (var r = 0; r < table.body.length; r++) {
-          for (var c = 0; c < colCount; c++) {
-            var cell = table.body[r][c];
-            if (cell === null || cell === undefined)
-              table.body[r][c] = { text: '' };
-            if (typeof table.body[r][c] === 'string')
-              table.body[r][c] = { text: table.body[r][c] };
+                        // No-wrap for IDs
+                        for (var r = 0; r < table.body.length; r++) {
+                            for (var c = 0; c < colCount; c++) {
+                                var cell = table.body[r][c];
+                                if (cell === null || cell === undefined)
+                                    table.body[r][c] = {
+                                        text: ''
+                                    };
+                                if (typeof table.body[r][c] === 'string')
+                                    table.body[r][c] = {
+                                        text: table.body[r][c]
+                                    };
 
-            // Prevent wrapping for IDs
-            if (r > 0 && (c === 4 || c === 5 || c === 6)) {
-              table.body[r][c].noWrap = true;
-              table.body[r][c].alignment = 'left';
-            }
-          }
-        }
+                                // Prevent wrapping for IDs
+                                if (r > 0 && (c === 4 || c === 5 || c === 6)) {
+                                    table.body[r][c].noWrap = true;
+                                    table.body[r][c].alignment = 'left';
+                                }
+                            }
+                        }
 
-        // Compact layout
-        tableBlock.layout = {
-          fillColor: i => (i % 2 === 0 ? null : '#f7f7f7'),
-          hLineWidth: () => 0.3,
-          vLineWidth: () => 0.3,
-          paddingTop: () => 2,
-          paddingBottom: () => 2,
-          paddingLeft: () => 3,
-          paddingRight: () => 3
-        };
-      }
-    }
+                        // Compact layout
+                        tableBlock.layout = {
+                            fillColor: i => (i % 2 === 0 ? null : '#f7f7f7'),
+                            hLineWidth: () => 0.3,
+                            vLineWidth: () => 0.3,
+                            paddingTop: () => 2,
+                            paddingBottom: () => 2,
+                            paddingLeft: () => 3,
+                            paddingRight: () => 3
+                        };
+                    }
+                }
             ],
             language: {
                 loadingRecords: '&nbsp;',
@@ -437,30 +458,43 @@
             }, 400); // Adjust the debounce delay (in milliseconds) as per your preference
         });
 
-        function approvedRequest(obj) {
-            var id = $(obj).attr('data-id');
-            var status = $(obj).attr('data-status');
-            var reject_note = $(obj).attr('data-reject_note');
-            $('.rejected_param').hide();
-            $('#reject_note').attr('required', false)
-            if (status == 2) {
-                $('.rejected_param').show();
-                $('#reject_note').val(reject_note);
-                $('#reject_note').attr('required', true)
-            }
-            $('#status').val(status)
-            $('#id').val(id)
-            $('.apprevod_request').modal('show');
-        }
+        $(document).ready(function () {
 
-        $('#status').change(function() {
-            var status = $(this).val();
-            $('.rejected_param').hide();
-            $('#reject_note').attr('required', false)
-            if (status == 2) {
-                $('.rejected_param').show();
-                $('#reject_note').attr('required', true)
+            const $form = $('#formApproved');
+            const $status = $form.find('#status');
+            const $rejectBlock = $('.rejected_param');
+            const $rejectNote = $('#reject_note');
+
+            // Helper: toggle reject field visibility
+            function toggleReject(status, rejectNote = '') {
+                if (status == 2 || status === "Rejected") {
+                    $rejectBlock.show();
+                    $rejectNote.prop('required', true).val(rejectNote);
+                } else {
+                    $rejectBlock.hide();
+                    $rejectNote.prop('required', false).val('');
+                }
             }
-        })
+
+            // Button click to open modal
+            window.approvedRequest = function (obj) {
+                const $btn = $(obj);
+
+                const id = $btn.data('id');
+                const status = $btn.data('status');
+                const note = $btn.data('reject_note') || '';
+
+                toggleReject(status, note); 
+                $status.val(status);
+                $('#id').val(id);
+
+                $('.apprevod_request').modal('show');
+            };
+
+            // Status dropdown change inside modal
+            $status.on('change', function () {
+                toggleReject($(this).val());
+            });
+        });
     </script>
 @endpush

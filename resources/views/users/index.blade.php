@@ -85,7 +85,13 @@
 								<textarea name="note" id="note"></textarea>
 							</div>
 						</div>
-						
+
+						<div class="offline_param"> 
+							<h5> Pass Key </h5>
+							<div class="from-group rech-re-form"> 
+								<input name="passkey" id="passkey" required>
+							</div>
+						</div> 
 					</div> 
 					<div class="class-main-count">
 						<div class="main-justify-space">

@@ -6,7 +6,7 @@
 	use App\Models\User;
 	use App\Models\UserWallet;
 	use App\Models\Billing;
-	use Auth,File,DB,Helper;
+	use Auth, Hash,DB,Helper;
 	use Razorpay\Api\Api;
 	use Illuminate\Support\Facades\Http;
 	use App\Services\MasterService;
@@ -106,7 +106,12 @@
 					'utr_no' => $value->utr_no ?? 'N/A',
 					'payment_mode' => $value->transaction_type,
 					'pg_name' => $value->pg_name ?? 'N/A',  
-					'transaction_status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
+					'transaction_status' => $value->transaction_status == "Paid"
+					? '<span class="badge badge-success">Paid</span>'
+					: ($value->transaction_status == "Rejected"
+						? '<span class="badge badge-danger">Rejected</span><br><small>Reject Note: ' . e($value->reject_note) . '</small>'
+						: '<span class="badge badge-warning">Pending</span>'
+					),
 				];
 			}
 
@@ -203,15 +208,21 @@
 					'txn_number' => $value->txn_number ?? 'N/A',
 					'utr_no' => $value->utr_no ?? 'N/A',
 					'payment_mode' => $value->transaction_type,
-					'pg_name' => $value->pg_name ?? 'N/A',  
-					'transaction_status' => $value->transaction_status == "Paid" ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Pending</span>',
+					'pg_name' => $value->pg_name ?? 'N/A',
+					'transaction_status' =>
+					$value->transaction_status == "Paid"
+					? '<span class="badge badge-success">Paid</span>'
+					: ($value->transaction_status == "Rejected"
+						? '<span class="badge badge-danger">Rejected</span><br><small>Reject Note: ' . e($value->reject_note) . '</small>'
+						: '<span class="badge badge-warning">Pending</span>'
+					),
 				];
 
 
 				$array['action'] = "";
-				if($value->transaction_status != "Paid")
+				if($value->transaction_status == "Pending")
 				{	
-					$array['action'] = '<button type="button" data-id="'.$value->id.'" data-reject_note="'.($value->reject_note ?? '').'" data-status="'.$value->status.'" class="btn-main-1" onclick="approvedRequest(this);">Approve Request</button>';
+					$array['action'] = '<button type="button" data-id="'.$value->id.'" data-reject_note="'.($value->reject_note ?? '').'" data-status="'.$value->transaction_status.'" class="new-submit-thmebtn" onclick="approvedRequest(this);">Approve Request</button>';
 				} 
 				
 				$data[] = $array;
@@ -226,7 +237,18 @@
 		}
  
 		public function rechargeWalletAction(Request $request)
-		{ 
+		{
+			$validated = $request->validate([ 
+				'status' => "required|in:Pending,Paid,Rejected",
+				'passkey' => "required"
+			]);
+
+			$user = Auth::user();
+			// Hash::check returns true when plain text matches hashed password
+			if (!Hash::check($request->input('passkey'), $user->password)) { 
+				return back()->with('error', 'Passkey does not match.');
+			}
+
 			$userWallet = UserWallet::with('user')->findOrFail($request->id); 
 			try {
 				DB::transaction(function () use ($request, $userWallet) {
@@ -335,7 +357,7 @@
 						'billing_type_id' => $userWallet->id,
 						'transaction_type' => 'credit',
 						'amount' => $userWallet->amount,
-						'note' => 'Payment received via Razorpay.',
+						'note' => "Payment received through Razorpay with UTR number: {$request->utr_no}."
 					]);
 
 					// Update UserWallet record if needed

@@ -103,6 +103,8 @@
 	});
 	
 	Route::get('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'index'])->name('courier.commission')->middleware('permission:general_setting.view');
+	Route::post('/verify-passkey', [App\Http\Controllers\CourierCommissionController::class, 'verifyPasskey'])->name('verify.passkey');
+
 	Route::post('courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'update'])->name('courier.commission.store');
 	Route::get('users/commission/{userId}', [App\Http\Controllers\CourierCommissionController::class, 'userCommission']);
 	Route::post('user-courier-commission', [App\Http\Controllers\CourierCommissionController::class, 'userCommissionUpdate'])->name('users.courier.commission.store');

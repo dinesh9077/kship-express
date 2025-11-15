@@ -82,7 +82,7 @@
 				'user:id,name,company_name,email,mobile',
 				'orderItems:id,order_id,product_category,product_name,sku_number,hsn_number,amount,quantity,dimensions',
 			])
-			->select('id', 'order_prefix', 'user_id', 'customer_id', 'customer_address_id', 'shipping_company_id', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
+			->select('id', 'order_prefix', 'user_id', 'customer_id', 'courier_id', 'customer_address_id', 'shipping_company_id', 'delivery_date', 'warehouse_id', 'status_courier', 'order_type', 'created_at', 'weight_order', 'cod_amount', 'awb_number', 'invoice_amount', 'length', 'width', 'height', 'weight', 'reason_cancel', 'courier_name')
 			->when($role === "user", fn($q) => $q->where('orders.user_id', $id));
 			
 			if($status === "in transit")
@@ -196,11 +196,16 @@
 					'id' => $status == "new" || $status == "all" ? $i : "<input type='checkbox' class='order-checkbox' value={$order->id}>",
 					//'id' => $i,
 
-					// Order + Admin info
-					'order_id' => '#' . $order->order_prefix
-						. ($role === "admin" ? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>" : ''),
+				'order_id' =>
+					"<a href='" . url("order/details/{$order->id}") . "?weight_order={$weightOrder}&status=" . ucwords($status) . "'>" .
+					"#" . $order->order_prefix .
+					($role === "admin"
+						? "<br><p>" . e($order->user->name ?? 'N.A') . "</p>"
+						: ""
+					) .
+					"</a>",
 
-					// Seller details
+				// Seller details
 					'seller_details' => "
 						<div class='main-cont1-2'>
 							<p>{$warehouse->warehouse_name} ({$warehouse->company_name})</p>
@@ -234,6 +239,7 @@
 
 					// Courier + Action
 					'status_courier' => $this->statusCourieHtml($order),
+					'delivery_date' => $order->delivery_date ?? 'N/A',
 					'action'         => $this->orderAction($order, $status, $weightOrder),
 				];
 
@@ -242,10 +248,10 @@
 
 			
 			return response()->json([
-			"draw" => intval($draw),
-			"iTotalRecords" => $totalData,
-			"iTotalDisplayRecords" => $totalFiltered,
-			"aaData" => $data
+				"draw" => intval($draw),
+				"iTotalRecords" => $totalData,
+				"iTotalDisplayRecords" => $totalFiltered,
+				"aaData" => $data
 			]);
 		}
 		
@@ -262,21 +268,8 @@
 		}
 		
 		function orderShipmentDetailHtml($order, $status, $weightOrder)
-		{
-			// Prepare order items JSON
-			$items = $order->orderItems->map(fn($item) => [
-				'product_category' => $item->product_category,
-				'product_name' => $item->product_name,
-				'sku_number' => $item->sku_number,
-				'hsn_number' => $item->hsn_number,
-				'amount' => $item->amount,
-				'quantity' => $item->quantity,
-			]);
-
-			$jsonItems = htmlspecialchars($items->toJson(), ENT_QUOTES, 'UTF-8'); // safely encode JSON
-			
-			$output = '';
-			
+		{ 
+			$output = ''; 
 			$output .= "<div class='main-cont1-1'>
 			<div class='checkbox checkbox-purple'>
 			Order Prefix/LR No: <a href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>#{$order->order_prefix}</a> 
@@ -287,15 +280,20 @@
 			if($status != "new")
 			{
 				$output .= "<div class='checkbox checkbox-purple'>
-				AWB Number: <a href='" . url("order/details/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>#{$order->awb_number}</a>
+				AWB Number: <a href='" . url("order/tracking-history/{$order->id}") . "?weight_order=".$weightOrder."&status=".ucwords($status)."'>#{$order->awb_number}</a>
 				</div>"; 
-			} 
-			$output .= "<span style='padding-left:0'> 
-					<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}' style=' color: #1A4BEC ;'  >
-						View Products
+			}
+
+			if (!empty($order->courier_id)) {
+				$output .= "
+				<div class='checkbox checkbox-purple'> 
+					<a href='" . url("storage/courier-logo/{$order->courier_id}.png") . "'>
+						<img src='" . url("storage/courier-logo/{$order->courier_id}.png") . "' alt='Order Image' style='width: 40px; height: auto;'>
 					</a>
-			</span>
-			</div>";
+				</div>";
+			} 
+
+			$output .= "</div>";
 			
 			return $output;
 		}
@@ -309,6 +307,18 @@
 			$width  = (float) $order->width;
 			$height = (float) $order->height;
 			$weight = (float) $order->weight;
+
+			// Prepare order items JSON
+			$items = $order->orderItems->map(fn($item) => [
+				'product_category' => $item->product_category,
+				'product_name' => $item->product_name,
+				'sku_number' => $item->sku_number,
+				'hsn_number' => $item->hsn_number,
+				'amount' => $item->amount,
+				'quantity' => $item->quantity,
+			]);
+
+			$jsonItems = htmlspecialchars($items->toJson(), ENT_QUOTES, 'UTF-8'); // safely encode JSON
 
 			// Avoid division by zero → standard divisor 5000
 			$volumetricWt = ($length * $width * $height) / 5000;
@@ -332,6 +342,11 @@
 						<p>Dead wt.: " . number_format($weight, 2) . " Kg</p>
 						<p>Volumetric wt.: " . number_format($totalVolumetric, 2) . " Kg</p>
 					</div>
+					<span style='padding-left:0'> 
+							<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}' style=' color: #1A4BEC ;'  >
+								View Products
+							</a>
+					</span>
 				";
 			}
 			else
@@ -342,6 +357,11 @@
 						<p>{$length} x {$width} x {$height} (cm)</p>
 						<p>Volumetric wt.: " . number_format($volumetricWt, 2) . " Kg</p>
 					</div>
+					<span style='padding-left:0'> 
+						<a href='javascript:;' class='show-details-btn' data-order='{$jsonItems}' style=' color: #1A4BEC ;'  >
+							View Products
+						</a>
+					</span>
 				";
 			}
 		}

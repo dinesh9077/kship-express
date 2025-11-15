@@ -31,7 +31,7 @@ class UpdateRechargeStatus extends Command
     {
         $this->info('Recharge status update started...');
 
-        $recharges = UserWallet::whereNotIn('transaction_status', ['Paid', 'captured', 'cancelled'])
+        $recharges = UserWallet::whereNotIn('transaction_status', ['Paid', 'captured', 'cancelled', 'Rejected'])
             ->whereDate('created_at', now()->toDateString())
             ->get();
 
@@ -92,10 +92,8 @@ class UpdateRechargeStatus extends Command
                     'billing_type_id' => $userWallet->id,
                     'transaction_type' => 'credit',
                     'amount' => $userWallet->amount,
-                    'note' => 'Payment received via Razorpay.',
-                ]);
-
-                
+                    'note' => "Payment received through Razorpay with UTR number: {$utrNo}."
+                ]);   
             }
 
             // Update UserWallet transaction details

@@ -7,6 +7,7 @@ use App\Models\ShippingCompany;
 
 use App\Models\UserCourierCommission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class CourierCommissionController extends Controller
 {
@@ -16,7 +17,22 @@ class CourierCommissionController extends Controller
         $shippingCompanies = ShippingCompany::select('id', 'name')->where('status',1)->get();
         return view('courier_commission.index', compact('commissions', 'shippingCompanies'));
     }
- 
+
+    public function verifyPasskey(Request $request)
+    {
+        $request->validate([
+            'passkey' => 'required|string'
+        ]);
+
+        $user = auth()->user();
+
+        // check hashed password
+        if (Hash::check($request->passkey, $user->password)) {
+            return response()->json(['status' => 'success']);
+        }
+
+        return response()->json(['status' => 'error']);
+    }
 
     public function update(Request $request)
     {
