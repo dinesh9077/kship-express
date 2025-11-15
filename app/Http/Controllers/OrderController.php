@@ -1001,7 +1001,7 @@
 			// Generate barcodes
 			$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 			//$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
-			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 50);
+			$orderIdBarcodePng  = DNS1D::getBarcodePNG($order->awb_number, 'C128');
 
 			// Render Blade HTML
 			$htmlView = view('order.single_label', compact(
@@ -1022,7 +1022,7 @@
 				->setOption('isRemoteEnabled', true);
 
 			// ✅ Return A4 label PDF
-			return $pdf->download('order_label_' . $orderId . '.pdf');
+			return $pdf->stream('order_label_' . $orderId . '.pdf');
 		} 
 
 		public function alllabeldownload(Request $request)

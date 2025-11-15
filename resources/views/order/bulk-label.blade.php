@@ -164,7 +164,7 @@
 					<td colspan="5" style="padding: 10px 0px; text-align: center; border: 1px solid black;">
 						<div style="height: 50px; width: 100%;">
 							@if(!empty($order->shipment_id))  
-								<img src="data:image/png;base64,{{ $orderIdBarcodePng }}" alt="Barcode" style="display: block; width: 90%; margin: 0 auto;" /> 
+								<img src="data:image/png;base64,{{ $orderIdBarcodePng }}" alt="Barcode" style="display: block; height:50px; width:80%; margin: 0 auto;" /> 
 							@endif
 						</div>
 						<p style="font-size: 18px;margin:0">{{ $order->awb_number }}</p> 
