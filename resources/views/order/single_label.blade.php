@@ -168,7 +168,7 @@
 								<img src="data:image/png;base64,{{ $orderIdBarcodePng }}" alt="Barcode" style="display: block; width: 90%; margin: 0 auto;" /> 
 							@endif
 						</div>
-						<p style="font-size: 18px;margin:0">{{ $order->shipment_id }}</p> 
+						<p style="font-size: 18px;margin:0">{{ $order->awb_number }}</p> 
 					</td> 
 				</tr>
 			@endif
