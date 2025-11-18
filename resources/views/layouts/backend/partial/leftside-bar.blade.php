@@ -228,11 +228,11 @@
 								</li>
 								@endif
 								@if(config('permission.passbook_report.view'))
-								<li>
-									<a href="{{ route('report.passbook.user') }}" class="{{ request()->is('passbook-user*') ? 'active' : '' }}"> 
-										<span> Passbook </span>
-									</a>
-								</li> 
+									<li>
+										<a href="{{ route('report.passbook.user') }}" class="{{ request()->is('passbook-user*') ? 'active' : '' }}"> 
+											<span> Passbook </span>
+										</a>
+									</li> 
 								@endif 
 								@if(config('permission.recharge_history.view'))
 								<li>

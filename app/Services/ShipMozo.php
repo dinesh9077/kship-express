@@ -47,7 +47,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/create-warehouse', $requestBody);
 
 				if ($response->successful()) {
@@ -88,7 +88,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/pincode-serviceability', $requestBody);
 
 				if ($response->successful()) {
@@ -155,7 +155,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/rate-calculator', $requestBody);
 
 				if ($response->successful()) {
@@ -234,7 +234,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/rate-calculator', $requestBody);
 
 				if ($response->successful()) {
@@ -360,7 +360,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/push-order', $requestBody);
 				 
 				// Handle the response
@@ -403,7 +403,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/assign-courier', $requestBody);
 				 
 				// Handle the response
@@ -446,7 +446,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->get($baseUrl . '/track-order', $requestBody);
 				 
 				// Handle the response
@@ -490,7 +490,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->post($baseUrl . '/cancel-order', $requestBody);
 				  
 				// Handle the response
@@ -528,7 +528,7 @@
 				$response = Http::withHeaders(
 					$this->httpHeader($shippingCompany)
 				)
-				->withOptions(['verify' => false])
+				->withOptions(['verify' => true])
 				->get($baseUrl . '/get-order-detail/'.$orderPrefrenceNo);
 				 
 				// Handle the response
@@ -592,7 +592,7 @@
 					'Authorization' => 'Bearer ' . $delhivery->api_key,
 					'Accept' => 'application/json',
 				])->withOptions([
-					'verify' => false, 
+					'verify' => true, 
 				])->get("$baseUrl/lr_copy/print/$lrNo");
 
 				// Check if request was successful
