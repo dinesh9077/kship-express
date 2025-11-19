@@ -16,7 +16,8 @@
 	use App\Services\DelhiveryB2CService;
 	use Illuminate\Support\Facades\Validator;
 	use Illuminate\Validation\Rule;
-	use App\Traits\ApiResponse;   
+	use App\Traits\ApiResponse;
+	use Storage; 
 	
 	class WarehouseController extends Controller
 	{	 
@@ -246,8 +247,8 @@
 			$userId = $user->id;
 			
 			// Base Query
-			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"))
-			->when($role === "user", fn($q) => $q->where('user_id', $userId));
+			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name")); 
+			// ->when($role === "user", fn($q) => $q->where('user_id', $userId));
 			 
 			// Apply search filter
 			if (!empty($search)) { 
@@ -326,8 +327,9 @@
 			$validator = Validator::make($request->all(), [
 				'first_name' => 'required|string|max:255',
 				'last_name'  => 'required|string|max:255',
-				'email'      => 'required|email|max:255',
-				'mobile'     => 'required|digits_between:8,15', 
+				'email'      => 'nullable|email|max:255',
+				'mobile' => 'required|digits:10', 
+				'alternate_mobile' => 'required|digits:10', 
 				'address'    => 'required|array|min:1',
 				'address.*'  => 'required|string|max:500', 
 				'zip_code'   => 'required|array|min:1',
@@ -405,8 +407,9 @@
 			$validator = Validator::make($request->all(), [
 				'first_name' => 'required|string|max:255',
 				'last_name'  => 'required|string|max:255',
-				'email'      => 'required|email|max:255',
-				'mobile'     => 'required|digits_between:8,15', 
+				'email' => 'nullable|email|max:255',
+				'mobile' => 'required|digits:10',
+				'alternate_mobile' => 'required|digits:10',
 				'address'    => 'required|array|min:1',
 				'address.*'  => 'required|string|max:500', 
 				'zip_code'   => 'required|array|min:1',

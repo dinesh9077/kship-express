@@ -284,7 +284,8 @@
 	Route::post('/report/order/ajax', [App\Http\Controllers\ReportController::class, 'reportOrderAjax'])->name('report.order.ajax');
 	Route::get('/report/export-orders', [App\Http\Controllers\ReportController::class, 'reportOrderExport'])->name('report.order.export');
 
-	Route::get('/passbook-user/', [App\Http\Controllers\ReportController::class, 'passbookUser'])->name('report.passbook.user')->middleware('permission:passbook_report.view');
+	Route::get('/passbook-user/', [App\Http\Controllers\ReportController::class, 'passbookUser'])->name('report.passbook.user')
+	->middleware('permission:passbook_report.view');
 	Route::post('/passbook-user/ajax', [App\Http\Controllers\ReportController::class, 'passbookUserAjax'])->name('report.passbook-user.ajax');
 	Route::get('/passbook/{user_id}', [App\Http\Controllers\ReportController::class, 'passbookReport'])->middleware('permission:passbook_report.view'); 
 	Route::post('/passbook/ajax', [App\Http\Controllers\ReportController::class, 'passbookReportAjax'])->name('report.passbook.ajax'); 
@@ -296,7 +297,6 @@
 	Route::post('report/billing-invoice/ajax', [App\Http\Controllers\ReportController::class, 'billingInvoiceAjax'])->name('report.billing-invoice.ajax');
 	Route::get('report/billing-invoice/pdf/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoicePdf'])->name('report.billing-invoice.pdf');
 	Route::get('report/billing-invoice/excel/{id}', [App\Http\Controllers\ReportController::class, 'billingInvoiceExcel'])->name('report.billing-invoice.excel');
-	
 	 
 	//Ticket
 	Route::group(['prefix'=>'ticket'], function()
