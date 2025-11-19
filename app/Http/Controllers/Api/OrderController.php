@@ -19,7 +19,7 @@
 	use App\Imports\BulkOrder;
 	use App\Traits\ApiResponse;   
 	use Helper; 
-	use DNS1D; 
+	use DNS1D, DNS2D; 
 	use App\Exports\CodRemittanceExport;
 	use PhpOffice\PhpSpreadsheet\Shared\Date;
 	
@@ -1058,7 +1058,8 @@
 			$products =  $order->orderItems ?? null; 
 			$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
 			 
-			$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60); 
+			//$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+			$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 			$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 			
 			$htmlView = view('order.single_label', compact('shipping', 'order', 'customer', 'customerAddr', 'products', 'barcodePng', 'hideLabel', 'orderIdBarcodePng'))->render();  
@@ -1097,7 +1098,8 @@
 					 
 					$hideLabel =  $order->warehouse ? $order->warehouse->label_options : []; 
 					 
-					$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+					//$barcodePng = DNS1D::getBarcodePNG($order->awb_number, 'C128', 2.5, 60);
+					$barcodePng = DNS2D::getBarcodePNG($order->awb_number, 'QRCODE', 6, 6);
 					$orderIdBarcodePng = DNS1D::getBarcodePNG($order->shipment_id ?? $order->order_prefix, 'C128', 2.5, 60);
 					
 					// Generate HTML for label
