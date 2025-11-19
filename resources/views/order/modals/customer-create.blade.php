@@ -71,7 +71,7 @@
 						<div class="col-xl-6 col-md-6 col-sm-12">
 							<div class="form-group my-2">
 								<label for="status">Status</label>
-								<select autocomplete="off" name="status" id="status" class="form-control">
+								<select autocomplete="off" name="status" id="status" >
 									<option value="1">Active</option>
 									<option value="0">In-Active</option>
 								</select>
@@ -120,26 +120,25 @@
 								<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code[]" id="zip_code" placeholder="Zip code" onkeyup="autoFetchCountry(this)" required> 
 							</div>
 						</div>  
-						
-						<div class="col-xl-6 col-md-4 col-sm-12">
-							<div class="from-group my-2">
-								<label for="username"> Country <span class="text-danger">*</span></label>
-								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
-							</div>
-						</div>
-						<div class="col-xl-6 col-md-4 col-sm-12">
-							<div class="from-group my-2">
-								<label for="username"> State <span class="text-danger">*</span></label>
-								<input class="default" type="text" data-id="0" autocomplete="off" name="state[]" id="state" placeholder="State" required> 
-							</div>
-						</div>
-						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
 								<label for="username"> City <span class="text-danger">*</span></label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="city[]" id="city" placeholder="City" required> 
 							</div>
 						</div> 
+						
+						<div class="col-xl-6 col-md-4 col-sm-12">
+							<div class="from-group my-2">
+								<label for="username"> State <span class="text-danger">*</span></label>
+								<input class="default" type="text" data-id="0" autocomplete="off" name="state[]" id="state" placeholder="State" required> 
+							</div>
+						</div> 
+						<div class="col-xl-6 col-md-4 col-sm-12">
+							<div class="from-group my-2">
+								<label for="username"> Country <span class="text-danger">*</span></label>
+								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
+							</div>
+						</div>
                     </div>
                 </div>
                 <div class="modal-footer">

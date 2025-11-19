@@ -245,10 +245,13 @@
 			$user = Auth::user();
 			$role = $user->role;
 			$userId = $user->id;
-			
+			$isLoginCustmer = $request->isLoginCustmer ?? 0;
 			// Base Query
-			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name")); 
-			// ->when($role === "user", fn($q) => $q->where('user_id', $userId));
+			$query = Customer::select('customers.*', DB::raw("CONCAT(first_name, ' ', last_name) as customer_name"));
+			if($isLoginCustmer == 1)
+			{
+				$query->when($role === "user", fn($q) => $q->where('user_id', $userId));
+			} 
 			 
 			// Apply search filter
 			if (!empty($search)) { 
