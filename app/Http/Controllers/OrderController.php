@@ -1627,12 +1627,19 @@
 		public function orderCustomerList()
 		{
 			$user = Auth::user();
+			$includeCustomerId = request('include_customer_id'); // For edit/clone pages
+			
 			$customer = Customer::query();
 			if ($user->role === "user") {
-				$customer->where('user_id', $user->id);
-			}else if(request('mobile'))
-			{
-			$customer->where('mobile', request('mobile'));
+				// If we need to include a specific customer (for edit/clone), add it to the query
+				if ($includeCustomerId) {
+					$customer->where(function($query) use ($user, $includeCustomerId) {
+						$query->where('user_id', $user->id)
+							  ->orWhere('id', $includeCustomerId);
+					});
+				} else {
+					$customer->where('user_id', $user->id);
+				}
 			}
 			$customers = $customer->where('status', 1)->get();
 
@@ -1646,6 +1653,52 @@
 			return response()->json([
 				'status' => 'success',
 				'output' => implode('', $options)
+			]);
+		}
+		
+		public function orderCustomerSearchByMobile()
+		{
+			$user = Auth::user();
+			$mobile = request('mobile');
+			
+			if (!$mobile || strlen($mobile) != 10) {
+				return response()->json([
+					'status' => 'error',
+					'message' => 'Invalid mobile number'
+				]);
+			}
+			
+			// Step 1: Search in current user's customers first
+			$customer = Customer::query();
+			if ($user->role === "user") {
+				$customer->where('user_id', $user->id);
+			}
+			$customer->where('mobile', $mobile)->where('status', 1);
+			$foundCustomer = $customer->first();
+			
+			// Step 2: If not found in user's data, search entire database
+			if (!$foundCustomer) {
+				$foundCustomer = Customer::where('mobile', $mobile)
+					->where('status', 1)
+					->first();
+			}
+			
+			if ($foundCustomer) {
+				return response()->json([
+					'status' => 'success',
+					'customer' => [
+						'id' => $foundCustomer->id,
+						'name' => $foundCustomer->first_name . ' ' . $foundCustomer->last_name,
+						'mobile' => $foundCustomer->mobile,
+						'user_id' => $foundCustomer->user_id,
+						'is_own' => ($user->role === "user" && $foundCustomer->user_id == $user->id)
+					]
+				]);
+			}
+			
+			return response()->json([
+				'status' => 'not_found',
+				'message' => 'No customer found with this mobile number'
 			]);
 		}
 		

@@ -511,7 +511,7 @@
 			.tooltip();  
 		$customerAddressElement.html('<option>Select Customer Address</option>').prop('disabled', true);
 		
-        $.get("{{ route('order.customer.list') }}", function(res) {
+        $.get("{{ route('order.customer.list') }}", { include_customer_id: customerId }, function(res) {
             $orderForm.find('#customer_id').html(res.output);
 			$orderForm.find('#customer_id').prop('disabled', false);
 			setTimeout(function(){
@@ -777,6 +777,81 @@
 	  
 	function allowOnlyNumbers(input) {
 		input.value = input.value.replace(/\D/g, '');
+	}
+
+	// Limit Select2 search input: 10 digits for numbers, unlimited for text
+	let searchTimeout;
+	$(document).on('keyup', '.select2-search__field', function() {
+		let $searchField = $(this);
+		let value = $searchField.val();
+		
+		// Check if input contains only digits
+		if (/^\d+$/.test(value)) {
+			// If only numbers, limit to 10 digits
+			if (value.length > 10) {
+				$searchField.val(value.substring(0, 10));
+				return;
+			}
+			
+			// If exactly 10 digits, trigger mobile search
+			if (value.length === 10) {
+				clearTimeout(searchTimeout);
+				searchTimeout = setTimeout(function() {
+					searchCustomerByMobile(value);
+				}, 500); // Debounce for 500ms
+			}
+		}
+		// If text (contains letters), no limit - do nothing
+	});
+	
+	function searchCustomerByMobile(mobile) {
+		$.ajax({
+			url: "{{ route('order.customer.search-by-mobile') }}",
+			type: "GET",
+			data: { mobile: mobile },
+			dataType: "json",
+			success: function(res) {
+				if (res.status === 'success' && res.customer) {
+					// Customer found - add to dropdown list
+					let customerId = res.customer.id;
+					
+					// Check if customer already exists in dropdown
+					let $customerSelect = $('#customer_id');
+					let optionExists = $customerSelect.find(`option[value="${customerId}"]`).length > 0;
+					
+					if (!optionExists) {
+						// Add customer to dropdown if not exists (but don't auto-select)
+						let newOption = new Option(
+							res.customer.name + ' - (' + res.customer.mobile + ')',
+							customerId,
+							false,
+							false
+						);
+						$customerSelect.append(newOption);
+						
+						// Close and reopen Select2 dropdown to refresh the results immediately
+						$customerSelect.select2('close');
+						setTimeout(function() {
+							$customerSelect.select2('open');
+							// Set the search term again to filter the results
+							$('.select2-search__field').val(mobile).trigger('input');
+						}, 100);
+					}
+					
+					// Show info message if customer belongs to another user
+					if (!res.customer.is_own) {
+						// toastrMsg('info', 'Customer found in database - now available in list');
+					} else {
+						// toastrMsg('success', 'Customer found - now available in list');
+					}
+				} else if (res.status === 'not_found') {
+					// toastrMsg('info', 'No customer found with this mobile number');
+				}
+			},
+			error: function(xhr) {
+				console.error("Error searching customer:", xhr);
+			}
+		});
 	}
 
 </script>

@@ -260,6 +260,7 @@
 		   
 		//Customer
 		Route::get('/customer/list', [App\Http\Controllers\OrderController::class, 'orderCustomerList'])->name('order.customer.list');  
+		Route::get('/customer/search-by-mobile', [App\Http\Controllers\OrderController::class, 'orderCustomerSearchByMobile'])->name('order.customer.search-by-mobile');  
 		Route::get('/customer/address-list/{customerId}', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressList'])->name('order.customer.address-list'); 
 		Route::get('/customer/create', [App\Http\Controllers\OrderController::class, 'orderCustomerCreate'])->name('order.customer.create'); 
 		Route::get('/customer-address/create/{customerId}', [App\Http\Controllers\OrderController::class, 'orderCustomerAddressCreate'])->name('order.customer-address.create'); 
