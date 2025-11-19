@@ -150,9 +150,9 @@
 				return response()->json(['status' => 'error', 'msg' => 'The mobile number already exists.']);
 			}
 
-			if (Customer::where('email', $request->email)->exists()) {
-				return response()->json(['status' => 'error', 'msg' => 'The email already exists.']);
-			}
+			// if (Customer::where('email', $request->email)->exists()) {
+			// 	return response()->json(['status' => 'error', 'msg' => 'The email already exists.']);
+			// }
 
 			try {
 				DB::beginTransaction();
@@ -220,9 +220,9 @@
 				return response()->json(['status' => 'error', 'msg' => 'The mobile number already exists.']);
 			}
 
-			if (Customer::where('id', '!=', $id)->where('email', $request->email)->exists()) {
-				return response()->json(['status' => 'error', 'msg' => 'The email already exists.']);
-			}
+			// if (Customer::where('id', '!=', $id)->where('email', $request->email)->exists()) {
+			// 	return response()->json(['status' => 'error', 'msg' => 'The email already exists.']);
+			// }
 
 			try {
 				DB::beginTransaction();

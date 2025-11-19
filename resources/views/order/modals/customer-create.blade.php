@@ -25,12 +25,12 @@
 							</div>
 						</div>
 						
-						<div class="col-xl-6 col-md-4 col-sm-12">
+						{{-- <div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
 								<label for="first-name"> Email </label>
 								<input type="email" autocomplete="off" name="email" id="email" placeholder="Email">
 							</div>
-						</div>
+						</div> --}}
 						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
@@ -67,16 +67,44 @@
 							</div>
 						</div>  --}}
 						 
-						<div class="col-xl-6 col-md-4 col-sm-12">
-							<div class="from-group my-2">
-								<label for="first-name"> Status </label>
-								<select autocomplete="off" name="status" id="status" > 
-									<option value="1"> Active </option>
-									<option value="0"> In-Active </option>
+						<!-- STATUS + Toggle Checkbox -->
+						<div class="col-xl-6 col-md-6 col-sm-12">
+							<div class="form-group my-2">
+								<label for="status">Status</label>
+								<select autocomplete="off" name="status" id="status" class="form-control">
+									<option value="1">Active</option>
+									<option value="0">In-Active</option>
 								</select>
 							</div>
 						</div>
+
+						<div class="col-xl-6 col-md-6 col-sm-12">
+							<div class="form-group my-2 d-flex align-items-center" style="height:100%;">
+								<div class="form-check mt-3">
+									<input class="form-check-input" type="checkbox" id="toggleContactDetails">
+									<label class="form-check-label" for="toggleContactDetails">
+										Email & Alternate Mobile
+									</label>
+								</div>
+							</div>
+						</div> 
                     </div> 
+					<div id="contact-details-section" class="row" style="display:none;">
+						<div class="col-xl-6 col-md-4 col-sm-12">
+							<div class="from-group my-2">
+								<label for="email"> Email </label>
+								<input type="email" autocomplete="off" name="email" id="email" class="form-control" placeholder="Email" >
+							</div>
+						</div>
+
+						<div class="col-xl-6 col-md-4 col-sm-12">
+							<div class="from-group my-2">
+								<label for="alternate_mobile"> Alternate Mobile </label>
+								<input type="text" autocomplete="off" name="alternate_mobile" id="alternate_mobile" class="form-control"
+									placeholder="Alternate Mobile" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits">
+							</div>
+						</div> 
+					</div>
                     <hr /> 
                     <div class="row">
                         <div class="col-xl-12 col-md-12 col-sm-12">
@@ -206,5 +234,30 @@
 				}, 500); // Debounce API request by 500ms
 			}
 		}
+
+		// Toggle contact details on checkbox click
+		$("#toggleContactDetails").on("change", function () {
+			if ($(this).is(":checked")) {
+				$("#contact-details-section").slideDown(150);
+			} else {
+				// hide and clear fields when unchecked
+				$("#contact-details-section").slideUp(150, function(){
+					$("#email").val('');
+					$("#alternate_mobile").val('');
+				});
+			}
+		});
+
+		// Numeric-only enforcement for mobile inputs (prevents non-digits)
+		function allowOnlyDigits(selector) {
+			$(document).on('input', selector, function () {
+				const clean = $(this).val().replace(/\D+/g, '');
+				if ($(this).val() !== clean) {
+					$(this).val(clean);
+				}
+			});
+		}
+		allowOnlyDigits('#mobile');
+		allowOnlyDigits('#alternate_mobile');
 	</script>
 </div>
