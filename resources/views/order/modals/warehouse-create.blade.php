@@ -63,12 +63,14 @@
 							<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code" id="zip_code" placeholder="Zip code" onkeyup="autoFetchCountry(this)" required> 
 						</div>
 					</div>  
+
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
-							<label for="username"> Country </label>
-							<input class="default" type="text" data-id="0" autocomplete="off" name="country" id="country" placeholder="Country" required> 
+							<label for="username"> City </label>
+							<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" required> 
 						</div>
 					</div>
+				
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
 							<label for="username"> State </label>
@@ -78,11 +80,10 @@
 					
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">
-							<label for="username"> City </label>
-							<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" required> 
+							<label for="username"> Country </label>
+							<input class="default" type="text" data-id="0" autocomplete="off" name="country" id="country" placeholder="Country" required> 
 						</div>
-					</div>
-										
+					</div> 	
 										
 					<div class="col-xl-4 col-md-4 col-sm-12">
 						<div class="from-group my-2">

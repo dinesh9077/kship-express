@@ -202,7 +202,7 @@
 				return response()->json(['status' => 'error', 'msg' => $e->getMessage()]);
 			}
 		}
-		 
+		  
 		public function editCustomer($id)
 		{
 			$customer = Customer::with('customerAddresses')->findOrFail($id);

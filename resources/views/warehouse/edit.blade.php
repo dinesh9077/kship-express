@@ -71,26 +71,24 @@
 												<input class="default" type="text" data-id="0" autocomplete="off" name="zip_code" id="zip_code" placeholder="Zip code" value="{{ $courierWarehouse->zip_code }}" onkeyup="autoFetchCountry(this)" required> 
 											</div>
 										</div>
-										<div class="col-xl-3 col-md-4 col-sm-6">
+											<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
-												<label for="username"> Country <span class="text-danger">*</span></label>
-												<input class="default" type="text" data-id="0" autocomplete="off" name="country" id="country" placeholder="Country" value="{{ $courierWarehouse->country }}" required> 
+												<label for="username"> City <span class="text-danger">*</span></label>
+												<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" value="{{ $courierWarehouse->city }}" required> 
 											</div>
-										</div>
+										</div> 
 										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
 												<label for="username"> State <span class="text-danger">*</span></label>
 												<input class="default" type="text" data-id="0" autocomplete="off" name="state" id="state" placeholder="State" value="{{ $courierWarehouse->state }}" required> 
 											</div>
 										</div>
-										
 										<div class="col-xl-3 col-md-4 col-sm-6">
 											<div class="from-group my-2">
-												<label for="username"> City <span class="text-danger">*</span></label>
-												<input class="default" type="text" data-id="0" autocomplete="off" name="city" id="city" placeholder="City" value="{{ $courierWarehouse->city }}" required> 
+												<label for="username"> Country <span class="text-danger">*</span></label>
+												<input class="default" type="text" data-id="0" autocomplete="off" name="country" id="country" placeholder="Country" value="{{ $courierWarehouse->country }}" required> 
 											</div>
 										</div> 
-										  
 										
         							</div>
 									

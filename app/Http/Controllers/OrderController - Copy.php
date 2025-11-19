@@ -1591,10 +1591,10 @@
 		{
 			$user = Auth::user();
 			$customer = Customer::query();
-			if($user->role === "user")
-			{
-				$customer->where('user_id', $user->id);
-			} 
+			// if($user->role === "user")
+			// {
+			// 	$customer->where('user_id', $user->id);
+			// } 
 			$customers = $customer->where('status', 1)->get();
 			
 			$options = ['<option value="">Select Recipeint/Customer</option>'];

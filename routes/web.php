@@ -58,7 +58,7 @@
 		Route::get('/lable-preferance', [App\Http\Controllers\SettingController::class, 'lablePreferance'])->name('lable.preferance');  
 		Route::post('/update-preferance', [App\Http\Controllers\SettingController::class, 'updateLablePref']);  
 	});
-	
+	  
 	//Customer
 	Route::group(['prefix'=>'customer'], function(){ 
 		Route::get('/', [App\Http\Controllers\CustomerController::class, 'index'])->name('customer')->middleware('permission:client.view');  

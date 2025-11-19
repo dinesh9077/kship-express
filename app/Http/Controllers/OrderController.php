@@ -1630,6 +1630,9 @@
 			$customer = Customer::query();
 			if ($user->role === "user") {
 				$customer->where('user_id', $user->id);
+			}else if(request('mobile'))
+			{
+			$customer->where('mobile', request('mobile'));
 			}
 			$customers = $customer->where('status', 1)->get();
 

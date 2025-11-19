@@ -27,21 +27,20 @@
 						</div>  
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> Country <span class="text-danger">*</span></label>
-								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
+								<label for="username"> City <span class="text-danger">*</span></label>
+								<input class="default" type="text" data-id="0" autocomplete="off" name="city[]" id="city" placeholder="City" required> 
 							</div>
-						</div>
+						</div>  
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
 								<label for="username"> State <span class="text-danger">*</span></label>
 								<input class="default" type="text" data-id="0" autocomplete="off" name="state[]" id="state" placeholder="State" required> 
 							</div>
 						</div>
-						
 						<div class="col-xl-6 col-md-4 col-sm-12">
 							<div class="from-group my-2">
-								<label for="username"> City <span class="text-danger">*</span></label>
-								<input class="default" type="text" data-id="0" autocomplete="off" name="city[]" id="city" placeholder="City" required> 
+								<label for="username"> Country <span class="text-danger">*</span></label>
+								<input class="default" type="text" data-id="0" autocomplete="off" name="country[]" id="country" placeholder="Country" required> 
 							</div>
 						</div> 
                     </div>

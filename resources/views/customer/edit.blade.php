@@ -37,12 +37,12 @@
         								</div>
         							</div>
         							
-                                    <div class="col-xl-3 col-md-4 col-sm-6">
+                                    {{-- <div class="col-xl-3 col-md-4 col-sm-6">
                                         <div class="from-group my-2">
                                             <label for="first-name"> Email </label>
                                             <input type="email" autocomplete="off" name="email" id="email" placeholder="Email" value="{{ $customer->email }}" >
         								</div>
-        							</div>
+        							</div> --}}
         							
                                     <div class="col-xl-3 col-md-4 col-sm-6">
                                         <div class="from-group my-2">
@@ -50,6 +50,36 @@
                                             <input type="text" autocomplete="off" name="mobile" id="mobile" placeholder="Mobile" value="{{ $customer->mobile }}" maxlength="10" pattern="\d{10}" title="Please enter exactly 10 digits" required> 
         								</div>
         							</div>  
+									<div class="col-xl-3 col-md-4 col-sm-6">
+										<div class="form-group my-2 d-flex align-items-center" style="height:100%;">
+											<div class="form-check mt-3">
+												<input class="form-check-input" type="checkbox"
+													id="toggleContactDetails" {{ $customer->email || $customer->alternate_mobile ? 'checked' : '' }}>
+												<label class="form-check-label" for="toggleContactDetails">
+													Email & Alternate Mobile
+												</label>
+											</div>
+										</div>
+									</div>
+									<div id="contact-details-section" class="row" style="display:{{ $customer->email || $customer->alternate_mobile ? '' : 'none' }};margin-left: 0">
+										<div class="col-xl-6 col-md-4 col-sm-12">
+											<div class="from-group my-2">
+												<label for="email"> Email </label>
+												<input type="email" autocomplete="off" name="email" id="email"
+													class="form-control" placeholder="Email" value="{{ $customer->email }}">
+											</div>
+										</div>
+
+										<div class="col-xl-6 col-md-4 col-sm-12">
+											<div class="from-group my-2">
+												<label for="alternate_mobile"> Alternate Mobile </label>
+												<input type="text" autocomplete="off" name="alternate_mobile"
+													id="alternate_mobile" class="form-control"
+													placeholder="Alternate Mobile" maxlength="10" pattern="\d{10}"
+													title="Please enter exactly 10 digits" value="{{ $customer->alternate_mobile }}">
+											</div>
+										</div>
+									</div>
         						</div>
 						    </div>
 						</div>
@@ -66,9 +96,10 @@
 													$fields = [ 
 														'address' => 'Address',
 														'zip_code' => 'Zip Code',
-														'country' => 'Country',
+														'city' => 'City', 
 														'state' => 'State',
-														'city' => 'City',
+														'country' => 'Country',
+														
 													];
 												@endphp
 												
@@ -217,8 +248,8 @@
 				</div>
 				<div class="col-xl-3 col-md-4 col-sm-6">
 					<div class="from-group my-2">
-						<label for="country_${i}"> Country </label>
-						<input class="default" type="text" data-id="${i}" autocomplete="off" name="country[]" id="country_${i}" placeholder="Country" required>
+						<label for="city_${i}"> City </label>
+						<input class="default" type="text" data-id="${i}" autocomplete="off" name="city[]" id="city_${i}" placeholder="City" required>
 					</div>
 				</div>
 				<div class="col-xl-3 col-md-4 col-sm-6">
@@ -229,11 +260,11 @@
 				</div>
 				<div class="col-xl-3 col-md-4 col-sm-6">
 					<div class="from-group my-2">
-						<label for="city_${i}"> City </label>
-						<input class="default" type="text" data-id="${i}" autocomplete="off" name="city[]" id="city_${i}" placeholder="City" required>
+						<label for="country_${i}"> Country </label>
+						<input class="default" type="text" data-id="${i}" autocomplete="off" name="country[]" id="country_${i}" placeholder="Country" required>
 					</div>
 				</div>
-				
+				 
 				<div class="col-lg-3 col-md-6">
 					<div class="from-group my-2">
 						<button type="button" class="btn-light-2" data-id="${i}" onclick="removeAddress(${i})">
@@ -335,5 +366,30 @@
 			}, 500); // Debounce API request by 500ms
 		}
 	}
+
+	// Toggle contact details on checkbox click
+	$("#toggleContactDetails").on("change", function() {
+		if ($(this).is(":checked")) {
+			$("#contact-details-section").slideDown(150);
+		} else {
+			// hide and clear fields when unchecked
+			$("#contact-details-section").slideUp(150, function() {
+				$("#email").val('');
+				$("#alternate_mobile").val('');
+			});
+		}
+	});
+
+	// Numeric-only enforcement for mobile inputs (prevents non-digits)
+	function allowOnlyDigits(selector) {
+		$(document).on('input', selector, function() {
+			const clean = $(this).val().replace(/\D+/g, '');
+			if ($(this).val() !== clean) {
+				$(this).val(clean);
+			}
+		});
+	}
+	allowOnlyDigits('#mobile');
+	allowOnlyDigits('#alternate_mobile');
 </script>
 @endpush
